@@ -68,6 +68,13 @@ domfin-api. Sin estados, las pantallas lo dicen y llevan a importarlos.
   Patrimonio neto). Una deuda con *plan de cuotas* (saldo a una fecha, tasa,
   primera y última cuota) baja con sus cuotas sin movimientos: es para un
   préstamo que otro paga por ti, y en Préstamos sus pagos salen de ese plan.
+- *Configuración → Respaldos* (`features/backup`) activa los respaldos
+  cifrados de domfin-api en una carpeta de nube (`/backup/*`), los corre y
+  restaura uno, aquí o en otra computadora. Restaurar cambia todo lo que la
+  API tiene: la app vuelve a pedir el libro, los activos y las cuentas, y las
+  tarjetas de Configuración se montan de nuevo (`useRestored`). La clave de
+  recuperación se muestra una vez; en la web se puede copiar, y en el
+  teléfono se selecciona.
 - Los periodos van de enero del año pasado al mes en curso (`LEDGER_MONTHS`
   en `src/lib/period.ts`).
 - La tasa de cambio viene de `GET /rates/usd-dop`. Los ingresos, gastos,

@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { PageHeader } from '@/components/PageHeader';
 import { Screen } from '@/components/Screen';
+import { BackupCard, useRestored } from '@/features/backup';
 import { CurrencyCard } from '@/features/currency';
 import { PdfPasswordCard } from '@/features/imports';
 import { PayrollCard, RulesCard } from '@/features/ledger';
@@ -16,6 +17,7 @@ import { LanguageCard } from './LanguageCard';
 /** The screen's cards, in order: a feature adds its settings by adding its card here. */
 const sections: ComponentType[] = [
   PdfPasswordCard,
+  BackupCard,
   PayrollCard,
   RulesCard,
   LanguageCard,
@@ -26,9 +28,11 @@ const sections: ComponentType[] = [
 
 export function SettingsScreen() {
   const { t } = useTranslation();
+  // A restored backup replaces what the cards read when they mounted: they mount again.
+  const { epoch } = useRestored();
   return (
     <Screen header={<PageHeader title={t('settings.title')} />}>
-      <View style={styles.grid}>
+      <View key={epoch} style={styles.grid}>
         {sections.map((Section, index) => (
           <View key={index} style={styles.cell}>
             <Section />

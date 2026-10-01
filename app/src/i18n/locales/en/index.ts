@@ -1,5 +1,6 @@
 import { accounts } from './accounts';
 import { assets } from './assets';
+import { backup } from './backup';
 import { cashFlow } from './cashFlow';
 import { classification } from './classification';
 import { common } from './common';
@@ -29,6 +30,7 @@ export const en = {
   ...assets,
   ...possessions,
   ...updates,
+  ...backup,
 } as const;
 
 export type Dictionary = typeof en;
