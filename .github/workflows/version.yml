@@ -1,0 +1,22 @@
+name: Versión
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  same-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: La app y la API tienen la misma versión
+        run: |
+          api=$(sed -n 's/^const Version = "\(.*\)"$/\1/p' api/internal/version/version.go)
+          app=$(node -p "require('./app/app.json').expo.version")
+          pkg=$(node -p "require('./app/package.json').version")
+          echo "api/internal/version: $api · app/app.json: $app · app/package.json: $pkg"
+          [ -n "$api" ] && [ "$api" = "$app" ] && [ "$app" = "$pkg" ]

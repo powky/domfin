@@ -1,0 +1,21 @@
+.DS_Store
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+bin/
+tmp/
+/api
+*.exe
+*.test
+*.out
+coverage.*
+go.work
+go.work.sum
+
+# Bank data never goes in the repo: statements and the local database.
+*.pdf
+*.db
+*.db-shm
+*.db-wal

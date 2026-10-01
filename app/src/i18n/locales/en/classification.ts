@@ -1,0 +1,68 @@
+/** Settings that decide how movements are classified: payroll and rules. */
+export const classification = {
+  classification: {
+    loading: 'Loading…',
+    offline: "Couldn't reach domfin-api. Is it running?",
+    saveFailed: "Couldn't save. Is domfin-api running?",
+    saved: 'Saved. Every movement was classified again.',
+    save: 'Save',
+    cancel: 'Cancel',
+    payroll: {
+      title: 'Payroll',
+      description:
+        'A payroll credit that comes on a payday is your Salary; any other one is Extra income. Bonuses are told apart with a rule.',
+      account: 'Payroll account',
+      allAccounts: 'Any account',
+      keyword: 'Text that marks it',
+      keywordHint: 'As it shows in the statement, like "nomina" in CREDITO NOMINA.',
+      days: 'Paydays',
+      daysPlaceholder: '15, 30',
+      daysHint: 'Days of the month, separated by commas.',
+      before: 'Days before',
+      after: 'Days after',
+      windowHint: 'Paid early on weekends and holidays, or posted a day late: still that payday.',
+      /** `days` comes joined in the app language: "12 and 27". */
+      suggestion: 'Your payroll credits usually come on the {{days}}.',
+      useSuggestion: 'Use those days',
+      invalid: 'Check the paydays (1 to 31) and the days before and after (0 to 10).',
+    },
+    rules: {
+      title: 'Rules',
+      description:
+        'A rule files what it matches under a category. Rules come before payroll and what the bank says, and the first that matches decides.',
+      empty: 'No rules yet.',
+      add: 'New rule',
+      delete: 'Delete rule {{name}}',
+      name: 'Name',
+      namePlaceholder: 'December bonus',
+      contains: 'Description contains',
+      containsPlaceholder: 'nomina, farmacia',
+      containsHint: 'Any of these texts, separated by commas. Case and accents don’t matter.',
+      direction: 'Money',
+      directions: {
+        any: 'In or out',
+        in: 'Comes in',
+        out: 'Goes out',
+      },
+      minAmount: 'From',
+      maxAmount: 'Up to',
+      amountPlaceholder: 'Amount',
+      months: 'Months',
+      monthsPlaceholder: '12',
+      monthsHint: 'Numbers from 1 to 12, separated by commas. Empty is every month.',
+      category: 'Category',
+      pickCategory: 'Pick a category',
+      review: 'Mark what it catches for review',
+      invalid: 'Give it a name, a category and at least one condition.',
+      /** A rule's conditions, joined with " · ". */
+      summary: {
+        contains: 'contains {{texts}}',
+        in: 'comes in',
+        out: 'goes out',
+        from: 'from {{amount}}',
+        upTo: 'up to {{amount}}',
+        months: 'in {{months}}',
+      },
+    },
+  },
+} as const;

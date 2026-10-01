@@ -1,0 +1,46 @@
+package store
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
+// statementsPasswordKey keeps the password statement PDFs open with.
+const statementsPasswordKey = "statements_password"
+
+// StatementsPassword is the password saved for statement PDFs, "" without one.
+func (s *Store) StatementsPassword(ctx context.Context) (string, error) {
+	var value string
+	err := s.db.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = ?`, statementsPasswordKey).Scan(&value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	var password string
+	if err := json.Unmarshal([]byte(value), &password); err != nil {
+		return "", fmt.Errorf("statements password: %w", err)
+	}
+	return password, nil
+}
+
+// SetStatementsPassword saves the password statement PDFs open with, in the
+// local database only its owner can read; "" forgets it.
+func (s *Store) SetStatementsPassword(ctx context.Context, password string) error {
+	if password == "" {
+		_, err := s.db.ExecContext(ctx, `DELETE FROM settings WHERE key = ?`, statementsPasswordKey)
+		return err
+	}
+	value, err := json.Marshal(password)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.ExecContext(ctx, `
+		INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+		statementsPasswordKey, string(value))
+	return err
+}

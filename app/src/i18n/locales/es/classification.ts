@@ -1,0 +1,68 @@
+import type { classification as en } from '../en/classification';
+import type { Translation } from '../types';
+
+export const classification = {
+  classification: {
+    loading: 'Cargando…',
+    offline: 'No se pudo conectar con domfin-api. ¿Está corriendo?',
+    saveFailed: 'No se pudo guardar. ¿Está corriendo domfin-api?',
+    saved: 'Guardado. Todos los movimientos se volvieron a clasificar.',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    payroll: {
+      title: 'Nómina',
+      description:
+        'El crédito de nómina que llega en un día de pago es tu Salario; cualquier otro, Ingreso adicional. Los bonos se distinguen con una regla.',
+      account: 'Cuenta nómina',
+      allAccounts: 'Cualquier cuenta',
+      keyword: 'Texto que la marca',
+      keywordHint: 'Como sale en el estado, por ejemplo "nomina" en CREDITO NOMINA.',
+      days: 'Días de pago',
+      daysPlaceholder: '15, 30',
+      daysHint: 'Días del mes, separados por comas.',
+      before: 'Días antes',
+      after: 'Días después',
+      windowHint: 'Si te pagan antes por un fin de semana o feriado, o el banco lo registra un día tarde, sigue siendo ese día de pago.',
+      suggestion: 'Tus créditos de nómina suelen llegar los días {{days}}.',
+      useSuggestion: 'Usar esos días',
+      invalid: 'Revisa los días de pago (del 1 al 31) y los días antes y después (de 0 a 10).',
+    },
+    rules: {
+      title: 'Reglas',
+      description:
+        'Una regla pone en una categoría lo que coincide con ella. Las reglas van antes que la nómina y que lo que dice el banco, y decide la primera que coincide.',
+      empty: 'Todavía no tienes reglas.',
+      add: 'Nueva regla',
+      delete: 'Borrar la regla {{name}}',
+      name: 'Nombre',
+      namePlaceholder: 'Regalía de diciembre',
+      contains: 'La descripción contiene',
+      containsPlaceholder: 'nomina, farmacia',
+      containsHint: 'Cualquiera de estos textos, separados por comas. No importan mayúsculas ni tildes.',
+      direction: 'Dinero',
+      directions: {
+        any: 'Entra o sale',
+        in: 'Entra',
+        out: 'Sale',
+      },
+      minAmount: 'Desde',
+      maxAmount: 'Hasta',
+      amountPlaceholder: 'Monto',
+      months: 'Meses',
+      monthsPlaceholder: '12',
+      monthsHint: 'Números del 1 al 12, separados por comas. Vacío es todos los meses.',
+      category: 'Categoría',
+      pickCategory: 'Elige una categoría',
+      review: 'Marcar lo que atrape para revisar',
+      invalid: 'Ponle un nombre, una categoría y al menos una condición.',
+      summary: {
+        contains: 'contiene {{texts}}',
+        in: 'entra',
+        out: 'sale',
+        from: 'desde {{amount}}',
+        upTo: 'hasta {{amount}}',
+        months: 'en {{months}}',
+      },
+    },
+  },
+} satisfies Translation<typeof en>;

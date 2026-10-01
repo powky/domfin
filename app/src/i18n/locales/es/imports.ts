@@ -1,0 +1,81 @@
+import type { imports as en } from '../en/imports';
+import { plural, type Translation } from '../types';
+
+export const imports = {
+  imports: {
+    password: {
+      title: 'Contraseña de los PDF',
+      description: 'Los bancos protegen sus estados de cuenta en PDF con una contraseña. Guárdala aquí una vez y cada importación los abre con ella.',
+      saved: 'Hay una contraseña guardada.',
+      environment: 'domfin-api usa la de STATEMENTS_PDF_PASSWORD; guarda una aquí para usar esta en su lugar.',
+      none: 'Sin contraseña: los estados que tengan una no se pueden importar.',
+      placeholder: 'La contraseña de tus estados',
+      replacePlaceholder: 'Escribe otra para reemplazarla',
+      save: 'Guardar',
+      forget: 'Olvidarla',
+      messages: {
+        saved: 'Guardada.',
+        forgotten: 'Olvidada.',
+        failed: 'No se pudo guardar. ¿Está corriendo domfin-api?',
+      },
+      privacy: 'Se guarda solo en esta computadora, en la base local de domfin-api. Domfin nunca la muestra ni la envía a ningún lado.',
+    },
+    title: 'Importar estados',
+    subtitle: 'PDF del banco, revisados y guardados en esta computadora',
+    loanName: 'Préstamo ****{{last4}}',
+    certificateName: 'Certificado ****{{last4}}',
+    upload: {
+      title: 'Subir estados de cuenta',
+      description:
+        'Elige uno o varios PDF. Domfin reconoce cada estado, revisa que cuadre y lo guarda; los que ya importaste no se duplican.',
+      supported: 'Por ahora lee los estados de cuenta y de tarjeta de crédito, y los historiales de préstamo y de certificado, del Banco Popular.',
+      choose: 'Elegir PDF',
+      ...plural('uploading', 'Importando {{count}} archivo…', 'Importando {{count}} archivos…'),
+      results: 'Última subida',
+    },
+    status: {
+      added: 'Importado',
+      replaced: 'Reemplazó al que se había importado',
+      unchanged: 'Ya estaba importado',
+    },
+    cutDate: 'Corte del {{date}}',
+    historyRange: 'Movimientos del {{from}} al {{to}}',
+    historyDate: 'Historial al {{date}}',
+    ...plural('transactions', '{{count}} movimiento en {{currency}}', '{{count}} movimientos en {{currency}}'),
+    reasons: {
+      unsupported: 'Omitido: Domfin todavía no sabe leer este tipo de estado.',
+      missing_password: 'Tiene contraseña: guárdala en Configuración → Contraseña de los PDF.',
+      wrong_password: 'La contraseña guardada no lo abre: revísala en Configuración.',
+      unreadable: 'No se pudo leer: {{detail}}',
+      not_saved: 'No se pudo guardar: {{detail}}',
+    },
+    errors: {
+      offline: 'No se pudo conectar con domfin-api. ¿Está corriendo?',
+      local_only: 'domfin-api solo recibe estados desde esta computadora.',
+      too_large: 'Son demasiados archivos a la vez. Súbelos en grupos más pequeños.',
+      unavailable: 'domfin-api no pudo abrir su base local.',
+      failed: 'Algo salió mal. Vuelve a intentarlo.',
+      picker_unavailable: 'Esta versión de la app todavía no tiene el selector de archivos. Vuelve a compilarla para importar desde aquí.',
+    },
+    coverage: {
+      title: 'Meses importados',
+      description: 'Del primer estado al último. Un mes cuadra cuando sus balances salen uno del otro.',
+      loading: 'Cargando…',
+      empty: 'Todavía no hay estados importados.',
+      status: {
+        ok: 'Cuadra',
+        review: 'Revisar',
+        missing: 'Falta',
+      },
+      monthLabel: '{{month}}: {{status}}',
+      issue: '{{month}}: {{issue}}',
+    },
+    kinds: {
+      savings: 'Cuenta de ahorro',
+      checking: 'Cuenta corriente',
+      credit_card: 'Tarjeta de crédito',
+      loan: 'Préstamo',
+      certificate: 'Certificado financiero',
+    },
+  },
+} satisfies Translation<typeof en>;

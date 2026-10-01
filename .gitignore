@@ -1,0 +1,14 @@
+# Personal notes and local tools: never in the repository.
+CLAUDE.local.md
+.claude/launch.json
+.claude/settings.local.json
+.DS_Store
+
+# Bank data never goes in the repository, anywhere in it.
+*.pdf
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!.env.example
