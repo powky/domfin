@@ -47,6 +47,9 @@ const styles = StyleSheet.create((theme) => ({
     columnGap: theme.space[4],
   },
   actions: {
+    // Narrower than the card, so on a phone its controls wrap instead of
+    // running past the edge (views don't shrink unless told to).
+    flexShrink: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
