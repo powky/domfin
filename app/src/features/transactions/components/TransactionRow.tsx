@@ -230,8 +230,10 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1.2,
     minWidth: 0,
   },
+  // The same width in every row, so the columns line up: ten ems hold
+  // -RD$99,999,999.99 in the amount's 16 px with tabular figures.
   amountColumn: {
-    minWidth: 110,
+    width: 10 * theme.font.size.lg,
   },
   checkboxSpace: {
     width: checkboxSize,
