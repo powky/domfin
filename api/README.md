@@ -97,4 +97,12 @@ go test ./...   # todos los tests, con PDF inventados (internal/testpdf)
 gofmt -l .      # debe salir vacío
 ```
 
+Para usar la app sin datos reales, `cmd/demo` llena una base nueva con
+estados inventados (nunca toca una que ya exista):
+
+```bash
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/api
+```
+
 Las reglas para proponer cambios están en [CONTRIBUTING.md](../CONTRIBUTING.md).

@@ -15,6 +15,7 @@ go test ./...                             # antes de dar algo por terminado
 gofmt -l .                                # debe salir vacío
 go run ./cmd/statements import -dry-run <carpeta>   # prueba sin guardar
 go run ./cmd/glyphs <pdf>                 # glyphs que el atlas no conoce
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo   # base con datos inventados
 ```
 
 ## Mapa
@@ -24,6 +25,7 @@ go run ./cmd/glyphs <pdf>                 # glyphs que el atlas no conoce
 | `cmd/api` | Arma el servidor: rutas públicas con CORS abierto y rutas con datos del banco detrás de `localonly`. |
 | `cmd/statements` | CLI para importar PDF y ver la cobertura por mes. |
 | `cmd/glyphs` | Encuentra caracteres nuevos para `internal/gridocr/popular.atlas`. |
+| `cmd/demo` | Llena una base nueva con datos inventados: para probar la app sin datos reales y para las capturas del README. |
 | `internal/rates` | Tasa USD/DOP del BCRD con caché diaria y la serie histórica. |
 | `internal/pdftext` | Texto de un PDF como líneas de celdas (descifra con pdfcpu). |
 | `internal/gridocr` | OCR de cuadrícula para los estados escaneados. |
@@ -35,7 +37,7 @@ go run ./cmd/glyphs <pdf>                 # glyphs que el atlas no conoce
 | `internal/books` | Endpoints `/ledger/*`. |
 | `internal/accounts` | `GET /accounts` con balances de fin de mes. |
 | `internal/localonly` | Guard para los endpoints con datos del banco. |
-| `internal/updates` | Último release de la API y la app en GitHub (`GET /updates`). |
+| `internal/updates` | Último release de Domfin en GitHub (`GET /updates`). |
 | `internal/version` | Versión de Domfin (la misma de la app) y repositorio de los releases. |
 | `internal/testpdf` | Genera PDF sintéticos (texto, cifrados y escaneados) para los tests. |
 
