@@ -3,6 +3,7 @@ module github.com/powky/domfin/api
 go 1.26.7
 
 require (
+	filippo.io/age v1.3.2
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/ledongthuc/pdf v0.0.0-20260907135840-6c8c28e0e8a0
@@ -12,6 +13,7 @@ require (
 )
 
 require (
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect

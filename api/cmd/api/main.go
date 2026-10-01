@@ -15,6 +15,7 @@ import (
 
 	"github.com/powky/domfin/api/internal/accounts"
 	"github.com/powky/domfin/api/internal/assets"
+	"github.com/powky/domfin/api/internal/backup"
 	"github.com/powky/domfin/api/internal/books"
 	"github.com/powky/domfin/api/internal/importer"
 	"github.com/powky/domfin/api/internal/rates"
@@ -42,13 +43,16 @@ func main() {
 	convert := func(ctx context.Context, cents int64, from, to, date string) (int64, error) {
 		return assets.Convert(ctx, rateOn, cents, from, to, date)
 	}
+	backups := backup.New(db, version.Version)
 	statements := &importer.Importer{Store: db, Password: os.Getenv("STATEMENTS_PDF_PASSWORD")}
 	if db != nil {
 		statements.AfterSave = func(ctx context.Context) {
 			if err := db.SyncAssetLinks(ctx, convert); err != nil {
 				log.Printf("activos: %v", err)
 			}
+			backups.Imported()
 		}
+		backups.Start(context.Background())
 	}
 
 	public := http.NewServeMux()
@@ -63,6 +67,9 @@ func main() {
 	mux.Handle("/statements/", importer.Handler(statements))
 	mux.Handle("/ledger/", books.Handler(db, convert, rateOn))
 	mux.Handle("/accounts", accounts.Handler(db))
+	backupHandler := backup.Handler(backups)
+	mux.Handle("/backup", backupHandler)
+	mux.Handle("/backup/", backupHandler)
 	mux.Handle("/", allowCORS(public))
 
 	addr := ":" + envOr("PORT", "8080")

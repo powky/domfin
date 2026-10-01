@@ -44,3 +44,37 @@ func (s *Store) SetStatementsPassword(ctx context.Context, password string) erro
 		statementsPasswordKey, string(value))
 	return err
 }
+
+// Setting reads the setting key into v, and says whether there was one.
+func (s *Store) Setting(ctx context.Context, key string, v any) (bool, error) {
+	var value string
+	err := s.db.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = ?`, key).Scan(&value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	if err := json.Unmarshal([]byte(value), v); err != nil {
+		return false, fmt.Errorf("setting %s: %w", key, err)
+	}
+	return true, nil
+}
+
+// SetSetting saves v, as JSON, as the setting key.
+func (s *Store) SetSetting(ctx context.Context, key string, v any) error {
+	value, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.ExecContext(ctx, `
+		INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+		key, string(value))
+	return err
+}
+
+// DeleteSetting forgets the setting key.
+func (s *Store) DeleteSetting(ctx context.Context, key string) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM settings WHERE key = ?`, key)
+	return err
+}

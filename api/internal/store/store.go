@@ -308,8 +308,9 @@ DELETE FROM categories WHERE id = 'usd-income';
 const dateLayout = "2006-01-02"
 
 type Store struct {
-	db  *sql.DB
-	now func() time.Time
+	db   *sql.DB
+	path string
+	now  func() time.Time
 }
 
 // DefaultPath is $DOMFIN_DATA_DIR/domfin.db, by default in the user's
@@ -339,17 +340,11 @@ func Open(path string) (*Store, error) {
 	}
 	file.Close()
 
-	dsn := (&url.URL{
-		Scheme:   "file",
-		OmitHost: true,
-		Path:     path,
-		RawQuery: "_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)",
-	}).String()
-	db, err := sql.Open("sqlite", dsn)
+	db, err := sql.Open("sqlite", dsn(path, "_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"))
 	if err != nil {
 		return nil, err
 	}
-	s := &Store{db: db, now: time.Now}
+	s := &Store{db: db, path: path, now: time.Now}
 	if err := s.migrate(context.Background()); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("migrate %s: %w", path, err)
@@ -362,6 +357,14 @@ func Open(path string) (*Store, error) {
 }
 
 func (s *Store) Close() error { return s.db.Close() }
+
+// Path is the database's file.
+func (s *Store) Path() string { return s.path }
+
+// dsn is the driver's name for the database at path, with query's options.
+func dsn(path, query string) string {
+	return (&url.URL{Scheme: "file", OmitHost: true, Path: path, RawQuery: query}).String()
+}
 
 func (s *Store) migrate(ctx context.Context) error {
 	var version int
