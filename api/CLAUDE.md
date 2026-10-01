@@ -37,6 +37,7 @@ DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo   # base con datos inventados
 | `internal/books` | Endpoints `/ledger/*`. |
 | `internal/accounts` | `GET /accounts` con balances de fin de mes. |
 | `internal/localonly` | Guard para los endpoints con datos del banco. |
+| `internal/backup` | Respaldos cifrados con age en una carpeta de nube: su clave, los automáticos, restaurar y las carpetas que detecta (`/backup/*`). |
 | `internal/updates` | Último release de Domfin en GitHub (`GET /updates`). |
 | `internal/version` | Versión de Domfin (la misma de la app) y repositorio de los releases. |
 | `internal/testpdf` | Genera PDF sintéticos (texto, cifrados y escaneados) para los tests. |
@@ -69,6 +70,9 @@ DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo   # base con datos inventados
   para probar, usa `-dry-run` o una copia con otro `DOMFIN_DATA_DIR`.
 - Nada de datos reales en el repo: ni PDF, ni bases, ni números de cuenta en
   ejemplos o tests. `.gitignore` ya excluye `*.pdf` y `*.db`.
+- La contraseña de respaldo y la clave de recuperación nunca van a un log ni
+  a una respuesta: la clave sale una sola vez, al crearla
+  (`POST /backup/setup`).
 
 ## Trampas conocidas
 

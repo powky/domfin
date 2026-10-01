@@ -45,6 +45,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   Central del día en que ocurrió.
 - **Montos ocultos**: el ojito de arriba los cambia por `RD$x,xxx.xx` cuando
   alguien más puede ver tu pantalla.
+- **Respaldos cifrados**: una copia de tus datos en la carpeta de tu nube
+  (iCloud Drive, Google Drive, Dropbox u OneDrive) cada día y después de cada
+  importación, que solo abren tu contraseña o tu clave de recuperación.
 - En español y en inglés, en la web, iOS y Android.
 
 ## Cómo se ve
@@ -99,6 +102,8 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   equipos de tu red.
 - La contraseña de tus PDF se guarda en la base local, que solo tu usuario
   puede leer. Domfin nunca la muestra.
+- Tus respaldos salen de tu computadora ya cifrados: el servicio de tu nube
+  solo guarda algo ilegible, y Domfin nunca habla con él.
 - Domfin solo se conecta a Internet para buscar la tasa del dólar del Banco
   Central (una vez al día) y para ver si hay una versión nueva en GitHub
   (como mucho dos veces al día; se puede apagar). Ninguna de las dos lleva
@@ -192,8 +197,21 @@ Todo queda en un solo archivo, `domfin.db`:
 | Linux | `~/.config/domfin-api/domfin.db` |
 | Windows | `%AppData%\domfin-api\domfin.db` |
 
-Para respaldar, copia ese archivo con domfin-api apagada. Los PDF quedan
-donde los tengas: Domfin no los copia.
+Para respaldarlo, ve a *Configuración → Respaldos*, elige la carpeta de tu
+nube (iCloud Drive, Google Drive, Dropbox u OneDrive) y una contraseña.
+Domfin deja ahí una copia cifrada cada día y después de cada importación, y
+la app de tu nube la sube.
+
+- Solo la abren tu contraseña o la **clave de recuperación** que Domfin te
+  muestra una vez: guárdala en tu gestor de contraseñas. Sin ninguna de las
+  dos, nadie puede abrir tus respaldos, ni siquiera Domfin.
+- En otra computadora, monta Domfin y, en *Configuración → Respaldos*, usa
+  *Restaurar un respaldo* con la misma carpeta y tu contraseña.
+- Usan [age](https://age-encryption.org), un formato abierto, con una clave
+  poscuántica. También se abren sin Domfin: con la clave de recuperación en
+  `clave.txt`, `age -d -i clave.txt domfin-2026-10-01-093015.age | gunzip > domfin.db`.
+
+Los PDF quedan donde los tengas: Domfin no los copia.
 
 ### Actualizar
 
@@ -331,7 +349,8 @@ proponer otra cosa,
 
 - [ ] Más bancos dominicanos; hoy lee el Popular y Qik. Si tienes estados de
   otro, mira [cómo agregar un banco](CONTRIBUTING.md#agregar-un-banco).
-- [ ] Respaldo privado y cifrado de tu base, por ejemplo en iCloud Drive.
+- [ ] Respaldos con conexión directa a Google Drive, OneDrive, Dropbox, S3
+  y WebDAV, sin la app de escritorio de cada servicio.
 - [ ] Modo oscuro.
 
 ### Ya disponible
@@ -354,6 +373,8 @@ proponer otra cosa,
 - [x] Patrimonio neto, préstamos y posesiones: un inmueble en plano con su
   plan de pagos, acciones, tu fondo de pensiones y tu vehículo, que se
   deprecia.
+- [x] Respaldos cifrados en la carpeta de tu nube (iCloud Drive, Google
+  Drive, Dropbox u OneDrive), con contraseña y clave de recuperación.
 - [x] Español e inglés; web, iOS y Android.
 
 ## Cómo está hecho

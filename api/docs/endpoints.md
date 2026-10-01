@@ -147,6 +147,73 @@ los movimientos que les pagan. Como los
 de estados de cuenta, solo responden a esta computadora. El modelo, las reglas
 y cada endpoint están en [modelo-de-datos.md](modelo-de-datos.md).
 
+## `/backup`
+
+Respaldos cifrados de la base en una carpeta que elijas, normalmente la de tu
+nube (iCloud Drive, Google Drive, Dropbox u OneDrive), que la app de
+escritorio del servicio sube sola. Domfin nunca habla con el servicio. Como
+los de estados de cuenta, solo responden a esta computadora.
+
+- `GET /backup`: cómo van.
+
+  ```json
+  {
+    "configured": true,
+    "folder": "/Users/ana/Library/Mobile Documents/com~apple~CloudDocs/Domfin",
+    "place": { "service": "icloud", "root": "/Users/ana/Library/Mobile Documents/com~apple~CloudDocs", "folder": "/Users/ana/Library/Mobile Documents/com~apple~CloudDocs/Domfin", "hasBackups": true },
+    "automatic": true,
+    "needsPassword": false,
+    "available": true,
+    "last": { "at": "2026-10-01T09:30:15-04:00", "file": "domfin-2026-10-01-093015.age", "bytes": 67585 },
+    "backups": [{ "file": "domfin-2026-10-01-093015.age", "at": "2026-10-01T09:30:15-04:00", "bytes": 67585 }]
+  }
+  ```
+
+  Si el último falló, `last.error` trae el código (como `folder_missing`).
+  `available` dice si la carpeta está; `needsPassword`, si se restauró con la
+  clave de recuperación desde una carpeta sin `domfin-clave.age` y falta
+  elegir una contraseña.
+- `GET /backup/places`: las carpetas de nube de esta computadora, con
+  `service` (`icloud`, `google-drive`, `dropbox` u `onedrive`), `account` si
+  la carpeta lo dice, `folder` (la de Domfin dentro) y `hasBackups`.
+- `POST /backup/setup` `{"folder", "password"}`: los activa. Con una clave
+  nueva responde `{"recoveryKey": "AGE-SECRET-KEY-PQ-1…"}`, la única vez que
+  sale; si la carpeta ya tiene respaldos, la contraseña tiene que abrirlos,
+  se sigue usando su clave y responde `{"recoveryKey": ""}`.
+- `POST /backup/run`: respalda ahora: `{"backup": {"file", "at", "bytes"}}`.
+- `PUT /backup` `{"automatic"?, "folder"?}`: los automáticos y la carpeta.
+  Responde como `GET /backup`.
+- `PUT /backup/password` `{"password"` o `"recoveryKey", "newPassword"}`:
+  cambia la contraseña; los respaldos no cambian.
+- `GET /backup/files?folder=…`: los respaldos de una carpeta, del más nuevo
+  al más viejo, y si tiene la clave (`hasKey`).
+- `POST /backup/restore` `{"folder", "file", "password"` o `"recoveryKey"}`:
+  reemplaza la base por la del respaldo sin reiniciar la API y deja una copia
+  de la anterior junto a ella: `{"safetyCopy": "…/domfin-antes-de-restaurar-2026-10-01-101500.db"}`
+  (quedan las últimas 3).
+- `DELETE /backup`: los apaga. Los respaldos se quedan donde están.
+
+Los errores son `{"error": "<código>"}`: `bad_folder` (la ruta no es
+absoluta), `folder_missing`, `short_password` (menos de 10 caracteres),
+`wrong_password`, `wrong_key`, `bad_recovery_key`, `no_key` (la carpeta no
+tiene `domfin-clave.age`), `other_key` (la carpeta tiene respaldos con otra
+clave), `bad_file`, `damaged`, `newer_version` y `not_configured`.
+
+Cómo se cifran:
+
+- Cada respaldo es una copia de la base (`VACUUM INTO`) comprimida con gzip
+  y cifrada con [age](https://age-encryption.org) a una clave poscuántica
+  (ML-KEM-768 + X25519) que Domfin crea al activarlos.
+- La parte pública de la clave queda en la base, así que los automáticos no
+  necesitan la contraseña. La privada va en `domfin-clave.age`, junto a los
+  respaldos, cifrada con la contraseña (scrypt), y es también la clave de
+  recuperación.
+- Hay un respaldo al día y otro un minuto después de cada importación. Se
+  guardan todos los del último día, el más nuevo de cada uno de los últimos
+  7 días con respaldos y el de cada uno de los últimos 12 meses.
+- Sin Domfin, con la clave de recuperación en `clave.txt`:
+  `age -d -i clave.txt domfin-2026-10-01-093015.age | gunzip > domfin.db`.
+
 ## `GET /updates`
 
 La versión de Domfin que corre y su último release en GitHub, para que la

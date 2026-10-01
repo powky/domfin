@@ -37,8 +37,9 @@ go build -o domfin-api ./cmd/api
   | Linux | `~/.config/domfin-api/domfin.db` |
   | Windows | `%AppData%\domfin-api\domfin.db` |
 
-  Para respaldar, copia ese archivo con la API apagada. Los PDF no se copian:
-  quedan donde los tengas.
+  Para respaldarla, activa los respaldos en *Configuración*: copias cifradas
+  en la carpeta de tu nube (ver [`/backup`](docs/endpoints.md#backup)). Los
+  PDF no se copian: quedan donde los tengas.
 - Los endpoints con datos del banco solo responden a esta misma computadora:
   ni otros equipos de tu red ni otras páginas abiertas en el navegador.
 - La contraseña de los PDF se guarda desde *Configuración* en la app, en la
