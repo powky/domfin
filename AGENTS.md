@@ -17,7 +17,7 @@ la misma computadora.
 
 ```bash
 ./domfin setup                                # instala lo que falte y salta lo demás
-./domfin start [--demo]                       # API (:8080) y app (:8081) juntas
+./domfin start [--demo]                       # API y app juntas, en 8080 y 8081 o los siguientes libres
 cd api && go run ./cmd/api                    # :8080
 cd api && go test ./... && gofmt -l .         # gofmt debe salir vacío
 cd app && npm run web                         # :8081

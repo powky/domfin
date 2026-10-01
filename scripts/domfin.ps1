@@ -66,14 +66,16 @@ function Show-Usage {
   Write-Host '                     de domfin-api y las dependencias de la app) y salta lo'
   Write-Host '                     que ya tienes.'
   Write-Host '  start              Arranca domfin-api y la app, y abre la app en tu'
-  Write-Host '                     navegador. Ctrl+C apaga las dos. Si falta algo, corre'
-  Write-Host '                     setup antes.'
-  Write-Host '  start --demo       Igual, con datos de ejemplo en vez de tu base. Se borran'
-  Write-Host '                     al salir.'
+  Write-Host '                     navegador. Usa los puertos 8080 y 8081, o los siguientes'
+  Write-Host '                     libres si están ocupados. Ctrl+C apaga las dos y los'
+  Write-Host '                     libera. Si falta algo, corre setup antes.'
+  Write-Host '  start --demo       Igual, con datos de ejemplo en vez de tu base, en los'
+  Write-Host '                     puertos 8090 y 8091 para correr junto a tu Domfin. Se'
+  Write-Host '                     borran al salir.'
   Write-Host ''
   Write-Host 'Opciones de start:'
-  Write-Host '  --api-port <n>     Puerto de domfin-api (8080 si no dices otro).'
-  Write-Host '  --app-port <n>     Puerto de la app (8081 si no dices otro).'
+  Write-Host '  --api-port <n>     Un puerto fijo para domfin-api.'
+  Write-Host '  --app-port <n>     Un puerto fijo para la app.'
 }
 
 # Clear-Domfin stops what start started and removes the temporary folders.
@@ -450,6 +452,15 @@ function Test-PortBusy([int] $Port) {
   }
 }
 
+# Get-FreePort FROM SKIP: the first port from FROM on that nothing listens on,
+# other than SKIP, or 0 after a hundred.
+function Get-FreePort([int] $From, [int] $Skip) {
+  for ($port = $From; $port -lt $From + 100; $port++) {
+    if ($port -ne $Skip -and -not (Test-PortBusy $port)) { return $port }
+  }
+  return 0
+}
+
 # Test-Domfin PORT: whether what listens on PORT is a domfin-api.
 function Test-Domfin([int] $Port) {
   try {
@@ -467,8 +478,9 @@ function Get-Port([string] $Value) {
 
 function Invoke-Start([string[]] $Options) {
   $demo = $false
-  $apiPort = 8080
-  $appPort = 8081
+  # 0: not given, Domfin picks one.
+  $apiPort = 0
+  $appPort = 0
   for ($i = 0; $i -lt $Options.Count; $i++) {
     $option = $Options[$i]
     if ($option -eq '--demo') {
@@ -488,24 +500,43 @@ function Invoke-Start([string[]] $Options) {
       Stop-Domfin "No conozco la opción $option. Mira .\domfin.cmd help."
     }
   }
-  if ($apiPort -eq $appPort) { Stop-Domfin 'domfin-api y la app no pueden usar el mismo puerto.' }
-
   Invoke-Setup $true
   Use-LocalTools
 
-  if (Test-PortBusy $appPort) {
-    Stop-Domfin "El puerto $appPort está ocupado (¿ya está corriendo la app?). Usa otro: .\domfin.cmd start --app-port 8091"
+  # The usual ports, or the next free ones when they're taken. The demo has
+  # its own, to run next to the real Domfin; the browser keeps each port's
+  # settings apart, so neither changes the other's. A port given with
+  # --api-port or --app-port has to be free.
+  $usualApi = 8080
+  $usualApp = 8081
+  if ($demo) {
+    $usualApi = 8090
+    $usualApp = 8091
   }
+  $busy = 'El puerto {0} está ocupado. Usa otro, o no digas ninguno y Domfin busca uno libre.'
   $reuse = $false
-  if (Test-PortBusy $apiPort) {
-    if (-not (Test-Domfin $apiPort)) {
-      Stop-Domfin "El puerto $apiPort está ocupado por otro programa. Usa otro: .\domfin.cmd start --api-port 8090"
+  if ($apiPort -ne 0) {
+    if (Test-PortBusy $apiPort) {
+      # A domfin-api already there, with the real data, is used as it is.
+      if ($demo -or -not (Test-Domfin $apiPort)) { Stop-Domfin ($busy -f $apiPort) }
+      $reuse = $true
     }
-    if ($demo) {
-      Stop-Domfin "Ya hay una domfin-api, con tu base, en el puerto $apiPort. Apágala para ver los datos de ejemplo, o usa otro puerto: .\domfin.cmd start --demo --api-port 8090"
-    }
+  } elseif (-not $demo -and (Test-PortBusy $usualApi) -and (Test-Domfin $usualApi)) {
+    $apiPort = $usualApi
     $reuse = $true
+  } else {
+    $apiPort = Get-FreePort $usualApi $usualApp
+    if ($apiPort -eq 0) { Stop-Domfin 'No encontré un puerto libre para domfin-api.' }
+    if ($apiPort -ne $usualApi) { Write-Step "El puerto $usualApi está ocupado: domfin-api usa el $apiPort." }
   }
+  if ($appPort -ne 0) {
+    if (Test-PortBusy $appPort) { Stop-Domfin ($busy -f $appPort) }
+  } else {
+    $appPort = Get-FreePort $usualApp $apiPort
+    if ($appPort -eq 0) { Stop-Domfin 'No encontré un puerto libre para la app.' }
+    if ($appPort -ne $usualApp) { Write-Step "El puerto $usualApp está ocupado: la app usa el $appPort." }
+  }
+  if ($apiPort -eq $appPort) { Stop-Domfin 'domfin-api y la app no pueden usar el mismo puerto.' }
 
   if ($demo) {
     $script:DemoDir = Join-Path ([IO.Path]::GetTempPath()) ('domfin-demo-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
@@ -538,7 +569,7 @@ function Invoke-Start([string[]] $Options) {
     if (-not $ready) { Stop-Domfin "domfin-api no responde en el puerto $apiPort." }
   }
 
-  if ($apiPort -ne 8080) { $env:EXPO_PUBLIC_API_URL = "http://localhost:$apiPort" }
+  $env:EXPO_PUBLIC_API_URL = "http://localhost:$apiPort"
   # Domfin promises to only go online for the BCRD rate and new versions:
   # no telemetry or checks from Expo while it runs.
   if (-not $env:EXPO_NO_TELEMETRY) { $env:EXPO_NO_TELEMETRY = '1' }

@@ -41,7 +41,7 @@ jobs:
           export PATH=/usr/bin:/bin:/usr/sbin:/sbin
           ./domfin start --demo > start.log 2>&1 &
           for i in $(seq 1 90); do
-            if curl -fsS -o accounts.json http://127.0.0.1:8080/accounts && grep -q '"1234"' accounts.json && curl -fsS -o /dev/null http://localhost:8081; then
+            if curl -fsS -o accounts.json http://127.0.0.1:8090/accounts && grep -q '"1234"' accounts.json && curl -fsS -o /dev/null http://localhost:8091; then
               echo 'Domfin respondió.'
               exit 0
             fi
@@ -82,8 +82,8 @@ jobs:
           Start-Process -FilePath cmd.exe -ArgumentList '/c', 'domfin.cmd', 'start', '--demo' -RedirectStandardOutput start.log -RedirectStandardError start.err -NoNewWindow
           for ($i = 0; $i -lt 90; $i++) {
             try {
-              $accounts = (Invoke-WebRequest -Uri http://127.0.0.1:8080/accounts -UseBasicParsing -TimeoutSec 5).Content
-              Invoke-WebRequest -Uri http://localhost:8081 -UseBasicParsing -TimeoutSec 5 | Out-Null
+              $accounts = (Invoke-WebRequest -Uri http://127.0.0.1:8090/accounts -UseBasicParsing -TimeoutSec 5).Content
+              Invoke-WebRequest -Uri http://localhost:8091 -UseBasicParsing -TimeoutSec 5 | Out-Null
               if ($accounts -match '"1234"') { 'Domfin respondió.'; exit 0 }
             } catch { }
             Start-Sleep -Seconds 2

@@ -151,9 +151,11 @@ quieras.
 En Windows: `.\domfin.cmd start`.
 
 Arranca domfin-api y la app juntas, y abre la app en tu navegador, en
-[http://localhost:8081](http://localhost:8081). Para apagar las dos,
-presiona Ctrl+C en esa terminal. Si te falta algo, `start` corre `setup`
-antes: con este comando basta.
+[http://localhost:8081](http://localhost:8081). Si un puerto está ocupado
+(el 8080 de domfin-api o el 8081 de la app), usa el siguiente libre y te
+dice cuál. Para apagar las dos y liberar sus puertos, presiona Ctrl+C en esa
+terminal. Si te falta algo, `start` corre `setup` antes: con este comando
+basta.
 
 #### Con datos de ejemplo
 
@@ -165,8 +167,9 @@ Para ver Domfin antes de darle tus estados:
 
 Arranca con una base aparte, llena de datos inventados (los de las
 capturas): una cuenta de nómina, una en dólares, dos tarjetas, un préstamo,
-un certificado y algunas posesiones, desde enero del año pasado. Tu base no
-se toca, y la de ejemplo se borra al salir.
+un certificado y algunas posesiones, desde enero del año pasado. Usa sus
+propios puertos, el 8090 y el 8091, así que puede correr junto a tu Domfin.
+Tu base no se toca, y la de ejemplo se borra al salir.
 
 ### 4. Primeros pasos
 
@@ -277,8 +280,8 @@ computadora con `EXPO_PUBLIC_API_URL=http://10.0.2.2:8080`.
 
 ### Configuración avanzada
 
-Si los puertos de siempre están ocupados, usa otros:
-`./domfin start --api-port 8090 --app-port 8091`.
+`./domfin start` busca puertos libres solo. Si quieres unos fijos:
+`./domfin start --api-port 8085 --app-port 8086`.
 
 | Variable | Para qué | Por defecto |
 | --- | --- | --- |
@@ -291,8 +294,11 @@ opciones de domfin-api están en [su README](api/README.md#configuración).
 
 - **`./domfin: Permission denied`**: dale permiso con `chmod +x domfin`, o
   córrelo con `bash domfin setup`.
-- **"El puerto 8080 está ocupado"**: otro programa lo usa. Arranca con
-  `./domfin start --api-port 8090`, o con `--app-port` si es el 8081.
+- **"El puerto … está ocupado"**: le diste ese puerto con `--api-port` o
+  `--app-port` y otro programa lo usa. Sin esas opciones, Domfin busca uno
+  libre.
+- **La app no recuerda tu idioma o tu moneda**: el navegador los guarda por
+  puerto, y la app arrancó en otro porque el de siempre estaba ocupado.
 - **En Windows, Ctrl+C pregunta si quieres terminar el trabajo por lotes**:
   responde que sí; Domfin ya se apagó.
 - **"¿Está corriendo domfin-api?"**: arranca Domfin con `./domfin start` y

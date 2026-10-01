@@ -58,14 +58,16 @@ Uso: ./domfin <comando>
                      de domfin-api y las dependencias de la app) y salta lo
                      que ya tienes.
   start              Arranca domfin-api y la app, y abre la app en tu
-                     navegador. Ctrl+C apaga las dos. Si falta algo, corre
-                     setup antes.
-  start --demo       Igual, con datos de ejemplo en vez de tu base. Se borran
-                     al salir.
+                     navegador. Usa los puertos 8080 y 8081, o los siguientes
+                     libres si están ocupados. Ctrl+C apaga las dos y los
+                     libera. Si falta algo, corre setup antes.
+  start --demo       Igual, con datos de ejemplo en vez de tu base, en los
+                     puertos 8090 y 8091 para correr junto a tu Domfin. Se
+                     borran al salir.
 
 Opciones de start:
-  --api-port <n>     Puerto de domfin-api (8080 si no dices otro).
-  --app-port <n>     Puerto de la app (8081 si no dices otro).
+  --api-port <n>     Un puerto fijo para domfin-api.
+  --app-port <n>     Un puerto fijo para la app.
 EOF
 }
 
@@ -369,9 +371,22 @@ cmd_setup() {
 
 # --- start ----------------------------------------------------------------
 
-# port_busy PORT: whether something already listens on PORT.
+# port_busy PORT: whether something already listens on PORT, on IPv4 or IPv6.
 port_busy() {
-  (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null
+  (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null || (exec 3<>"/dev/tcp/::1/$1") 2>/dev/null
+}
+
+# free_port FROM SKIP prints the first port from FROM on that nothing listens
+# on, other than SKIP, and fails after a hundred.
+free_port() {
+  local port
+  for port in $(seq "$1" $(($1 + 99))); do
+    if [ "$port" != "$2" ] && ! port_busy "$port"; then
+      printf '%s' "$port"
+      return 0
+    fi
+  done
+  return 1
 }
 
 # is_domfin PORT: whether what listens on PORT is a domfin-api.
@@ -386,7 +401,7 @@ check_port() {
 }
 
 cmd_start() {
-  local demo=0 api_port=8080 app_port=8081 reuse=0 i
+  local demo=0 api_port='' app_port='' reuse=0 usual_api=8080 usual_app=8081 i
   while [ $# -gt 0 ]; do
     case "$1" in
       --demo) demo=1 ;;
@@ -405,25 +420,41 @@ cmd_start() {
     esac
     shift
   done
-  check_port "$api_port"
-  check_port "$app_port"
-  if [ "$api_port" = "$app_port" ]; then fail "domfin-api y la app no pueden usar el mismo puerto."; fi
+  if [ -n "$api_port" ]; then check_port "$api_port"; fi
+  if [ -n "$app_port" ]; then check_port "$app_port"; fi
 
   cmd_setup --quiet
   use_local_tools
 
-  if port_busy "$app_port"; then
-    fail "El puerto $app_port está ocupado (¿ya está corriendo la app?). Usa otro: ./domfin start --app-port 8091"
-  fi
-  if port_busy "$api_port"; then
-    if ! is_domfin "$api_port"; then
-      fail "El puerto $api_port está ocupado por otro programa. Usa otro: ./domfin start --api-port 8090"
+  # The usual ports, or the next free ones when they're taken. The demo has
+  # its own, to run next to the real Domfin; the browser keeps each port's
+  # settings apart, so neither changes the other's. A port given with
+  # --api-port or --app-port has to be free.
+  if [ "$demo" = 1 ]; then usual_api=8090 usual_app=8091; fi
+  if [ -n "$api_port" ]; then
+    if port_busy "$api_port"; then
+      # A domfin-api already there, with the real data, is used as it is.
+      if [ "$demo" = 1 ] || ! is_domfin "$api_port"; then
+        fail "El puerto $api_port está ocupado. Usa otro, o no digas ninguno y Domfin busca uno libre."
+      fi
+      reuse=1
     fi
-    if [ "$demo" = 1 ]; then
-      fail "Ya hay una domfin-api, con tu base, en el puerto $api_port. Apágala para ver los datos de ejemplo, o usa otro puerto: ./domfin start --demo --api-port 8090"
-    fi
+  elif [ "$demo" = 0 ] && port_busy "$usual_api" && is_domfin "$usual_api"; then
+    api_port=$usual_api
     reuse=1
+  else
+    api_port="$(free_port "$usual_api" "$usual_app")" || fail "No encontré un puerto libre para domfin-api."
+    if [ "$api_port" != "$usual_api" ]; then step "El puerto $usual_api está ocupado: domfin-api usa el $api_port."; fi
   fi
+  if [ -n "$app_port" ]; then
+    if port_busy "$app_port"; then
+      fail "El puerto $app_port está ocupado. Usa otro, o no digas ninguno y Domfin busca uno libre."
+    fi
+  else
+    app_port="$(free_port "$usual_app" "$api_port")" || fail "No encontré un puerto libre para la app."
+    if [ "$app_port" != "$usual_app" ]; then step "El puerto $usual_app está ocupado: la app usa el $app_port."; fi
+  fi
+  if [ "$api_port" = "$app_port" ]; then fail "domfin-api y la app no pueden usar el mismo puerto."; fi
 
   if [ "$demo" = 1 ]; then
     demo_dir="$(mktemp -d "${TMPDIR:-/tmp}/domfin-demo.XXXXXX")"
@@ -449,7 +480,7 @@ cmd_start() {
     done
   fi
 
-  if [ "$api_port" != 8080 ]; then export EXPO_PUBLIC_API_URL="http://localhost:$api_port"; fi
+  export EXPO_PUBLIC_API_URL="http://localhost:$api_port"
   # Domfin promises to only go online for the BCRD rate and new versions:
   # no telemetry or checks from Expo while it runs.
   export EXPO_NO_TELEMETRY="${EXPO_NO_TELEMETRY:-1}"
