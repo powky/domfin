@@ -467,3 +467,50 @@ func TestDue(t *testing.T) {
 		}
 	}
 }
+
+// Only a backup made it to the new computer, without the key file: the
+// recovery key restores it, backups go on, and a password can be set again.
+func TestRestoreWithoutKeyFile(t *testing.T) {
+	ctx := context.Background()
+	old := newService(t)
+	recoveryKey, err := old.Setup(ctx, filepath.Join(t.TempDir(), "Domfin"), password)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file, err := old.Backup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldConfig, _, _ := old.config(ctx)
+	data, err := os.ReadFile(filepath.Join(oldConfig.Folder, file.Name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	folder := t.TempDir()
+	if err := os.WriteFile(filepath.Join(folder, file.Name), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	s := newService(t)
+	if _, err := s.Restore(ctx, folder, file.Name, "", recoveryKey); err != nil {
+		t.Fatal(err)
+	}
+	if status, _ := s.Status(ctx); !status.Configured || !status.NeedsPassword || status.Folder != folder {
+		t.Errorf("after restoring: %+v", status)
+	}
+	if _, err := s.Backup(ctx); err != nil {
+		t.Errorf("backing up without a password: %v", err)
+	}
+	if err := s.ChangePassword(ctx, password, "", "una frase nueva y larga"); !errors.Is(err, ErrNoKey) {
+		t.Errorf("a password without one to open: %v", err)
+	}
+	if err := s.ChangePassword(ctx, "", recoveryKey, "una frase nueva y larga"); err != nil {
+		t.Fatal(err)
+	}
+	if status, _ := s.Status(ctx); status.NeedsPassword {
+		t.Errorf("still needs a password: %+v", status)
+	}
+	if _, err := os.Stat(filepath.Join(folder, KeyFile)); err != nil {
+		t.Errorf("no key file after setting the password: %v", err)
+	}
+}
