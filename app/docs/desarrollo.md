@@ -91,12 +91,31 @@ Las versiones nuevas: domfin-api pregunta a GitHub por los releases
 en *Más* y en *Configuración → Acerca de Domfin*. La versión de la app es la
 de `app.json`.
 
+## Íconos y pantalla de carga
+
+Todos salen del logo (`LogoMark` en `src/components/brand/Logo.tsx`) con
+`scripts/icons.sh`, que los dibuja con `rsvg-convert` (librsvg) e
+ImageMagick:
+
+| Archivo | Para qué | Cómo es |
+| --- | --- | --- |
+| `assets/icon.png` | iOS, y Android antes de los íconos adaptativos | 1024 px, naranja de borde a borde (el sistema redondea las esquinas) y la vela del tamaño que tiene en el logo. Sin transparencia, como pide Apple. |
+| `assets/android-icon-foreground.png` | La capa de adelante del ícono adaptativo | La vela blanca en 108 dp, de los que se ven los 72 del medio; queda dentro de la zona segura de 66. El fondo es el `backgroundColor` naranja de `app.json`. |
+| `assets/android-icon-monochrome.png` | El ícono temático de Android 13 | La misma vela: Android la pinta con los colores del tema. |
+| `assets/splash-icon.png` | La pantalla de carga (`expo-splash-screen`) | El logo en los dos tercios del medio (Android 12 recorta a ese círculo), sobre el fondo de la app, `#F7F6F3`, a 200 de ancho. |
+| `assets/favicon.png` | La pestaña del navegador | El logo, 48 px. |
+
+La pantalla de carga sigue hasta que el layout raíz tiene las fuentes, el
+idioma, la moneda y la preferencia de montos; después `_layout.tsx` la
+esconde. Los íconos y la pantalla de carga cambian con un development build
+nuevo; el favicon, al recargar la web.
+
 ## Arquitectura
 
 ```
 src/
   app/                    Rutas (Expo Router). Solo composición, sin lógica.
-    _layout.tsx           Fuentes, SafeArea, Stack raíz
+    _layout.tsx           Fuentes, pantalla de carga, SafeArea, Stack raíz
     (app)/_layout.tsx     AppShell: sidebar (md+) o tab bar (móvil)
     (app)/cash-flow.tsx   Cada ruta monta la pantalla de su feature
   features/<feature>/     Un módulo por dominio (cash-flow, transactions, ...)
@@ -109,7 +128,7 @@ src/
     ui/                   Primitivas del design system (Text, Card, SegmentedControl, ...)
     motion/               Animaciones: entradas escalonadas, odómetro, indicadores, reduce motion
     navigation/           AppShell, Sidebar, BottomTabBar y config de navegación
-    brand/                Logo
+    brand/                Logo (de él salen los íconos: scripts/icons.sh)
   theme/
     tokens/               Tokens crudos: palette, spacing, radius, typography, layout, motion
     themes.ts             Tokens semánticos (colors.text.primary, colors.accent.subtle, ...)

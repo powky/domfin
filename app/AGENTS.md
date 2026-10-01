@@ -30,9 +30,11 @@ documentación de la versión instalada
   ni los edites; configura en `app.json` y con config plugins. Si algo los
   genera, bórralos y revierte los cambios de `app.json` o `package.json`
   antes del commit.
-- Unistyles y `expo-document-picker` traen código nativo: no funcionan en
-  Expo Go, y un development build anterior a una dependencia nativa nueva
-  hay que volver a compilarlo.
+- Unistyles, `expo-document-picker` y `expo-splash-screen` traen código
+  nativo: no funcionan en Expo Go, y un development build anterior a una
+  dependencia nativa nueva hay que volver a compilarlo.
+- Los íconos, la pantalla de carga y el favicon salen del logo con
+  `scripts/icons.sh`: si el logo cambia, córrelo otra vez.
 
 ## Datos
 
