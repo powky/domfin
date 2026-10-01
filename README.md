@@ -150,12 +150,29 @@ quieras.
 
 En Windows: `.\domfin.cmd start`.
 
-Arranca domfin-api y la app juntas, y abre la app en tu navegador, en
-[http://localhost:8081](http://localhost:8081). Si un puerto está ocupado
-(el 8080 de domfin-api o el 8081 de la app), usa el siguiente libre y te
-dice cuál. Para apagar las dos y liberar sus puertos, presiona Ctrl+C en esa
-terminal. Si te falta algo, `start` corre `setup` antes: con este comando
-basta.
+Arranca domfin-api y la app juntas, y abre la app en tu navegador. Para
+apagar las dos, presiona Ctrl+C en esa terminal. Si te falta algo, `start`
+corre `setup` antes: con este comando basta.
+
+#### Los puertos
+
+domfin-api usa el 8080 y la app el 8081
+([http://localhost:8081](http://localhost:8081)), pero no hace falta que
+estén libres:
+
+- Si otro programa tiene uno, `start` usa el siguiente libre y te dice cuál:
+  «El puerto 8081 está ocupado: la app usa el 8082».
+- Si en el 8080 ya hay una domfin-api corriendo, la usa en vez de arrancar
+  otra.
+- Al apagar Domfin, con Ctrl+C o cerrando la terminal, se apaga lo que
+  `start` arrancó y sus puertos quedan libres. Una domfin-api que ya estaba
+  corriendo antes sigue corriendo.
+- Para usar puertos fijos: `./domfin start --api-port 8085 --app-port 8086`.
+  Si alguno está ocupado, te lo dice en vez de cambiarlo.
+- El navegador guarda por puerto tu idioma, tu moneda y si ocultas los
+  montos: si la app arranca en otro puerto, empieza con los de siempre. Si
+  el 8081 siempre está ocupado, cae siempre en el mismo puerto libre y los
+  recuerda.
 
 #### Con datos de ejemplo
 
@@ -280,8 +297,7 @@ computadora con `EXPO_PUBLIC_API_URL=http://10.0.2.2:8080`.
 
 ### Configuración avanzada
 
-`./domfin start` busca puertos libres solo. Si quieres unos fijos:
-`./domfin start --api-port 8085 --app-port 8086`.
+Para los puertos, mira [Los puertos](#los-puertos).
 
 | Variable | Para qué | Por defecto |
 | --- | --- | --- |
@@ -299,6 +315,10 @@ opciones de domfin-api están en [su README](api/README.md#configuración).
   libre.
 - **La app no recuerda tu idioma o tu moneda**: el navegador los guarda por
   puerto, y la app arrancó en otro porque el de siempre estaba ocupado.
+- **domfin-api siguió corriendo después de cerrar Domfin a la fuerza** (por
+  ejemplo, con `kill -9`): el siguiente `./domfin start` la encuentra y la
+  usa. Para apagarla, ciérrala en el Monitor de Actividad o el Administrador
+  de tareas; se llama `domfin-api`.
 - **En Windows, Ctrl+C pregunta si quieres terminar el trabajo por lotes**:
   responde que sí; Domfin ya se apagó.
 - **"¿Está corriendo domfin-api?"**: arranca Domfin con `./domfin start` y
