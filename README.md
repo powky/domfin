@@ -102,17 +102,14 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 - Domfin solo se conecta a Internet para buscar la tasa del dólar del Banco
   Central (una vez al día) y para ver si hay una versión nueva en GitHub
   (como mucho dos veces al día; se puede apagar). Ninguna de las dos lleva
-  datos tuyos.
+  datos tuyos. Instalarlo sí descarga Go, Node.js y las dependencias desde
+  sus sitios oficiales, y al arrancar con `./domfin start`, Expo (con lo que
+  corre la app) no manda nada.
 
 ## Cómo montarlo
 
-### Lo que necesitas
-
-- macOS, Linux o Windows.
-- [Git](https://git-scm.com/downloads).
-- [Go](https://go.dev/dl/) 1.26 o más nuevo, para domfin-api.
-- [Node.js](https://nodejs.org/) 20.19.4 o más nuevo (la versión LTS sirve),
-  con npm, para la app.
+Solo necesitas macOS, Linux o Windows, y [Git](https://git-scm.com/downloads).
+Lo demás lo instala Domfin.
 
 ### 1. Descarga Domfin
 
@@ -121,52 +118,50 @@ git clone https://github.com/powky/domfin.git
 cd domfin
 ```
 
-### 2. Arranca domfin-api
+### 2. Prepáralo
 
 ```bash
-cd api
-go run ./cmd/api
+./domfin setup
 ```
 
-La primera vez descarga sus dependencias. Cuando diga
-`domfin-api escuchando en :8080`, déjala corriendo en esa terminal.
+En Windows, desde PowerShell o el símbolo del sistema: `.\domfin.cmd setup`.
+
+Revisa lo que Domfin necesita, salta lo que ya tienes e instala lo que falte:
+
+- **Go y Node.js**, si no los tienes o son muy viejos. Los baja de sus sitios
+  oficiales, verifica cada descarga y los deja en `.tools/`, dentro de la
+  carpeta de Domfin: no se instalan en tu sistema.
+- **Los módulos de domfin-api**, que compila (la primera vez tarda unos
+  minutos), y **las dependencias de la app**.
+
+Al final te dice qué ya tenías y qué instaló. Puedes correrlo las veces que
+quieras.
+
+### 3. Arráncalo
+
+```bash
+./domfin start
+```
+
+En Windows: `.\domfin.cmd start`.
+
+Arranca domfin-api y la app juntas, y abre la app en tu navegador, en
+[http://localhost:8081](http://localhost:8081). Para apagar las dos,
+presiona Ctrl+C en esa terminal. Si te falta algo, `start` corre `setup`
+antes: con este comando basta.
 
 #### Con datos de ejemplo
 
-Para ver Domfin antes de darle tus estados, arranca domfin-api con una base
-aparte, llena de datos inventados (los de las capturas): una cuenta de
-nómina, una en dólares, dos tarjetas, un préstamo, un certificado y algunas
-posesiones, desde enero del año pasado.
+Para ver Domfin antes de darle tus estados:
 
 ```bash
-cd api
-DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo
-DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/api
+./domfin start --demo
 ```
 
-En Windows, desde PowerShell:
-
-```powershell
-cd api
-$env:DOMFIN_DATA_DIR = "$env:TEMP\domfin-demo"
-go run ./cmd/demo
-go run ./cmd/api
-```
-
-Tu base de siempre no se toca. Para volver a ella, apaga domfin-api y
-arráncala como arriba (en Windows, desde una terminal nueva).
-
-### 3. Arranca la app
-
-En otra terminal, desde la carpeta `domfin`:
-
-```bash
-cd app
-npm install
-npm run web
-```
-
-Abre [http://localhost:8081](http://localhost:8081) en tu navegador.
+Arranca con una base aparte, llena de datos inventados (los de las
+capturas): una cuenta de nómina, una en dólares, dos tarjetas, un préstamo,
+un certificado y algunas posesiones, desde enero del año pasado. Tu base no
+se toca, y la de ejemplo se borra al salir.
 
 ### 4. Primeros pasos
 
@@ -204,15 +199,47 @@ donde los tengas: Domfin no los copia.
 
 Cuando hay una versión nueva, la app lo avisa en la barra lateral (o en
 *Más*, en el teléfono), y en *Configuración → Acerca de Domfin* ves qué
-trae. Para actualizar, apaga los dos programas y, desde la carpeta
-`domfin`:
+trae. Para actualizar, apaga Domfin (Ctrl+C) y, desde la carpeta `domfin`:
 
 ```bash
 git pull
-cd app && npm install
+./domfin start
 ```
 
-Vuelve a arrancarlos como en los pasos 2 y 3. Tu base se pone al día sola.
+`start` instala lo que haya cambiado antes de arrancar, y tu base se pone al
+día sola.
+
+### A mano
+
+Si prefieres tus propias herramientas, necesitas [Go](https://go.dev/dl/)
+1.26.7 o más nuevo y [Node.js](https://nodejs.org/) 20.19.4, 22.13, 24.3 o
+más nuevo (la versión LTS sirve), con npm. Arranca domfin-api:
+
+```bash
+cd api
+go run ./cmd/api
+```
+
+Y en otra terminal, la app:
+
+```bash
+cd app
+npm install
+npm run web
+```
+
+Para los datos de ejemplo, prepara una base aparte y arranca domfin-api con
+ella:
+
+```bash
+cd api
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/api
+```
+
+En Windows (PowerShell), define la carpeta antes, con
+`$env:DOMFIN_DATA_DIR = "$env:TEMP\domfin-demo"`, y corre los dos comandos
+sin el `DOMFIN_DATA_DIR=` del principio.
 
 ### En el teléfono
 
@@ -232,17 +259,27 @@ computadora con `EXPO_PUBLIC_API_URL=http://10.0.2.2:8080`.
 
 ### Configuración avanzada
 
+Si los puertos de siempre están ocupados, usa otros:
+`./domfin start --api-port 8090 --app-port 8091`.
+
 | Variable | Para qué | Por defecto |
 | --- | --- | --- |
-| `EXPO_PUBLIC_API_URL` | Dónde está domfin-api. | `http://localhost:8080` |
+| `EXPO_PUBLIC_API_URL` | Dónde está domfin-api, si la arrancas a mano en otro puerto u otra computadora. | `http://localhost:8080` |
 
 Ponla en un archivo `.env` en `app/` (copia `app/.env.example`). Las
 opciones de domfin-api están en [su README](api/README.md#configuración).
 
 ### Si algo falla
 
-- **"¿Está corriendo domfin-api?"**: arráncala (paso 2) y recarga la app.
-  Si usas otro puerto, cambia `EXPO_PUBLIC_API_URL`.
+- **`./domfin: Permission denied`**: dale permiso con `chmod +x domfin`, o
+  córrelo con `bash domfin setup`.
+- **"El puerto 8080 está ocupado"**: otro programa lo usa. Arranca con
+  `./domfin start --api-port 8090`, o con `--app-port` si es el 8081.
+- **En Windows, Ctrl+C pregunta si quieres terminar el trabajo por lotes**:
+  responde que sí; Domfin ya se apagó.
+- **"¿Está corriendo domfin-api?"**: arranca Domfin con `./domfin start` y
+  recarga la app. Si arrancaste domfin-api a mano en otro puerto, cambia
+  `EXPO_PUBLIC_API_URL`.
 - **Un PDF "tiene contraseña"**: guárdala en *Configuración → Contraseña de
   los PDF*.
 - **Un mes sale con ⚠**: algo no cuadró al leerlo (un balance, una página).

@@ -1,0 +1,477 @@
+#!/usr/bin/env bash
+# Domfin's launcher for macOS and Linux (on Windows, domfin.cmd does the same):
+#
+#   ./domfin setup            installs what Domfin needs and skips what's there
+#   ./domfin start [--demo]   runs domfin-api and the app together
+#
+# Go and Node.js, when missing or too old, are downloaded into .tools/ in
+# this folder and never installed on the system. What it prints is in
+# Spanish, like everything Domfin's users read.
+set -euo pipefail
+
+# This folder, even when the script is reached through a symlink.
+self="${BASH_SOURCE[0]}"
+while [ -h "$self" ]; do
+  dir="$(cd -P "$(dirname "$self")" && pwd)"
+  self="$(readlink "$self")"
+  case "$self" in /*) ;; *) self="$dir/$self" ;; esac
+done
+ROOT="$(cd -P "$(dirname "$self")" && pwd)"
+TOOLS="$ROOT/.tools"
+API_BIN="$TOOLS/bin/domfin-api"
+# What the app's dependencies were installed from: npm ci again when it changes.
+APP_STAMP="$ROOT/app/node_modules/.domfin-setup"
+
+# Where Go and Node.js come from; a mirror can stand in for either.
+GO_MIRROR="${DOMFIN_GO_MIRROR:-https://dl.google.com/go}"
+NODE_MIRROR="${DOMFIN_NODE_MIRROR:-https://nodejs.org/dist}"
+# The oldest Go that builds domfin-api, from api/go.mod.
+GO_MIN="$(sed -n 's/^go \([0-9][0-9.]*\).*/\1/p' "$ROOT/api/go.mod")"
+
+quiet=0
+installed_tools=0
+work=''
+api_pid=''
+demo_dir=''
+
+if [ -t 1 ]; then
+  bold=$'\033[1m' dim=$'\033[2m' green=$'\033[32m' yellow=$'\033[33m' red=$'\033[31m' reset=$'\033[0m'
+else
+  bold='' dim='' green='' yellow='' red='' reset=''
+fi
+
+ok() { [ "$quiet" = 1 ] || printf '  %s✓%s %s\n' "$green" "$reset" "$*"; }
+step() { printf '  %s→%s %s\n' "$dim" "$reset" "$*"; }
+note() { [ "$quiet" = 1 ] || printf '  %s!%s %s\n' "$yellow" "$reset" "$*"; }
+fail() {
+  printf '\n%s✗ %s%s\n' "$red" "$*" "$reset" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+${bold}Domfin${reset}: tus finanzas, en tu computadora.
+
+Uso: ./domfin <comando>
+
+  setup              Instala lo que Domfin necesita (Go, Node.js, los módulos
+                     de domfin-api y las dependencias de la app) y salta lo
+                     que ya tienes.
+  start              Arranca domfin-api y la app, y abre la app en tu
+                     navegador. Ctrl+C apaga las dos. Si falta algo, corre
+                     setup antes.
+  start --demo       Igual, con datos de ejemplo en vez de tu base. Se borran
+                     al salir.
+
+Opciones de start:
+  --api-port <n>     Puerto de domfin-api (8080 si no dices otro).
+  --app-port <n>     Puerto de la app (8081 si no dices otro).
+EOF
+}
+
+cleanup() {
+  if [ -n "$api_pid" ]; then
+    kill "$api_pid" 2>/dev/null || true
+    wait "$api_pid" 2>/dev/null || true
+  fi
+  if [ -n "$demo_dir" ]; then rm -rf "$demo_dir"; fi
+  if [ -n "$work" ]; then rm -rf "$work"; fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+
+# --- Helpers --------------------------------------------------------------
+
+# version_ge A B: whether version A (like 1.26.7) is B or newer.
+version_ge() {
+  local IFS=.
+  local -a a b
+  local i x y
+  read -r -a a <<<"$1"
+  read -r -a b <<<"$2"
+  for i in 0 1 2; do
+    x="${a[i]:-0}" y="${b[i]:-0}"
+    x="${x%%[!0-9]*}" y="${y%%[!0-9]*}"
+    if [ "${x:-0}" -gt "${y:-0}" ]; then return 0; fi
+    if [ "${x:-0}" -lt "${y:-0}" ]; then return 1; fi
+  done
+  return 0
+}
+
+# use_local_tools puts the Go and Node.js in .tools/, if any, first on PATH.
+use_local_tools() {
+  if [ -x "$TOOLS/go/bin/go" ]; then PATH="$TOOLS/go/bin:$PATH"; fi
+  if [ -x "$TOOLS/node/bin/node" ]; then PATH="$TOOLS/node/bin:$PATH"; fi
+  export PATH
+}
+
+# fetch URL FILE [big] downloads URL into FILE, with a progress bar for big
+# files when someone is watching.
+fetch() {
+  if command -v curl >/dev/null 2>&1; then
+    if [ "${3:-}" = big ] && [ -t 2 ]; then
+      curl -fL --progress-bar --retry 2 --connect-timeout 20 -o "$2" "$1"
+    else
+      curl -fsSL --retry 2 --connect-timeout 20 -o "$2" "$1"
+    fi
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -O "$2" "$1"
+  else
+    fail "Hace falta curl o wget para descargar. Instala uno de los dos y vuelve a intentarlo."
+  fi || fail "No pude descargar $1. ¿Tienes conexión a Internet?"
+}
+
+# http_get URL prints what URL answers, quickly, or fails.
+http_get() {
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsS --max-time 3 "$1" 2>/dev/null
+  else
+    wget -q -T 3 -O - "$1" 2>/dev/null
+  fi
+}
+
+sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1"
+  else
+    shasum -a 256 "$1"
+  fi | awk '{ print $1 }'
+}
+
+# check_sum FILE SUM: the download is what its publisher says it is.
+check_sum() {
+  if [ "$(sha256 "$1")" != "$2" ]; then
+    fail "$(basename "$1") no coincide con su suma SHA-256, así que no lo uso. Vuelve a intentarlo."
+  fi
+}
+
+work_dir() {
+  if [ -z "$work" ]; then work="$(mktemp -d "${TMPDIR:-/tmp}/domfin-setup.XXXXXX")"; fi
+}
+
+# platform sets os, go_arch and node_arch for the downloads.
+platform() {
+  case "$(uname -s)" in
+    Darwin) os=darwin ;;
+    Linux) os=linux ;;
+    MINGW* | MSYS* | CYGWIN*) fail "En Windows, usa domfin.cmd (por ejemplo: .\\domfin.cmd setup)." ;;
+    *) fail "No sé instalar Go y Node.js en $(uname -s). Instálalos a mano (mira el README) y vuelve a correr ./domfin setup." ;;
+  esac
+  case "$(uname -m)" in
+    x86_64 | amd64) go_arch=amd64 node_arch=x64 ;;
+    arm64 | aarch64) go_arch=arm64 node_arch=arm64 ;;
+    *) fail "No sé instalar Go y Node.js para $(uname -m). Instálalos a mano (mira el README) y vuelve a correr ./domfin setup." ;;
+  esac
+}
+
+# have_note TOOL FOLDER: how ok lists a tool that was already there.
+have_note() {
+  case "$(command -v "$1")" in
+    "$TOOLS"/*) printf 'ya estaba en .tools/%s' "$2" ;;
+    *) printf 'ya lo tenías' ;;
+  esac
+}
+
+# --- Go -------------------------------------------------------------------
+
+# go_version prints the version of the Go on PATH (1.26.7), or nothing.
+go_version() {
+  local out
+  command -v go >/dev/null 2>&1 || return 0
+  out="$(cd / && GOTOOLCHAIN=local go version 2>/dev/null)" || return 0
+  out="${out#go version go}"
+  printf '%s' "${out%% *}"
+}
+
+# go_wanted is the Go to download: api/go.mod's toolchain, or its go line.
+go_wanted() {
+  local v
+  v="$(sed -n 's/^toolchain go\([0-9][0-9.]*\).*/\1/p' "$ROOT/api/go.mod")"
+  if [ -z "$v" ]; then v="$GO_MIN"; fi
+  case "$v" in *.*.*) ;; *) v="$v.0" ;; esac
+  printf '%s' "$v"
+}
+
+install_go() {
+  local version file
+  platform
+  work_dir
+  version="$(go_wanted)"
+  file="go$version.$os-$go_arch.tar.gz"
+  step "Bajando Go $version..."
+  fetch "$GO_MIRROR/$file.sha256" "$work/$file.sha256"
+  fetch "$GO_MIRROR/$file" "$work/$file" big
+  check_sum "$work/$file" "$(tr -d '[:space:]' <"$work/$file.sha256")"
+  tar -xzf "$work/$file" -C "$work"
+  mkdir -p "$TOOLS"
+  rm -rf "$TOOLS/go"
+  mv "$work/go" "$TOOLS/go"
+}
+
+ensure_go() {
+  local have
+  have="$(go_version)"
+  if [ -n "$have" ] && version_ge "$have" "$GO_MIN"; then
+    ok "Go $have ($(have_note go go))"
+    return
+  fi
+  if [ -n "$have" ]; then
+    step "Tu Go ($have) es muy viejo: domfin-api necesita $GO_MIN o más nuevo."
+  else
+    step "Falta Go, para domfin-api."
+  fi
+  install_go
+  use_local_tools
+  installed_tools=1
+  have="$(go_version)"
+  if [ -z "$have" ] || ! version_ge "$have" "$GO_MIN"; then
+    fail "Bajé Go a .tools/go, pero no arranca en esta computadora."
+  fi
+  ok "Go $have (nuevo, en .tools/go)"
+}
+
+# --- Node.js --------------------------------------------------------------
+
+node_version() {
+  local out
+  command -v node >/dev/null 2>&1 || return 0
+  out="$(node --version 2>/dev/null)" || return 0
+  printf '%s' "${out#v}"
+}
+
+# node_supported VERSION: the Node.js versions React Native runs on
+# (its engines: ^20.19.4 || ^22.13.0 || ^24.3.0 || >= 25).
+node_supported() {
+  local major="${1%%.*}"
+  case "$major" in
+    20) version_ge "$1" 20.19.4 ;;
+    22) version_ge "$1" 22.13.0 ;;
+    24) version_ge "$1" 24.3.0 ;;
+    *) [ "$major" -ge 25 ] 2>/dev/null ;;
+  esac
+}
+
+install_node() {
+  local version file sum
+  platform
+  work_dir
+  fetch "$NODE_MIRROR/index.tab" "$work/index.tab"
+  # Newest first; the 10th column names the LTS line, or is "-".
+  version="$(awk -F'\t' 'NR > 1 && $10 != "-" { print $1; exit }' "$work/index.tab")"
+  if [ -z "$version" ]; then fail "No encontré la versión LTS de Node.js en $NODE_MIRROR."; fi
+  file="node-$version-$os-$node_arch.tar.gz"
+  step "Bajando Node.js ${version#v} (LTS)..."
+  fetch "$NODE_MIRROR/$version/SHASUMS256.txt" "$work/SHASUMS256.txt"
+  sum="$(awk -v file="$file" '$2 == file { print $1 }' "$work/SHASUMS256.txt")"
+  if [ -z "$sum" ]; then fail "Node.js ${version#v} no tiene versión para $os-$node_arch."; fi
+  fetch "$NODE_MIRROR/$version/$file" "$work/$file" big
+  check_sum "$work/$file" "$sum"
+  tar -xzf "$work/$file" -C "$work"
+  mkdir -p "$TOOLS"
+  rm -rf "$TOOLS/node"
+  mv "$work/${file%.tar.gz}" "$TOOLS/node"
+}
+
+ensure_node() {
+  local have
+  have="$(node_version)"
+  if [ -n "$have" ] && node_supported "$have" && command -v npm >/dev/null 2>&1; then
+    ok "Node.js $have ($(have_note node node))"
+    return
+  fi
+  if [ -z "$have" ]; then
+    step "Falta Node.js, para la app."
+  elif ! node_supported "$have"; then
+    step "Tu Node.js ($have) no le sirve a la app: necesita 20.19.4, 22.13, 24.3 o más nuevo."
+  else
+    step "Tu Node.js ($have) no trae npm."
+  fi
+  install_node
+  use_local_tools
+  installed_tools=1
+  have="$(node_version)"
+  if [ -z "$have" ] || ! node_supported "$have"; then
+    fail "Bajé Node.js a .tools/node, pero no arranca en esta computadora."
+  fi
+  ok "Node.js $have (nuevo, en .tools/node)"
+}
+
+# --- Domfin ---------------------------------------------------------------
+
+ensure_git() {
+  local v
+  if v="$(git --version 2>/dev/null)"; then
+    v="${v#git version }"
+    ok "Git ${v%% *} (ya lo tenías)"
+  else
+    note "Falta Git. Domfin funciona sin él, pero lo necesitas para actualizarlo (git pull): https://git-scm.com/downloads"
+  fi
+}
+
+ensure_api() {
+  # With GOPROXY=off, go mod download only succeeds if every module is here.
+  if (cd "$ROOT/api" && GOTOOLCHAIN=local GOPROXY=off go mod download) >/dev/null 2>&1; then
+    ok "Módulos de domfin-api (ya estaban)"
+  else
+    step "Bajando los módulos de domfin-api..."
+    (cd "$ROOT/api" && GOTOOLCHAIN=local go mod download) || fail "No pude bajar los módulos de domfin-api."
+    ok "Módulos de domfin-api (descargados)"
+  fi
+
+  if [ -x "$API_BIN" ] && [ -z "$(find "$ROOT/api" -type f -newer "$API_BIN" -print -quit)" ]; then
+    ok "domfin-api compilada (ya estaba al día)"
+    return
+  fi
+  if [ -x "$API_BIN" ]; then
+    step "Compilando domfin-api..."
+  else
+    step "Compilando domfin-api (la primera vez tarda unos minutos)..."
+  fi
+  mkdir -p "$TOOLS/bin"
+  (cd "$ROOT/api" && GOTOOLCHAIN=local go build -buildvcs=false -o "$API_BIN" ./cmd/api) ||
+    fail "No pude compilar domfin-api."
+  ok "domfin-api compilada"
+}
+
+ensure_app() {
+  local stamp node
+  node="$(node_version)"
+  stamp="$(sha256 "$ROOT/app/package-lock.json") node${node%%.*} $(uname -sm)"
+  if [ -f "$APP_STAMP" ] && [ "$(cat "$APP_STAMP")" = "$stamp" ]; then
+    ok "Dependencias de la app (ya estaban)"
+    return
+  fi
+  step "Instalando las dependencias de la app (npm ci, tarda unos minutos)..."
+  (cd "$ROOT/app" && npm ci --no-audit --no-fund --loglevel=error) ||
+    fail "No pude instalar las dependencias de la app."
+  printf '%s\n' "$stamp" >"$APP_STAMP"
+  ok "Dependencias de la app (instaladas)"
+}
+
+cmd_setup() {
+  if [ "${1:-}" = --quiet ]; then quiet=1; fi
+  if [ "$quiet" = 0 ]; then printf '%sDomfin%s: revisando lo que hace falta\n\n' "$bold" "$reset"; fi
+  use_local_tools
+  ensure_git
+  ensure_go
+  ensure_node
+  ensure_api
+  ensure_app
+  if [ "$quiet" = 1 ]; then return; fi
+  printf '\n%sListo.%s Arranca Domfin con:\n\n  ./domfin start\n\n' "$bold" "$reset"
+  printf 'O pruébalo con datos de ejemplo:\n\n  ./domfin start --demo\n'
+  if [ "$installed_tools" = 1 ]; then
+    printf '\nGo y Node.js quedaron en .tools/, solo para Domfin: no se instalaron en tu sistema.\n'
+  fi
+}
+
+# --- start ----------------------------------------------------------------
+
+# port_busy PORT: whether something already listens on PORT.
+port_busy() {
+  (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null
+}
+
+# is_domfin PORT: whether what listens on PORT is a domfin-api.
+is_domfin() {
+  local body
+  body="$(http_get "http://127.0.0.1:$1/updates")" || return 1
+  case "$body" in *'"version"'*) return 0 ;; *) return 1 ;; esac
+}
+
+check_port() {
+  case "$1" in '' | *[!0-9]*) fail "\"$1\" no es un puerto: usa un número, como 8090." ;; esac
+}
+
+cmd_start() {
+  local demo=0 api_port=8080 app_port=8081 reuse=0 i
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --demo) demo=1 ;;
+      --api-port | --app-port)
+        if [ $# -lt 2 ]; then fail "Falta el número de puerto después de $1."; fi
+        if [ "$1" = --api-port ]; then api_port="$2"; else app_port="$2"; fi
+        shift
+        ;;
+      --api-port=*) api_port="${1#*=}" ;;
+      --app-port=*) app_port="${1#*=}" ;;
+      -h | --help)
+        usage
+        exit 0
+        ;;
+      *) fail "No conozco la opción $1. Mira ./domfin help." ;;
+    esac
+    shift
+  done
+  check_port "$api_port"
+  check_port "$app_port"
+  if [ "$api_port" = "$app_port" ]; then fail "domfin-api y la app no pueden usar el mismo puerto."; fi
+
+  cmd_setup --quiet
+  use_local_tools
+
+  if port_busy "$app_port"; then
+    fail "El puerto $app_port está ocupado (¿ya está corriendo la app?). Usa otro: ./domfin start --app-port 8091"
+  fi
+  if port_busy "$api_port"; then
+    if ! is_domfin "$api_port"; then
+      fail "El puerto $api_port está ocupado por otro programa. Usa otro: ./domfin start --api-port 8090"
+    fi
+    if [ "$demo" = 1 ]; then
+      fail "Ya hay una domfin-api, con tu base, en el puerto $api_port. Apágala para ver los datos de ejemplo, o usa otro puerto: ./domfin start --demo --api-port 8090"
+    fi
+    reuse=1
+  fi
+
+  if [ "$demo" = 1 ]; then
+    demo_dir="$(mktemp -d "${TMPDIR:-/tmp}/domfin-demo.XXXXXX")"
+    export DOMFIN_DATA_DIR="$demo_dir"
+    step "Preparando los datos de ejemplo..."
+    (cd "$ROOT/api" && GOTOOLCHAIN=local go run -buildvcs=false ./cmd/demo >/dev/null) ||
+      fail "No pude preparar los datos de ejemplo."
+  fi
+
+  if [ "$reuse" = 1 ]; then
+    step "domfin-api ya está corriendo en el puerto $api_port: uso esa."
+  else
+    (cd "$ROOT/api" && export PORT="$api_port" && exec "$API_BIN") &
+    api_pid=$!
+    for i in $(seq 1 150); do
+      if http_get "http://127.0.0.1:$api_port/health" >/dev/null; then break; fi
+      if ! kill -0 "$api_pid" 2>/dev/null; then
+        api_pid=''
+        fail "domfin-api no arrancó: mira el error de arriba."
+      fi
+      if [ "$i" = 150 ]; then fail "domfin-api no responde en el puerto $api_port."; fi
+      sleep 0.2
+    done
+  fi
+
+  if [ "$api_port" != 8080 ]; then export EXPO_PUBLIC_API_URL="http://localhost:$api_port"; fi
+  # Domfin promises to only go online for the BCRD rate and new versions:
+  # no telemetry or checks from Expo while it runs.
+  export EXPO_NO_TELEMETRY="${EXPO_NO_TELEMETRY:-1}"
+  export EXPO_OFFLINE="${EXPO_OFFLINE:-1}"
+
+  printf '\n%sDomfin está corriendo%s' "$bold" "$reset"
+  if [ "$demo" = 1 ]; then printf ' con datos de ejemplo'; fi
+  printf '\n  App: http://localhost:%s (se abre sola en tu navegador)\n' "$app_port"
+  printf '  API: http://localhost:%s\n' "$api_port"
+  printf '  Para apagar Domfin, presiona Ctrl+C.\n\n'
+
+  cd "$ROOT/app"
+  ./node_modules/.bin/expo start --web --port "$app_port"
+}
+
+case "${1:-help}" in
+  setup) shift && cmd_setup "$@" ;;
+  start) shift && cmd_start "$@" ;;
+  help | -h | --help) usage ;;
+  *)
+    printf 'No conozco el comando "%s".\n\n' "$1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

@@ -4,6 +4,9 @@ CLAUDE.local.md
 .claude/settings.local.json
 .DS_Store
 
+# What ./domfin setup downloads and builds: Go, Node.js and domfin-api.
+.tools/
+
 # Bank data never goes in the repository, anywhere in it.
 *.pdf
 *.db

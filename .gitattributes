@@ -1,0 +1,5 @@
+# The launchers keep the line endings their shells need, whatever
+# core.autocrlf says: bash breaks on CRLF, and Windows expects it.
+domfin text eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

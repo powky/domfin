@@ -1,0 +1,92 @@
+name: Instalador
+
+# ./domfin and domfin.cmd on a computer without Go or Node.js: setup brings
+# them, a second setup installs nothing, and start --demo serves the app.
+on:
+  push:
+    branches: [main]
+    paths: ['domfin', 'domfin.cmd', 'scripts/**', '.github/workflows/launcher.yml']
+  pull_request:
+    paths: ['domfin', 'domfin.cmd', 'scripts/**', '.github/workflows/launcher.yml']
+
+permissions:
+  contents: read
+
+env:
+  BROWSER: none
+
+jobs:
+  unix:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      # The runners keep their Go and Node.js out of this PATH.
+      - name: setup desde cero
+        run: |
+          export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+          ./domfin setup | tee setup.log
+          grep -q 'nuevo, en .tools/go' setup.log
+      - name: setup otra vez no instala nada
+        run: |
+          export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+          ./domfin setup | tee setup.log
+          if grep -q '→' setup.log; then echo 'La segunda vez instaló algo.'; exit 1; fi
+      - name: start --demo
+        run: |
+          export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+          ./domfin start --demo > start.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -fsS -o accounts.json http://127.0.0.1:8080/accounts && grep -q '"1234"' accounts.json && curl -fsS -o /dev/null http://localhost:8081; then
+              echo 'Domfin respondió.'
+              exit 0
+            fi
+            sleep 2
+          done
+          cat start.log
+          exit 1
+
+  windows:
+    name: windows-latest
+    runs-on: windows-latest
+    defaults:
+      run:
+        # Windows PowerShell 5.1, the one domfin.cmd uses.
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v4
+      # The runner keeps its Go and Node.js out of this PATH.
+      - name: setup desde cero
+        run: |
+          $env:Path = "$env:SystemRoot\System32;$env:SystemRoot;$env:SystemRoot\System32\WindowsPowerShell\v1.0;C:\Program Files\Git\cmd"
+          $log = & cmd.exe /c 'domfin.cmd setup 2>&1'
+          $code = $LASTEXITCODE
+          $log
+          if ($code -ne 0) { exit $code }
+          if (-not ($log -match 'nuevo, en \.tools\\go')) { 'No instaló Go.'; exit 1 }
+      - name: setup otra vez no instala nada
+        run: |
+          $env:Path = "$env:SystemRoot\System32;$env:SystemRoot;$env:SystemRoot\System32\WindowsPowerShell\v1.0;C:\Program Files\Git\cmd"
+          $log = & cmd.exe /c 'domfin.cmd setup 2>&1'
+          $code = $LASTEXITCODE
+          $log
+          if ($code -ne 0) { exit $code }
+          if ($log -match '^\s+->\s') { 'La segunda vez instaló algo.'; exit 1 }
+      - name: start --demo
+        run: |
+          $env:Path = "$env:SystemRoot\System32;$env:SystemRoot;$env:SystemRoot\System32\WindowsPowerShell\v1.0;C:\Program Files\Git\cmd"
+          Start-Process -FilePath cmd.exe -ArgumentList '/c', 'domfin.cmd', 'start', '--demo' -RedirectStandardOutput start.log -RedirectStandardError start.err -NoNewWindow
+          for ($i = 0; $i -lt 90; $i++) {
+            try {
+              $accounts = (Invoke-WebRequest -Uri http://127.0.0.1:8080/accounts -UseBasicParsing -TimeoutSec 5).Content
+              Invoke-WebRequest -Uri http://localhost:8081 -UseBasicParsing -TimeoutSec 5 | Out-Null
+              if ($accounts -match '"1234"') { 'Domfin respondió.'; exit 0 }
+            } catch { }
+            Start-Sleep -Seconds 2
+          }
+          Get-Content start.log, start.err
+          exit 1

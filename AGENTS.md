@@ -16,6 +16,8 @@ la misma computadora.
 ## Comandos
 
 ```bash
+./domfin setup                                # instala lo que falte y salta lo demás
+./domfin start [--demo]                       # API (:8080) y app (:8081) juntas
 cd api && go run ./cmd/api                    # :8080
 cd api && go test ./... && gofmt -l .         # gofmt debe salir vacío
 cd app && npm run web                         # :8081
@@ -34,3 +36,6 @@ cd app && npm run typecheck && npm run lint
   español neutro, de "tú", y en inglés.
 - La app y la API comparten la versión (ver *Publicar una versión* en
   CONTRIBUTING).
+- El lanzador tiene dos versiones: `domfin` (bash 3.2, para macOS y Linux) y
+  `scripts/domfin.ps1` (Windows PowerShell 5.1, por `domfin.cmd`). Un cambio
+  va en las dos.

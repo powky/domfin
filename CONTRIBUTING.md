@@ -39,7 +39,8 @@ Si encuentras una vulnerabilidad, no abras un issue público: mira
 
 ## Montar el entorno
 
-Sigue [Cómo montarlo](README.md#cómo-montarlo). Antes de abrir un pull
+Sigue [Cómo montarlo](README.md#cómo-montarlo): `./domfin setup` deja todo
+listo y `./domfin start` arranca la API y la app. Antes de abrir un pull
 request, según lo que cambies:
 
 ```bash
@@ -48,11 +49,16 @@ cd app && npm run typecheck && npm run lint
 ```
 
 Para trabajar sin tus datos, usa los
-[datos de ejemplo](README.md#con-datos-de-ejemplo): cubren cada pantalla y
-sirven para las capturas. Para probar la API con tus estados sin tocar tu
+[datos de ejemplo](README.md#con-datos-de-ejemplo) (`./domfin start --demo`):
+cubren cada pantalla y sirven para las capturas. Para probar la API con tus estados sin tocar tu
 base, usa otra carpeta:
 `DOMFIN_DATA_DIR=/tmp/domfin-prueba go run ./cmd/api`, o
 `go run ./cmd/statements import -dry-run <carpeta>`.
+
+El lanzador tiene dos versiones que hacen lo mismo: `domfin`, en bash (3.2,
+el que trae macOS), para macOS y Linux, y `scripts/domfin.ps1`, en Windows
+PowerShell 5.1, que corre `domfin.cmd`. Un cambio va en las dos; el
+workflow *Instalador* las prueba en los tres sistemas.
 
 ## Reglas del código
 
