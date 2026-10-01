@@ -1,11 +1,29 @@
-# Domfin
+<p align="center">
+  <img src="docs/images/logo.svg" alt="" width="80" height="80">
+</p>
 
-Tus finanzas personales en República Dominicana, armadas con los estados de
-cuenta de tu banco: en pesos y en dólares, y sin que tu información salga de
-tu computadora.
+<h1 align="center">Domfin</h1>
+
+<p align="center">
+  Tus finanzas personales en República Dominicana, armadas con los estados de
+  cuenta de tu banco: en pesos y en dólares, y sin que tu información salga de
+  tu computadora.
+</p>
+
+<p align="center">
+  <a href="#cómo-montarlo">Cómo montarlo</a> ·
+  <a href="#con-datos-de-ejemplo">Pruébalo con datos de ejemplo</a> ·
+  <a href="#hoja-de-ruta">Hoja de ruta</a> ·
+  <a href="CONTRIBUTING.md">Cómo contribuir</a>
+</p>
+
+![Flujo de caja en Domfin: un diagrama de Sankey que va de los ingresos a los gastos por grupo, las inversiones y lo que quedó en tus cuentas](docs/images/flujo-de-caja.png)
 
 Domfin lee los PDF que te da tu banco, clasifica cada movimiento y te muestra
 a dónde se fue tu dinero, cuánto tienes y cuánto debes.
+
+<sub>Todas las capturas usan datos inventados, los mismos que puedes cargar
+para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 
 ## Qué hace
 
@@ -28,6 +46,39 @@ a dónde se fue tu dinero, cuánto tienes y cuánto debes.
 - **Montos ocultos**: el ojito de arriba los cambia por `RD$x,xxx.xx` cuando
   alguien más puede ver tu pantalla.
 - En español y en inglés, en la web, iOS y Android.
+
+## Cómo se ve
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/gastos.png" alt="Gastos: el total del período, el promedio mensual y una dona por categoría">
+      <p align="center"><b>Gastos</b> por grupo, categoría y comercio</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/transacciones.png" alt="Transacciones agrupadas por día, cada una con su categoría, su cuenta y su monto">
+      <p align="center"><b>Transacciones</b> clasificadas solas</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/patrimonio-neto.png" alt="Patrimonio neto: activos, pasivos y su evolución mes a mes">
+      <p align="center"><b>Patrimonio neto</b> mes a mes</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/posesiones.png" alt="Posesiones: un apartamento en plano con su plan de pagos, acciones, un fondo de pensiones y un vehículo">
+      <p align="center"><b>Posesiones</b> que ningún estado muestra</p>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/images/telefono-gastos.png" alt="Gastos en el teléfono" width="240">
+  &nbsp;
+  <img src="docs/images/telefono-transacciones.png" alt="Transacciones en el teléfono" width="240">
+  &nbsp;
+  <img src="docs/images/telefono-posesiones.png" alt="Posesiones en el teléfono" width="240">
+</p>
 
 ## Qué bancos lee
 
@@ -79,6 +130,31 @@ go run ./cmd/api
 
 La primera vez descarga sus dependencias. Cuando diga
 `domfin-api escuchando en :8080`, déjala corriendo en esa terminal.
+
+#### Con datos de ejemplo
+
+Para ver Domfin antes de darle tus estados, arranca domfin-api con una base
+aparte, llena de datos inventados (los de las capturas): una cuenta de
+nómina, una en dólares, dos tarjetas, un préstamo, un certificado y algunas
+posesiones, desde enero del año pasado.
+
+```bash
+cd api
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo
+DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/api
+```
+
+En Windows, desde PowerShell:
+
+```powershell
+cd api
+$env:DOMFIN_DATA_DIR = "$env:TEMP\domfin-demo"
+go run ./cmd/demo
+go run ./cmd/api
+```
+
+Tu base de siempre no se toca. Para volver a ella, apaga domfin-api y
+arráncala como arriba (en Windows, desde una terminal nueva).
 
 ### 3. Arranca la app
 
@@ -174,6 +250,74 @@ opciones de domfin-api están en [su README](api/README.md#configuración).
   Domfin, abre un issue describiéndolo **sin datos reales**.
 - **"No es un estado que Domfin sepa leer"**: ese banco o documento aún no
   está soportado.
+
+## Hoja de ruta
+
+Lo que viene, sin fechas ni un orden estricto. Si algo te interesa o quieres
+proponer otra cosa,
+[abre una idea](https://github.com/powky/domfin/issues/new?template=idea.md).
+
+### Próximamente
+
+**Movimientos más claros**
+
+- [ ] Nombres y logos de los comercios, en lugar de la descripción que
+  imprime el banco.
+- [ ] Clasificar los retiros de efectivo según en qué se gastó ese dinero.
+- [ ] Proyectos: juntar gastos de distintas categorías en un mismo proyecto
+  (una mudanza, una boda, un negocio propio) y ver cuánto lleva cada uno.
+- [ ] Guardar lo que marcas como revisado, lo que ocultas y lo que agregas a
+  mano. Hoy dura mientras la app está abierta.
+
+**Salario y gastos fijos**
+
+- [ ] Desglose de la nómina: lo que te descuentan cada mes (ISR, AFP y SFS)
+  y lo acumulado en el año.
+- [ ] Gastos fijos: cuánto suman cada mes los pagos que no puedes dejar de
+  hacer (alquiler, servicios, cuotas y suscripciones).
+
+**Planificación**
+
+- [ ] Préstamos: cuánto te falta y cuándo terminas de pagar cada uno,
+  incluidos los que subsidia tu empleador.
+- [ ] Proyecciones: tu flujo de caja de los próximos meses con tu salario,
+  tus beneficios laborales (bonificación, regalía pascual) y los planes de
+  pago que ya tienes.
+- [ ] Inversiones en el tiempo: cuánto les has puesto, cuánto valen y cuánto
+  te han costado.
+- [ ] Simular compras grandes, como una vivienda o un vehículo, y ver cómo
+  cambian tu flujo de caja y tu patrimonio.
+- [ ] Año contra año: tus ingresos, gastos y ahorro frente a los del año
+  anterior, con lo que subió y lo que bajó.
+
+**Plataforma**
+
+- [ ] Más bancos dominicanos; hoy lee el Popular y Qik. Si tienes estados de
+  otro, mira [cómo agregar un banco](CONTRIBUTING.md#agregar-un-banco).
+- [ ] Respaldo privado y cifrado de tu base, por ejemplo en iCloud Drive.
+- [ ] Modo oscuro.
+
+### Ya disponible
+
+- [x] Estados del Banco Popular (tarjetas de crédito, cuentas de ahorro y
+  corrientes, préstamos y certificados financieros), incluso escaneados, y
+  de las tarjetas Qik.
+- [x] Clasificación automática de cada movimiento: por el código del
+  comercio, la descripción del banco, tu nómina y tus reglas.
+- [x] Salario, bonos, bonificaciones, ingresos adicionales y entregas sueltas
+  (como un regalo), cada uno por su lado; lo que inviertes no cuenta como
+  gasto.
+- [x] Transferencias entre tus cuentas, avances de efectivo y cambios de
+  moneda emparejados, para que no cuenten como ingreso ni como gasto.
+- [x] Certificados financieros e intereses, con la retención de la DGII.
+- [x] El 0.15% que cobra la DGII a las transferencias, clasificado como
+  impuesto.
+- [x] La tasa del dólar del Banco Central del día de cada movimiento, con el
+  histórico guardado en tu computadora.
+- [x] Patrimonio neto, préstamos y posesiones: un inmueble en plano con su
+  plan de pagos, acciones, tu fondo de pensiones y tu vehículo, que se
+  deprecia.
+- [x] Español e inglés; web, iOS y Android.
 
 ## Cómo está hecho
 

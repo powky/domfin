@@ -17,8 +17,10 @@ tests, ejemplos y capturas:
   columnas trae, cómo se ve una línea (`27 MAR  27 MAR  CREDITO NOMINA
   30,000.00  110,000.00`). Los tests generan PDF falsos con
   `api/internal/testpdf`, que imita los reales.
-- Las capturas, con los montos ocultos (el ojito de arriba) y sin nombres
-  que te identifiquen.
+- Las capturas, con los
+  [datos de ejemplo](README.md#con-datos-de-ejemplo) o, si tienen que ser
+  tuyas, con los montos ocultos (el ojito de arriba) y sin nombres que te
+  identifiquen.
 - Antes de abrir un pull request, revisa el diff buscando datos tuyos.
 
 ## Seguridad
@@ -45,7 +47,10 @@ cd api && go test ./... && gofmt -l .      # gofmt debe salir vacío
 cd app && npm run typecheck && npm run lint
 ```
 
-Para probar la API con tus estados sin tocar tu base, usa otra carpeta:
+Para trabajar sin tus datos, usa los
+[datos de ejemplo](README.md#con-datos-de-ejemplo): cubren cada pantalla y
+sirven para las capturas. Para probar la API con tus estados sin tocar tu
+base, usa otra carpeta:
 `DOMFIN_DATA_DIR=/tmp/domfin-prueba go run ./cmd/api`, o
 `go run ./cmd/statements import -dry-run <carpeta>`.
 
