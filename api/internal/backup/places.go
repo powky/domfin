@@ -74,7 +74,7 @@ func detectPlaces(home, goos string, getenv func(string) string) []Place {
 	case "darwin":
 		add("icloud", "", filepath.Join(home, "Library", "Mobile Documents", "com~apple~CloudDocs"))
 		// Google Drive, Dropbox and OneDrive live in CloudStorage, one folder
-		// per account: GoogleDrive-ana@gmail.com, Dropbox, OneDrive-Personal.
+		// per account: GoogleDrive-ana@example.com, Dropbox, OneDrive-Personal.
 		cloud := filepath.Join(home, "Library", "CloudStorage")
 		entries, _ := os.ReadDir(cloud)
 		for _, entry := range entries {
