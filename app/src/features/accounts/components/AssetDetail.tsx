@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { Link } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -65,9 +66,9 @@ export function AssetDetail({ accountId }: { accountId: string }) {
 }
 
 /** "Installment 3 of 8", "Reservation"… */
-export function scheduleLabel(item: ScheduleItem, t: ReturnType<typeof useTranslation>['t']) {
+export function scheduleLabel(item: ScheduleItem, t: TFunction) {
   return item.kind === 'installment'
-    ? t('assets.detail.labels.installment', { number: item.number, count: item.count })
+    ? t('assets.detail.labels.installment', { number: item.number ?? 0, count: item.count ?? 0 })
     : t(`assets.detail.labels.${item.kind}`);
 }
 
