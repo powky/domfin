@@ -1,6 +1,6 @@
 import type { DocumentPickerAsset } from 'expo-document-picker';
 
-/** A file as React Native's `fetch` uploads it on iOS and Android. */
+/** A file as React Native's XMLHttpRequest uploads it on iOS and Android (see apiPostForm). */
 type NativeFile = { uri: string; name: string; type: string };
 
 /**
