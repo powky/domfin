@@ -40,7 +40,7 @@ const styles = StyleSheet.create((theme) => ({
     lineHeight: theme.font.lineHeight.xs,
     variants: {
       appearance: {
-        subtle: { color: theme.colors.accent.default },
+        subtle: { color: theme.colors.text.accent },
         solid: { color: theme.colors.accent.onAccent },
       },
     },

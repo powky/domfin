@@ -90,7 +90,7 @@ const styles = StyleSheet.create((theme) => ({
     pointerEvents: 'none',
     top: 0,
     left: 0,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceRaised,
     borderWidth: theme.layout.hairline,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm + 2,

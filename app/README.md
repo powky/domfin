@@ -13,6 +13,7 @@ npx expo run:ios     # development build (Expo Go no sirve: usa módulos nativos
 npx expo run:android
 npm run typecheck
 npm run lint
+npm run contrast     # el contraste de los colores, en el tema claro y el oscuro
 ```
 
 Por dentro (de dónde sale cada dato, la estructura de carpetas, el design

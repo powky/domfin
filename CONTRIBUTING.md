@@ -45,7 +45,7 @@ request, según lo que cambies:
 
 ```bash
 cd api && go test ./... && gofmt -l .      # gofmt debe salir vacío
-cd app && npm run typecheck && npm run lint
+cd app && npm run typecheck && npm run lint && npm run contrast
 ```
 
 Para trabajar sin tus datos, usa los
@@ -91,7 +91,10 @@ workflow *Instalador* las prueba en los tres sistemas.
   Movimientos), Flujo de caja, Gastos, Patrimonio neto, Cuentas, Préstamos,
   Posesiones, Configuración, Saldo, Comercio y Monto.
 - Solo tokens semánticos del tema (`theme.colors.*`, `theme.space[*]`…):
-  nada de colores hex ni números sueltos, tampoco en las animaciones.
+  nada de colores hex ni números sueltos, tampoco en las animaciones. Cada
+  color tiene versión clara y oscura (`src/theme/themes.ts`), y
+  `npm run contrast` revisa que el texto, los íconos y los gráficos se lean
+  en las dos.
 - Montos y fechas con `src/lib/format.ts` y `src/lib/dates.ts`, nunca con un
   locale fijo. Los montos se muestran con `Text`, para que el ojito los
   oculte.

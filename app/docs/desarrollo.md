@@ -11,6 +11,7 @@ npm run web          # web, en http://localhost:8081
 npx expo run:ios     # development build (Unistyles usa módulos nativos: Expo Go no sirve)
 npx expo run:android
 npm run typecheck && npm run lint
+npm run contrast     # el contraste de los colores, en el tema claro y el oscuro
 ```
 
 ## Datos
@@ -102,7 +103,7 @@ ImageMagick:
 | `assets/icon.png` | iOS, y Android antes de los íconos adaptativos | 1024 px, naranja de borde a borde (el sistema redondea las esquinas) y la vela del tamaño que tiene en el logo. Sin transparencia, como pide Apple. |
 | `assets/android-icon-foreground.png` | La capa de adelante del ícono adaptativo | La vela blanca en 108 dp, de los que se ven los 72 del medio; queda dentro de la zona segura de 66. El fondo es el `backgroundColor` naranja de `app.json`. |
 | `assets/android-icon-monochrome.png` | El ícono temático de Android 13 | La misma vela: Android la pinta con los colores del tema. |
-| `assets/splash-icon.png` | La pantalla de carga (`expo-splash-screen`) | El logo en los dos tercios del medio (Android 12 recorta a ese círculo), sobre el fondo de la app, `#F7F6F3`, a 200 de ancho. |
+| `assets/splash-icon.png` | La pantalla de carga (`expo-splash-screen`) | El logo en los dos tercios del medio (Android 12 recorta a ese círculo), sobre el fondo de la app (`#F7F6F3`, y `#121110` con el modo oscuro del dispositivo), a 200 de ancho. |
 | `assets/favicon.png` | La pestaña del navegador | El logo, 48 px. |
 
 La pantalla de carga sigue hasta que el layout raíz tiene las fuentes, el
@@ -130,8 +131,9 @@ src/
     navigation/           AppShell, Sidebar, BottomTabBar y config de navegación
     brand/                Logo (de él salen los íconos: scripts/icons.sh)
   theme/
-    tokens/               Tokens crudos: palette, spacing, radius, typography, layout, motion
-    themes.ts             Tokens semánticos (colors.text.primary, colors.accent.subtle, ...)
+    tokens/               Tokens crudos: palette, spacing, radius, typography, layout, motion, elevation
+    themes.ts             Tokens semánticos (colors.text.primary, colors.accent.subtle, ...), claros y oscuros
+    appearance.ts         Sistema, claro u oscuro: la preferencia y cómo se aplica
     breakpoints.ts        xs 0 · sm 576 · md 768 · lg 1024 · xl 1280
     unistyles.ts          StyleSheet.configure + tipos
   services/api/           Cliente HTTP compartido
@@ -147,8 +149,8 @@ src/
   `theme.space[*]`, `theme.radius.*`, `theme.font.*`); nunca hex ni números mágicos.
 - Responsive con breakpoints de Unistyles dentro de los estilos
   (`display: { xs: 'none', md: 'flex' }`), sin re-renders.
-- Para agregar dark mode: crear `darkTheme` con la misma forma en `themes.ts`,
-  añadirlo a `appThemes` y activar `adaptiveThemes`.
+- Cada color tiene su versión clara y oscura (ver *Temas*): un token nuevo va
+  en los dos temas.
 - Las pantallas consumen datos solo vía hooks en `features/<feature>/api`.
 - Ningún texto visible se escribe en los componentes: va como clave en
   `src/i18n/locales/en/<feature>.ts` y su traducción en `es/` (TypeScript exige que el
@@ -160,6 +162,37 @@ src/
   idioma de la app con la región del dispositivo (es-US, es-DO...). Nunca `'en-US'` fijo.
 - Dentro de `<Link asChild>` usar `Touchable` (de `components/ui`), porque el
   Slot de Expo Router no acepta arrays de estilos.
+
+### Temas: claro y oscuro
+
+- `src/theme/themes.ts` da a cada token semántico su color en el tema claro y
+  en el oscuro. El oscuro usa grises cálidos, con las tarjetas más claras que
+  el fondo, y conserva el naranja de la marca: sobre él, las etiquetas y las
+  marcas van oscuras, y el texto naranja es un tono más claro. Los gráficos y
+  los avatares de marca tienen los mismos colores en los dos temas, salvo los
+  pocos que no se leían sobre el fondo oscuro. El logo no cambia
+  (`colors.brand`).
+- *Configuración → Apariencia* elige Sistema, Claro u Oscuro, y se guarda en
+  el dispositivo (`src/theme/appearance.ts`). Con Sistema, la app sigue el
+  modo del dispositivo y cambia con él aunque esté abierta. En iOS y Android,
+  lo que el sistema dibuja dentro de la app (el teclado en iOS, las barras de
+  desplazamiento) sigue el tema elegido (`Appearance.setColorScheme`). La app
+  elige el tema y Unistyles lo pone con `setTheme`, sin `adaptiveThemes`.
+- `npm run contrast` (`scripts/contrast.mjs`) revisa que lo que la app pone
+  junto se lea en los dos temas, con los mínimos de WCAG 2.2 AA: 4.5:1 el
+  texto; 3:1 los íconos, los gráficos y el borde de los controles. Un token
+  nuevo que sea texto o ícono va también en su lista de pares. El tema claro
+  es anterior a esta revisión y tiene pares por debajo (`pendingInLight`, con
+  el contraste de hoy, que no puede bajar). Corre en CI.
+- En la web, Unistyles cambia los colores del tema por variables CSS dentro de
+  `StyleSheet.create`, así que ahí no se puede operar con ellos (agregarles
+  transparencia, compararlos). Para eso `useUnistyles()` da los valores
+  reales, como en el Sankey. Por lo mismo las sombras (`elevation`, en
+  `tokens/`) están fuera del tema: una variable no acepta la opacidad de la
+  sombra.
+- El fondo de cada tema está también en `app.json` (la pantalla de carga y su
+  variante oscura) y en `public/index.html` (lo que pinta la web mientras
+  carga la app): si cambia, cámbialo ahí.
 
 ### Monedas
 

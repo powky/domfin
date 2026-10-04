@@ -12,12 +12,15 @@ import {
 } from './tokens';
 
 /**
- * Semantic tokens. Components only read from here, so adding a dark theme
- * later means adding another object with the same shape.
+ * Semantic tokens. Components only read from here: each theme gives every
+ * token its own color, so a component looks right in both without knowing
+ * which one is on. `npm run contrast` checks that what goes together reads.
  */
 const lightColors = {
   background: palette.neutral[50],
   surface: palette.white,
+  /** What sits over the rest: menus, tooltips, the thumb of a segmented control. */
+  surfaceRaised: palette.white,
   surfaceMuted: palette.neutral[100],
   surfaceHover: palette.neutral[100],
   border: palette.neutral[150],
@@ -27,6 +30,7 @@ const lightColors = {
     primary: palette.neutral[900],
     secondary: palette.neutral[600],
     tertiary: palette.neutral[400],
+    /** On the accent and on chart colors, like a primary button's label. */
     inverse: palette.white,
     accent: palette.orange[500],
     positive: palette.green[500],
@@ -92,7 +96,75 @@ const lightColors = {
     pink: { background: palette.pink[500], foreground: palette.white, border: palette.pink[500] },
     dark: { background: palette.neutral[800], foreground: palette.white, border: palette.neutral[800] },
   },
-} as const;
+
+  /** The logo: an orange circle with a white sail in every theme, like the app's icon. */
+  brand: { mark: palette.orange[500], sail: palette.white },
+};
+
+/** The light theme's tokens, each one free to take any color: what every theme fills in. */
+type Colors<T> = { [K in keyof T]: T[K] extends string ? string : Colors<T[K]> };
+export type ThemeColors = Colors<typeof lightColors>;
+
+/**
+ * Warm dark grays, with the cards lighter than the background as in the light
+ * theme. The accent keeps the brand's orange: labels and checks go dark on it,
+ * and its text is a lighter orange. Charts and brand avatars keep their colors,
+ * except the few too dark to read on these surfaces.
+ */
+const darkColors: ThemeColors = {
+  background: palette.neutralDark[950],
+  surface: palette.neutralDark[900],
+  surfaceRaised: palette.neutralDark[750],
+  surfaceMuted: palette.neutralDark[800],
+  surfaceHover: palette.neutralDark[800],
+  border: palette.neutralDark[750],
+  borderStrong: palette.neutralDark[700],
+
+  text: {
+    primary: palette.neutralDark[50],
+    secondary: palette.neutralDark[300],
+    tertiary: palette.neutralDark[400],
+    inverse: palette.neutralDark[950],
+    accent: palette.orange[400],
+    positive: palette.green[400],
+  },
+
+  accent: {
+    default: palette.orange[500],
+    pressed: palette.orange[400],
+    subtle: palette.orange[900],
+    muted: palette.orange[800],
+    onAccent: palette.neutralDark[950],
+  },
+
+  track: palette.neutralDark[750],
+  overlay: 'rgba(0, 0, 0, 0.32)',
+
+  spending: palette.red[500],
+
+  positive: palette.green[400],
+  negative: palette.red[500],
+
+  chart: {
+    ...lightColors.chart,
+    incomeLink: palette.green[900],
+    slate: palette.slate[500],
+    slateLight: palette.slate[600],
+    navy: palette.navy[400],
+    plum: palette.plum[400],
+  },
+
+  control: palette.neutralDark[500],
+
+  avatar: {
+    ...lightColors.avatar,
+    neutral: { background: palette.neutralDark[750], foreground: palette.neutralDark[300], border: palette.neutralDark[750] },
+    outline: { background: palette.neutralDark[900], foreground: palette.neutralDark[300], border: palette.neutralDark[700] },
+    dark: { background: palette.neutral[700], foreground: palette.white, border: palette.neutral[700] },
+  },
+
+  brand: lightColors.brand,
+};
 
 const base = {
   space,
@@ -103,15 +175,17 @@ const base = {
   motion,
 } as const;
 
-export const lightTheme = {
-  ...base,
-  colors: lightColors,
-} as const;
+export type AppTheme = typeof base & { colors: ThemeColors };
+export type ChartColor = keyof ThemeColors['chart'];
+export type AvatarTone = keyof ThemeColors['avatar'];
 
-export type AppTheme = typeof lightTheme;
-export type ChartColor = keyof AppTheme['colors']['chart'];
-export type AvatarTone = keyof AppTheme['colors']['avatar'];
+export const lightTheme: AppTheme = { ...base, colors: lightColors };
+export const darkTheme: AppTheme = { ...base, colors: darkColors };
 
+/** The names are Unistyles' and the system's: `light` and `dark`. */
 export const appThemes = {
   light: lightTheme,
+  dark: darkTheme,
 } as const;
+
+export type ThemeName = keyof typeof appThemes;

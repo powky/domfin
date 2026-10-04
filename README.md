@@ -169,10 +169,10 @@ estén libres:
   corriendo antes sigue corriendo.
 - Para usar puertos fijos: `./domfin start --api-port 8085 --app-port 8086`.
   Si alguno está ocupado, te lo dice en vez de cambiarlo.
-- El navegador guarda por puerto tu idioma, tu moneda y si ocultas los
-  montos: si la app arranca en otro puerto, empieza con los de siempre. Si
-  el 8081 siempre está ocupado, cae siempre en el mismo puerto libre y los
-  recuerda.
+- El navegador guarda por puerto tu idioma, tu moneda, la apariencia y si
+  ocultas los montos: si la app arranca en otro puerto, empieza con los de
+  siempre. Si el 8081 siempre está ocupado, cae siempre en el mismo puerto
+  libre y los recuerda.
 
 #### Con datos de ejemplo
 
@@ -313,8 +313,9 @@ opciones de domfin-api están en [su README](api/README.md#configuración).
 - **"El puerto … está ocupado"**: le diste ese puerto con `--api-port` o
   `--app-port` y otro programa lo usa. Sin esas opciones, Domfin busca uno
   libre.
-- **La app no recuerda tu idioma o tu moneda**: el navegador los guarda por
-  puerto, y la app arrancó en otro porque el de siempre estaba ocupado.
+- **La app no recuerda tu idioma, tu moneda o la apariencia**: el navegador
+  los guarda por puerto, y la app arrancó en otro porque el de siempre estaba
+  ocupado.
 - **domfin-api siguió corriendo después de cerrar Domfin a la fuerza** (por
   ejemplo, con `kill -9`): el siguiente `./domfin start` la encuentra y la
   usa. Para apagarla, ciérrala en el Monitor de Actividad o el Administrador
@@ -377,7 +378,6 @@ proponer otra cosa,
   otro, mira [cómo agregar un banco](CONTRIBUTING.md#agregar-un-banco).
 - [ ] Respaldos con conexión directa a Google Drive, OneDrive, Dropbox, S3
   y WebDAV, sin la app de escritorio de cada servicio.
-- [ ] Modo oscuro.
 
 ### Ya disponible
 
@@ -402,6 +402,7 @@ proponer otra cosa,
 - [x] Respaldos cifrados en la carpeta de tu nube (iCloud Drive, Google
   Drive, Dropbox u OneDrive), con contraseña y clave de recuperación.
 - [x] Español e inglés; web, iOS y Android.
+- [x] Modo claro y oscuro, o el de tu dispositivo.
 
 ## Cómo está hecho
 

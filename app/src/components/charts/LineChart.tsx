@@ -13,7 +13,7 @@ import Svg, { Circle, ClipPath, Defs, G, Line, Path, Rect } from 'react-native-s
 
 import { ease, timing, useEntranceDelay, useFadeInOnChange, useReducedMotion } from '@/components/motion';
 import { ColorSwatch, Text } from '@/components/ui';
-import { motion } from '@/theme';
+import { elevation, motion } from '@/theme';
 
 import {
   areaPath,
@@ -491,15 +491,11 @@ const styles = StyleSheet.create((theme) => ({
     gap: theme.space[1],
     paddingVertical: theme.space[2],
     paddingHorizontal: theme.space[2.5],
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceRaised,
     borderRadius: theme.radius.md,
     borderWidth: theme.layout.hairline,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.text.primary,
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    ...elevation.tooltip,
   },
   tooltipRow: {
     flexDirection: 'row',

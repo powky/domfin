@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../assets"
 
-orange='#E8622C' # palette.orange[500], the app's accent
+orange='#E8622C' # palette.orange[500], the logo's color (colors.brand.mark)
 sail='M7 22.5c3.2-.2 5.6-1.3 7.4-3.4 2-2.4 2.8-5.6 3.1-10.1 2.4 2.6 4.5 6.5 5.1 10.2.3 1.3.9 2.5 2.4 3.3H7Z'
 circle="<circle cx=\"16\" cy=\"16\" r=\"16\" fill=\"$orange\"/>"
 white="<path d=\"$sail\" fill=\"#FFFFFF\"/>"

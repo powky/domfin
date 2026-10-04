@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>%WEB_TITLE%</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <!-- Domfin: the background of the theme while the app loads, so the dark one
+         doesn't start white. The colors are the themes' `background`
+         (src/theme/themes.ts); once the app runs, src/theme/appearance.ts paints it. -->
+    <style id="domfin-theme">
+      :root {
+        color-scheme: light;
+        background-color: #f7f6f3;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          background-color: #121110;
+        }
+      }
+    </style>
+    <script>
+      // A theme picked in Settings, saved by src/theme/appearance.ts, wins over the device's.
+      try {
+        var theme = localStorage.getItem('domfin.appearance');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.style.colorScheme = theme;
+          document.documentElement.style.backgroundColor = theme === 'dark' ? '#121110' : '#f7f6f3';
+        }
+      } catch (error) {}
+    </script>
+  </head>
+
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>

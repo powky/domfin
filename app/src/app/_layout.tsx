@@ -14,6 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDisplayCurrencyReady } from '@/features/currency';
 import { useLanguageReady, useSystemLocaleSync } from '@/i18n';
 import { useAmountsPreferenceReady } from '@/lib/privacy';
+import { useAppearanceReady, useThemeChrome } from '@/theme';
 
 // The splash screen (expo-splash-screen in app.json) stays until the app can
 // draw its first screen. On the web there is none.
@@ -24,9 +25,12 @@ export default function RootLayout() {
   const languageReady = useLanguageReady();
   const currencyReady = useDisplayCurrencyReady();
   const amountsReady = useAmountsPreferenceReady();
+  const appearanceReady = useAppearanceReady();
+  const statusBarStyle = useThemeChrome();
   useSystemLocaleSync();
   // Without Inter the app still opens, in the system's font.
-  const ready = (fontsLoaded || fontsFailed !== null) && languageReady && currencyReady && amountsReady;
+  const ready =
+    (fontsLoaded || fontsFailed !== null) && languageReady && currencyReady && amountsReady && appearanceReady;
 
   useEffect(() => {
     if (ready) SplashScreen.hide();
@@ -36,7 +40,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={statusBarStyle} />
       <Stack screenOptions={{ headerShown: false }} />
     </SafeAreaProvider>
   );

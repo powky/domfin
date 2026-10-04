@@ -11,6 +11,7 @@ import { PdfPasswordCard } from '@/features/imports';
 import { PayrollCard, RulesCard } from '@/features/ledger';
 import { AboutCard } from '@/features/updates';
 
+import { AppearanceCard } from './AppearanceCard';
 import { FormatPreviewCard } from './FormatPreviewCard';
 import { LanguageCard } from './LanguageCard';
 
@@ -21,6 +22,7 @@ const sections: ComponentType[] = [
   PayrollCard,
   RulesCard,
   LanguageCard,
+  AppearanceCard,
   CurrencyCard,
   FormatPreviewCard,
   AboutCard,

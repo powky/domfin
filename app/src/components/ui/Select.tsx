@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { elevation } from '@/theme';
+
 import { Button } from './Button';
 import { Text } from './Text';
 import { Touchable } from './Touchable';
@@ -149,15 +151,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   menu: {
     position: 'absolute',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceRaised,
     borderRadius: theme.radius.md,
     borderWidth: theme.layout.hairline,
     borderColor: theme.colors.border,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    ...elevation.menu,
   },
   menuContent: {
     padding: theme.space[1],

@@ -12,12 +12,13 @@ en `../CONTRIBUTING.md`; cómo se monta, en `../README.md`.
 npm run web                 # dev server web
 npm run typecheck           # tsc --noEmit
 npm run lint                # expo lint
+npm run contrast            # contraste de los colores, en el tema claro y el oscuro
 npx expo install <paquete>  # siempre en vez de npm install <paquete>: elige la versión del SDK
 npx expo-doctor             # problemas de dependencias y configuración
 ```
 
-Corre typecheck y lint antes de dar algo por terminado, y di qué cambiaste
-y cómo revisarlo en la app.
+Corre typecheck, lint y contrast antes de dar algo por terminado, y di qué
+cambiaste y cómo revisarlo en la app.
 
 ## Expo cambia en cada SDK: no confíes en lo que recuerdas
 
@@ -64,7 +65,9 @@ de simularlo en la app. Sin datos para el periodo, usa `DataNotice`.
   Movimientos; Flujo de caja, Gastos, Patrimonio neto, Cuentas, Préstamos,
   Configuración, Saldo, Comercio, Monto).
 - Solo tokens semánticos del tema; nada de hex ni números sueltos, tampoco en
-  las animaciones (`theme.motion`).
+  las animaciones (`theme.motion`). Cada color tiene versión clara y oscura:
+  un token nuevo va en los dos temas, y si es texto o ícono, en los pares de
+  `scripts/contrast.mjs`.
 - Montos y fechas con `src/lib/format.ts` y `src/lib/dates.ts`; nunca un
   locale fijo.
 - Rutas en `src/app/` solo componen; la lógica vive en `src/features/`.
