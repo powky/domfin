@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Domfin's engine for iOS, built by modules/domfin-engine/build.sh
+/modules/domfin-engine/ios/DomfinEngine.xcframework
