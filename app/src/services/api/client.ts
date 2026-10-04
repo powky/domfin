@@ -1,4 +1,4 @@
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { DomfinEngine } from '../../../modules/domfin-engine';
 
@@ -72,6 +72,13 @@ export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
 
 /** Sends a multipart form (files) and reads the JSON answer. */
 export async function apiPostForm<T>(path: string, form: FormData): Promise<T> {
+  if (Platform.OS !== 'web') {
+    const began = Date.now();
+    const { status, body } = await sendForm(`${await apiBase()}${path}`, form);
+    if (__DEV__ && DomfinEngine) console.log(`motor de Domfin: POST ${path} ${status} en ${Date.now() - began} ms`);
+    if (status < 200 || status >= 300) throw new ApiError(status, body);
+    return JSON.parse(body) as T;
+  }
   const response = await apiFetch(path, {
     method: 'POST',
     body: form,
@@ -79,6 +86,23 @@ export async function apiPostForm<T>(path: string, form: FormData): Promise<T> {
   });
   if (!response.ok) throw new ApiError(response.status, await response.text());
   return (await response.json()) as T;
+}
+
+/**
+ * POSTs a form with XMLHttpRequest. On iOS and Android the app's fetch is
+ * expo/fetch, which can't send React Native's `{ uri, name, type }` files;
+ * XMLHttpRequest still can, with their names.
+ */
+function sendForm(url: string, form: FormData) {
+  return new Promise<{ status: number; body: string }>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', url);
+    request.setRequestHeader('Accept', 'application/json');
+    request.onload = () => resolve({ status: request.status, body: request.responseText });
+    // Like fetch when nothing answers (see importErrorOf).
+    request.onerror = () => reject(new TypeError('Network request failed'));
+    request.send(form);
+  });
 }
 
 /** Sends a JSON body with PUT, POST or PATCH and reads the JSON answer, if any. */
