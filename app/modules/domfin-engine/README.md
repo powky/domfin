@@ -43,6 +43,52 @@ cambia.
 En los dos, la tasa del BCRD y el aviso de versiones llegan desde el
 teléfono y los datos siguen ahí al cerrar y abrir la app.
 
+## Prueba de punta a punta (5 de octubre de 2026)
+
+Con todo lo de `main` (presupuesto, compartir PDF), sin domfin-api ni
+computadora:
+
+- En Android, el primer arranque crea la base. Después se restauró ahí un
+  respaldo cifrado hecho en la computadora (con la contraseña de respaldo,
+  en 0.9 s), y Flujo de caja, Presupuesto y Nómina mostraron sus 21 meses.
+  Lo que se agrega (un gasto fijo) sigue ahí al cerrar la app, y sin
+  internet todo funciona salvo la tasa del día, que sale de la última
+  guardada.
+- Compartir varios PDF desde Archivos los importa en el motor, con la app
+  abierta y, en una release, con la app cerrada. El escaneado (con OCR)
+  tarda 0.5-0.6 s y el resto menos de 20 ms. La contraseña de los PDF se
+  guarda en la misma pantalla y el que la necesitaba se importa solo.
+- En una release de Android, la app abre en ~0.5 s, el motor arranca en
+  14-21 ms y responde el libro completo en 75-112 ms. El APK de arm64 pesa
+  67 MB, de los que el motor ocupa 17.6 MB (sin comprimir).
+- En iOS (simulador), el motor arranca en 68 ms (223 ms en frío) e importó
+  cuatro PDF compartidos.
+
+Se arreglaron:
+- Cualquier app del teléfono podía leer los datos por 127.0.0.1. Ahora el
+  motor pide un secreto nuevo en cada arranque (`Token`), que solo tiene la
+  app; desde otro usuario de Android responde 401.
+- Restaurar fallaba en Android porque Go usaba `/data/local/tmp` como
+  carpeta temporal.
+- Gradle podía meter en el APK las clases del motor anterior.
+
+Falta para no depender de la API:
+- Respaldos en el teléfono. Hoy solo aceptan una ruta escrita a mano. Falta
+  guardarlos en iCloud Drive (el contenedor de iCloud de la app) y, en
+  Android, en la carpeta que se elija con el selector del sistema (Drive,
+  OneDrive, Dropbox), y restaurar eligiendo el archivo.
+- Textos: unos 26 hablan de domfin-api, de "esta computadora" o de la
+  terminal, y el aviso de versiones dice que se actualiza con `git pull`.
+- Escritorio sin servidor (por ejemplo, Wails con la web de Expo y el motor
+  en el mismo proceso). La web sigue necesitando domfin-api.
+- Sincronizar entre dispositivos: hoy solo se puede restaurar, y restaurar
+  reemplaza todo.
+- Builds de tienda: firma, el grupo de la app registrado en Apple, y CI o
+  EAS con Go, gomobile y el NDK.
+- Decidir si los respaldos del propio teléfono (Google e iCloud) incluyen la
+  base, como pasa hoy por defecto, y si la contraseña de los PDF va al
+  llavero del sistema.
+
 ## Cómo está hecho
 
 - `api/internal/server` arma la API: `cmd/api` la sirve en un puerto de la
@@ -56,4 +102,5 @@ teléfono y los datos siguen ahí al cerrar y abrir la app.
   release lo permiten solo para `localhost`
   (`android/src/release/res/xml/domfin_engine_network.xml`).
 
-Si se sigue, falta: llamar al motor sin abrir un puerto y compilarlo en CI.
+Si se sigue, falta además llamar al motor sin abrir un puerto (sin red de
+por medio, ni secreto que pasar) y compilarlo en CI.
