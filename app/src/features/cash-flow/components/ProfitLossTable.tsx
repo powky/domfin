@@ -6,12 +6,14 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { ColorSwatch, Text } from '@/components/ui';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import { usePhoneLayout } from '@/theme';
 
 import type { CashFlowSummary } from '../types';
 
 export function ProfitLossTable({ summary }: { summary: CashFlowSummary }) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const phone = usePhoneLayout();
   const [incomeOpen, setIncomeOpen] = useState(true);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   // What each row's amount measures, by row: the amount column is as wide as
@@ -132,17 +134,23 @@ export function ProfitLossTable({ summary }: { summary: CashFlowSummary }) {
         <Text variant="caption" tone="secondary" style={styles.categoryCol}>
           {t('cashFlow.table.category')}
         </Text>
-        <View style={[styles.percentCol, styles.desktopOnly]}>
-          <Text variant="caption" tone="secondary" align="right">
+        {phone ? null : (
+          <Text variant="caption" tone="secondary" align="right" style={styles.percentCol}>
             {t('cashFlow.table.percentOfIncome')}
           </Text>
-        </View>
+        )}
         <Text variant="caption" tone="secondary" align="right" style={[styles.amountCol, amountWidth]}>
           {t('cashFlow.table.amount')}
         </Text>
       </View>
       {rows.map(({ key, ...row }) => (
-        <Row key={key} {...row} amountWidth={amountWidth} onAmountWidth={(width) => measureAmount(key, width)} />
+        <Row
+          key={key}
+          {...row}
+          phone={phone}
+          amountWidth={amountWidth}
+          onAmountWidth={(width) => measureAmount(key, width)}
+        />
       ))}
     </View>
   );
@@ -160,11 +168,13 @@ type RowProps = {
   expandable?: boolean;
   expanded?: boolean;
   onPress?: () => void;
+  /** Phones put the share under the amount, which leaves the name more room. */
+  phone: boolean;
   amountWidth: { minWidth: number } | null;
   onAmountWidth: (width: number) => void;
 };
 
-type RowSpec = Omit<RowProps, 'amountWidth' | 'onAmountWidth'> & { key: string };
+type RowSpec = Omit<RowProps, 'phone' | 'amountWidth' | 'onAmountWidth'> & { key: string };
 
 function Row({
   label,
@@ -178,6 +188,7 @@ function Row({
   expandable,
   expanded,
   onPress,
+  phone,
   amountWidth,
   onAmountWidth,
 }: RowProps) {
@@ -202,22 +213,19 @@ function Row({
           {label}
         </Text>
       </View>
-      <View style={[styles.percentCol, styles.desktopOnly]}>
-        <Text variant="body" tone="secondary" align="right" numberOfLines={1} style={styles.cellText}>
+      {phone ? null : (
+        <Text variant="body" tone="secondary" align="right" numberOfLines={1} style={[styles.percentCol, styles.cellText]}>
           {percent ?? ''}
         </Text>
-      </View>
-      {/* On phones the share sits under the amount, which leaves the name more room. */}
+      )}
       <View style={[styles.amountCol, amountWidth]}>
         <Text variant={textVariant} align="right" numberOfLines={1} style={styles.cellText}>
           {amount}
         </Text>
-        {percent ? (
-          <View style={styles.phoneOnly}>
-            <Text variant="caption" tone="secondary" align="right">
-              {percent}
-            </Text>
-          </View>
+        {phone && percent ? (
+          <Text variant="caption" tone="secondary" align="right">
+            {percent}
+          </Text>
         ) : null}
       </View>
       {/* The amount again, unseen and at its own width: what the column measures. */}
@@ -289,12 +297,6 @@ const styles = StyleSheet.create((theme) => ({
   amountCol: {
     width: { xs: 92, md: 140 },
     marginLeft: { xs: theme.space[2], md: theme.space[3] },
-  },
-  phoneOnly: {
-    display: { xs: 'flex', md: 'none' },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
   },
   measure: {
     position: 'absolute',
