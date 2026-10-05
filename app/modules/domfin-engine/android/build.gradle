@@ -26,5 +26,7 @@ def buildEngine = tasks.register('buildDomfinEngine', Exec) {
 preBuild.dependsOn(buildEngine)
 
 dependencies {
-  implementation files('libs/domfin-engine.jar')
+  // builtBy: the app dexes this jar on its own, so it has to wait for
+  // build.sh too, or it would pack the previous engine's classes.
+  implementation files('libs/domfin-engine.jar').builtBy(buildEngine)
 }
