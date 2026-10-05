@@ -1,0 +1,6 @@
+<!-- The engine answers on http://localhost inside the app. Debug builds
+     already allow plain HTTP everywhere (Metro needs it); release builds get
+     it for localhost only. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:networkSecurityConfig="@xml/domfin_engine_network" />
+</manifest>

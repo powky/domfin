@@ -42,3 +42,6 @@ yarn-error.*
 
 # Domfin's engine for iOS, built by modules/domfin-engine/build.sh
 /modules/domfin-engine/ios/DomfinEngine.xcframework
+/modules/domfin-engine/android/libs
+/modules/domfin-engine/android/src/main/jniLibs
+/modules/domfin-engine/android/build

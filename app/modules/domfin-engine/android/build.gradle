@@ -1,0 +1,30 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.domfinengine'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.domfinengine"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+    consumerProguardFiles 'consumer-rules.pro'
+  }
+}
+
+// The engine comes from the Go code in api/: build.sh compiles it before
+// the module, and does nothing when that code didn't change. It leaves the
+// jar below and the native libraries in src/main/jniLibs, out of git. It
+// builds the app's ABIs: just the device's when `expo run:android` targets
+// one, all four for a release.
+def buildEngine = tasks.register('buildDomfinEngine', Exec) {
+  commandLine "${projectDir}/../build.sh", 'android', findProperty('reactNativeArchitectures') ?: 'arm64-v8a,x86_64'
+}
+preBuild.dependsOn(buildEngine)
+
+dependencies {
+  implementation files('libs/domfin-engine.jar')
+}
