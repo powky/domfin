@@ -27,6 +27,8 @@ if [ "${1:-ios}" = android ]; then
   write_samples "$work"
   "$adb" shell mkdir -p /sdcard/Download/Domfin
   "$adb" push -q "$work/." /sdcard/Download/Domfin/
+  # The file picker lists what the media index knows about: update it.
+  "$adb" shell content call --method scan_volume --uri content://media --arg external_primary >/dev/null 2>&1 || true
   echo "Listo: Download/Domfin tiene 4 estados de ejemplo."
   exit 0
 fi
