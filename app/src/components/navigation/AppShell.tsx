@@ -2,22 +2,25 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { usePhoneLayout } from '@/theme';
+
 import { BottomTabBar } from './BottomTabBar';
 import { Sidebar } from './Sidebar';
 
 /**
- * Responsive app frame: sidebar from `md` up, bottom tab bar below.
- * Visibility is driven by Unistyles breakpoints in each component's styles,
- * so switching layouts never re-renders the tree.
+ * Responsive app frame: sidebar from `md` up, bottom tab bar below. Only the
+ * one in use is mounted (see `usePhoneLayout`); the page keeps its place, so
+ * crossing `md` doesn't remount it.
  */
 export function AppShell({ children, sidebarFooter }: { children: ReactNode; sidebarFooter?: ReactNode }) {
+  const phone = usePhoneLayout();
   return (
     <View style={styles.root}>
       <View style={styles.body}>
-        <Sidebar footer={sidebarFooter} />
+        {phone ? null : <Sidebar footer={sidebarFooter} />}
         <View style={styles.content}>{children}</View>
       </View>
-      <BottomTabBar />
+      {phone ? <BottomTabBar /> : null}
     </View>
   );
 }

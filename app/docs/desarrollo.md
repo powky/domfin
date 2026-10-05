@@ -147,15 +147,14 @@ src/
 
 - Los componentes solo leen tokens semánticos del tema (`theme.colors.*`,
   `theme.space[*]`, `theme.radius.*`, `theme.font.*`); nunca hex ni números mágicos.
-- Responsive con breakpoints de Unistyles dentro de los estilos
-  (`display: { xs: 'none', md: 'flex' }`), sin re-renders. Eso vale para
-  piezas fijas (la barra lateral, el encabezado). Donde algo cambia mientras
-  se usa (filas que se seleccionan o se expanden, una tarjeta que alterna
-  vistas, filtros que se abren), elige la versión con `usePhoneLayout()`
-  (de `@/theme`) y dibuja solo esa: en las compilaciones de prueba, React
-  Native se cierra si cambia la estructura junto a una vista con
-  `display: 'none'` (facebook/react-native#52349). Una lista llama al hook
-  una vez y pasa `phone` a sus filas.
+- Responsive con breakpoints de Unistyles dentro de los estilos para tamaños,
+  espacios y direcciones (`gap: { xs: …, md: … }`), sin re-renders. Para
+  mostrar algo solo en el celular o solo en pantallas anchas, elige la
+  versión con `usePhoneLayout()` (de `@/theme`; `rt.breakpoint` para otro
+  corte) y dibuja solo esa. Nunca `display: 'none'` por breakpoint: en las
+  compilaciones de prueba, React Native se cierra cuando cambian las vistas
+  de alrededor (facebook/react-native#52349), incluso al arrancar. Una lista
+  llama al hook una vez y pasa `phone` a sus filas.
 - Decorados dentro de un botón (un ícono, un logo) van con
   `pointerEvents="none"`, para que el toque sea del botón: en Android, el SVG
   de un ícono puede quedárselo.

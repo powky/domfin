@@ -6,6 +6,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Text, Touchable } from '@/components/ui';
 import { formatCurrency, formatSignedCurrency } from '@/lib/format';
+import { usePhoneLayout } from '@/theme';
 
 import { institutionLine, isFavorable } from '../lib/accountTypes';
 import type { AccountSummary } from '../types';
@@ -37,7 +38,9 @@ export type AccountRowProps = {
 };
 
 export function AccountRow({ account, showStatus = true }: AccountRowProps) {
-  const { theme } = useUnistyles();
+  const { theme, rt } = useUnistyles();
+  // The sync column is for wide screens; the narrowest phones also drop the chevron.
+  const phone = usePhoneLayout();
 
   return (
     <Link href={account.href} asChild>
@@ -59,7 +62,7 @@ export function AccountRow({ account, showStatus = true }: AccountRowProps) {
             </Text>
           </View>
         </View>
-        {showStatus ? (
+        {showStatus && !phone ? (
           <View style={styles.status}>
             <SyncStatusLabel institution={account.institution} />
           </View>
@@ -70,9 +73,9 @@ export function AccountRow({ account, showStatus = true }: AccountRowProps) {
           </Text>
           <ChangeText account={account} />
         </View>
-        <View style={styles.chevron}>
+        {rt.breakpoint === 'xs' ? null : (
           <ChevronRight size={16} strokeWidth={2} color={theme.colors.text.tertiary} />
-        </View>
+        )}
       </Touchable>
     </Link>
   );
@@ -104,14 +107,10 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 1,
   },
   status: {
-    display: { xs: 'none', md: 'flex' },
     width: 180,
   },
   amounts: {
     alignItems: 'flex-end',
     gap: theme.space[0.5],
-  },
-  chevron: {
-    display: { xs: 'none', sm: 'flex' },
   },
 }));

@@ -7,6 +7,7 @@ import { AmountsToggle } from '@/components/AmountsToggle';
 import { BackLink } from '@/components/BackLink';
 import { LogoMark } from '@/components/brand/Logo';
 import { Text } from '@/components/ui';
+import { usePhoneLayout } from '@/theme';
 
 export type PageHeaderProps = {
   title: string;
@@ -39,57 +40,67 @@ export function PageHeader({
   mobileAction,
   back,
 }: PageHeaderProps) {
-  const subtitleContent = (
-    <>
+  const phone = usePhoneLayout();
+  const subtitleRow = subtitle ? (
+    <View style={styles.subtitle}>
       {subtitleIcon}
       <Text variant="caption" tone="secondary" style={styles.subtitleText}>
         {subtitle}
       </Text>
-    </>
-  );
-
-  const phoneButtons = (
-    <View style={[styles.phoneButtons, styles.mobileOnly]}>
-      {mobileAction}
-      <AmountsToggle />
     </View>
-  );
+  ) : null;
 
-  const header = (
-    <View style={styles.container}>
-      <View style={styles.titleBlock}>
+  if (phone) {
+    const buttons = (
+      <View style={styles.buttons}>
+        {mobileAction}
+        <AmountsToggle />
+      </View>
+    );
+    const header = (
+      <View style={styles.phoneStack}>
         <View style={styles.titleRow}>
-          {back ? null : (
-            <View style={styles.mobileOnly}>
-              <LogoMark size={32} />
-            </View>
-          )}
-          <Text variant="display" style={styles.title} numberOfLines={2}>
+          {back ? null : <LogoMark size={32} />}
+          <Text variant="display" style={styles.phoneTitle} numberOfLines={2}>
             {title}
           </Text>
-          {back ? null : phoneButtons}
+          {back ? null : buttons}
         </View>
-        {subtitle ? <View style={[styles.subtitle, styles.desktopOnly]}>{subtitleContent}</View> : null}
+        {actions ? <View style={styles.actions}>{actions}</View> : null}
+        {subtitleRow}
       </View>
-      {/* On phones the eye sits in the title row: without other actions, this row is desktop only. */}
-      <View style={[styles.actions, !actions && styles.desktopOnly]}>
+    );
+    if (!back) return header;
+    return (
+      <View style={styles.withBack}>
+        <View style={styles.backRow}>
+          <BackLink href={back.href} label={back.label} />
+          {buttons}
+        </View>
+        {header}
+      </View>
+    );
+  }
+
+  const header = (
+    <View style={styles.desktopRow}>
+      <View style={styles.titleBlock}>
+        <Text variant="display" numberOfLines={2}>
+          {title}
+        </Text>
+        {subtitleRow}
+      </View>
+      <View style={styles.actions}>
         {actions}
-        {desktopAction ? <View style={styles.desktopOnly}>{desktopAction}</View> : null}
-        <View style={styles.desktopOnly}>
-          <AmountsToggle />
-        </View>
+        {desktopAction}
+        <AmountsToggle />
       </View>
-      {subtitle ? <View style={[styles.subtitle, styles.mobileOnly]}>{subtitleContent}</View> : null}
     </View>
   );
-
   if (!back) return header;
   return (
     <View style={styles.withBack}>
-      <View style={styles.backRow}>
-        <BackLink href={back.href} label={back.label} />
-        {phoneButtons}
-      </View>
+      <BackLink href={back.href} label={back.label} />
       {header}
     </View>
   );
@@ -105,11 +116,27 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'space-between',
     gap: theme.space[3],
   },
+  phoneStack: {
+    gap: theme.space[3],
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space[3],
+  },
+  phoneTitle: {
+    flex: 1,
+  },
+  buttons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space[2],
+  },
   // On a narrow desktop the buttons go under the title instead of squeezing it.
-  container: {
-    flexDirection: { xs: 'column', md: 'row' },
-    flexWrap: { xs: 'nowrap', md: 'wrap' },
-    alignItems: { xs: 'stretch', md: 'flex-start' },
+  desktopRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     rowGap: theme.space[3],
     columnGap: theme.space[6],
@@ -117,19 +144,6 @@ const styles = StyleSheet.create((theme) => ({
   titleBlock: {
     flexShrink: 1,
     gap: theme.space[1],
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.space[3],
-  },
-  title: {
-    flex: { xs: 1, md: undefined },
-  },
-  phoneButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.space[2],
   },
   subtitle: {
     flexDirection: 'row',
@@ -144,11 +158,5 @@ const styles = StyleSheet.create((theme) => ({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: theme.space[2],
-  },
-  mobileOnly: {
-    display: { xs: 'flex', md: 'none' },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
   },
 }));
