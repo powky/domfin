@@ -140,6 +140,35 @@ func TestStartTurnsAwayRequestsWithoutTheToken(t *testing.T) {
 	}
 }
 
+// Android sets no TMPDIR and apps can't write Go's fallback: the engine
+// uses a folder of its own, emptied when it starts. Where the system sets
+// one (iOS), it stays.
+func TestOwnTemp(t *testing.T) {
+	data := t.TempDir()
+	env := map[string]string{}
+	getenv := func(key string) string { return env[key] }
+	setenv := func(key, value string) error { env[key] = value; return nil }
+
+	leftover := filepath.Join(data, "tmp", "domfin-restore-1")
+	if err := os.MkdirAll(leftover, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := ownTemp(data, getenv, setenv); err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(data, "tmp"); env["TMPDIR"] != want {
+		t.Fatalf("TMPDIR = %q, want %q", env["TMPDIR"], want)
+	}
+	if _, err := os.Stat(leftover); !os.IsNotExist(err) {
+		t.Errorf("what was left in tmp is still there: %v", err)
+	}
+
+	env["TMPDIR"] = "/private/var/mobile/tmp"
+	if err := ownTemp(data, getenv, setenv); err != nil || env["TMPDIR"] != "/private/var/mobile/tmp" {
+		t.Errorf("with TMPDIR set: %q, %v", env["TMPDIR"], err)
+	}
+}
+
 // With DOMFIN_SAMPLES set to a folder, this writes the sample statements
 // there, to import them in the app.
 func TestWriteSamples(t *testing.T) {

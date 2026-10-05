@@ -13,6 +13,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -41,6 +42,9 @@ func Start(dataDir string) (int, error) {
 	}
 	began := time.Now()
 	if handler == nil {
+		if err := ownTemp(dataDir, os.Getenv, os.Setenv); err != nil {
+			return 0, err
+		}
 		token = rand.Text()
 		handler = timed(authorized(token, server.New(server.Config{
 			DBPath:    filepath.Join(dataDir, "domfin.db"),
@@ -62,6 +66,25 @@ func Start(dataDir string) (int, error) {
 	go serve(listener)
 	log.Printf("motor de Domfin %s: en 127.0.0.1:%d, listo en %s", version.Version, port, time.Since(began).Round(time.Millisecond))
 	return port, nil
+}
+
+// ownTemp points TMPDIR, where Go and SQLite write their temporary files
+// (restoring a backup, a big upload), to dataDir/tmp when the system sets
+// none: on Android it's unset, and Go's fallback, /data/local/tmp, is closed
+// to apps. iOS sets it to the app's own tmp. What's left there from before
+// is gone.
+func ownTemp(dataDir string, getenv func(string) string, setenv func(string, string) error) error {
+	if getenv("TMPDIR") != "" {
+		return nil
+	}
+	dir := filepath.Join(dataDir, "tmp")
+	if err := os.RemoveAll(dir); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	return setenv("TMPDIR", dir)
 }
 
 // Token is the secret each request to the engine carries, as
