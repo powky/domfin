@@ -19,7 +19,13 @@ export type ScreenProps = {
 export function Screen({ header, children }: ScreenProps) {
   const arrival = useScreenArrival(useArrivalDirection());
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      // iOS moves what's typed in above the keyboard; taps on buttons work with it open.
+      automaticallyAdjustKeyboardInsets
+      keyboardShouldPersistTaps="handled"
+    >
       <EntranceScope>
         <Animated.View style={[styles.inner, arrival]}>
           {header ? <Reveal>{header}</Reveal> : null}
@@ -30,13 +36,13 @@ export function Screen({ header, children }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create((theme, rt) => ({
+const styles = StyleSheet.create((theme) => ({
   scroll: {
     flex: 1,
   },
   container: {
     paddingTop: {
-      xs: rt.insets.top + theme.space[4],
+      xs: theme.space[4],
       md: theme.space[6],
     },
     paddingBottom: theme.space[6],

@@ -22,7 +22,7 @@ export function AppShell({ children, sidebarFooter }: { children: ReactNode; sid
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   root: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -31,7 +31,10 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     flexDirection: 'row',
   },
+  // Pages scroll below the status bar, which keeps the background's color,
+  // instead of passing under the clock.
   content: {
     flex: 1,
+    paddingTop: rt.insets.top,
   },
 }));
