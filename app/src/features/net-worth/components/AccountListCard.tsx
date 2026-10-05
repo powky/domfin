@@ -6,6 +6,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Card, ColorSwatch, Text, Touchable } from '@/components/ui';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import { usePhoneLayout } from '@/theme';
 
 import type { AccountSummary, AccountType, AccountTypeSummary, BalanceSheetSide, SelectedAccount } from '../types';
 
@@ -20,6 +21,7 @@ export type AccountListCardProps = {
 export function AccountListCard({ title, side, selected, onToggleAccount }: AccountListCardProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const phone = usePhoneLayout();
   const [open, setOpen] = useState<Partial<Record<AccountType, boolean>>>({});
   const colorById = new Map(selected.map((item) => [item.id, theme.colors.chart[item.color]]));
 
@@ -32,11 +34,11 @@ export function AccountListCard({ title, side, selected, onToggleAccount }: Acco
           <Text variant="caption" tone="secondary" style={styles.nameCol}>
             {t('netWorth.list.type')}
           </Text>
-          <View style={[styles.percentCol, styles.desktopOnly]}>
-            <Text variant="caption" tone="secondary" align="right">
+          {phone ? null : (
+            <Text variant="caption" tone="secondary" align="right" style={styles.percentCol}>
               {t('netWorth.list.share')}
             </Text>
-          </View>
+          )}
           <Text variant="caption" tone="secondary" align="right" style={styles.amountCol}>
             {t('netWorth.list.balance')}
           </Text>
@@ -45,13 +47,14 @@ export function AccountListCard({ title, side, selected, onToggleAccount }: Acco
           const expanded = !!open[type.type];
           return (
             <View key={type.type}>
-              <TypeRow type={type} expanded={expanded} onPress={() => toggleType(type.type)} />
+              <TypeRow type={type} expanded={expanded} phone={phone} onPress={() => toggleType(type.type)} />
               {expanded
                 ? type.accounts.map((account) => (
                     <AccountRow
                       key={account.id}
                       account={account}
                       color={colorById.get(account.id)}
+                      phone={phone}
                       onPress={() => onToggleAccount(account.id)}
                     />
                   ))
@@ -64,7 +67,9 @@ export function AccountListCard({ title, side, selected, onToggleAccount }: Acco
   );
 }
 
-function TypeRow({ type, expanded, onPress }: { type: AccountTypeSummary; expanded: boolean; onPress: () => void }) {
+type TypeRowProps = { type: AccountTypeSummary; expanded: boolean; phone: boolean; onPress: () => void };
+
+function TypeRow({ type, expanded, phone, onPress }: TypeRowProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
   const Chevron = expanded ? ChevronDown : ChevronRight;
@@ -85,12 +90,14 @@ function TypeRow({ type, expanded, onPress }: { type: AccountTypeSummary; expand
           {type.label}
         </Text>
       </View>
-      <Amounts amount={type.balance} share={type.share} strong />
+      <Amounts amount={type.balance} share={type.share} phone={phone} strong />
     </Touchable>
   );
 }
 
-function AccountRow({ account, color, onPress }: { account: AccountSummary; color?: string; onPress: () => void }) {
+type AccountRowProps = { account: AccountSummary; color?: string; phone: boolean; onPress: () => void };
+
+function AccountRow({ account, color, phone, onPress }: AccountRowProps) {
   const { t } = useTranslation();
   const selected = !!color;
   const institution = account.mask ? `${account.institution} ••${account.mask}` : account.institution;
@@ -123,29 +130,29 @@ function AccountRow({ account, color, onPress }: { account: AccountSummary; colo
           </View>
         </View>
       </View>
-      <Amounts amount={account.balance} share={account.share} />
+      <Amounts amount={account.balance} share={account.share} phone={phone} />
     </Touchable>
   );
 }
 
 /** Share and balance columns; on phones the share sits under the balance. */
-function Amounts({ amount, share, strong }: { amount: number; share: number; strong?: boolean }) {
+function Amounts({ amount, share, phone, strong }: { amount: number; share: number; phone: boolean; strong?: boolean }) {
   return (
     <>
-      <View style={[styles.percentCol, styles.desktopOnly]}>
-        <Text tone="secondary" align="right">
+      {phone ? null : (
+        <Text tone="secondary" align="right" style={styles.percentCol}>
           {formatPercent(share)}
         </Text>
-      </View>
+      )}
       <View style={styles.amountCol}>
         <Text variant={strong ? 'bodyStrong' : 'body'} align="right">
           {formatCurrency(amount)}
         </Text>
-        <View style={styles.phoneOnly}>
+        {phone ? (
           <Text variant="caption" tone="secondary" align="right">
             {formatPercent(share)}
           </Text>
-        </View>
+        ) : null}
       </View>
     </>
   );
@@ -213,12 +220,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   amountCol: {
     width: { xs: 112, md: 128 },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
-  },
-  phoneOnly: {
-    display: { xs: 'flex', md: 'none' },
   },
   checkbox: {
     width: 18,

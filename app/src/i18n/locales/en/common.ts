@@ -26,6 +26,7 @@ export const common = {
     transactions: 'Transactions',
     'cash-flow': 'Cash flow',
     spending: 'Spending',
+    budget: 'Budget',
     'net-worth': 'Net worth',
     accounts: 'Accounts',
     possessions: 'Possessions',
@@ -40,7 +41,7 @@ export const common = {
     transactions: 'Transactions',
     'cash-flow': 'Cash flow',
     spending: 'Spending',
-    'net-worth': 'Net worth',
+    budget: 'Budget',
     more: 'More',
   },
   period: {

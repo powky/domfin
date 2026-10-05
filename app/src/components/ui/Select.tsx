@@ -19,6 +19,8 @@ export type SelectProps<T extends string> = {
   icon?: LucideIcon;
   accessibilityLabel?: string;
   hideIconOnPhone?: boolean;
+  /** A square button with just the icon, for a row of actions on a phone. Needs `accessibilityLabel`. */
+  iconOnly?: boolean;
   /** Shown on the button while `value` is none of the options, like an action's name. */
   placeholder?: string;
   /** Replaces the button: what shows (like a table cell's text), opening the menu when pressed. */
@@ -42,6 +44,7 @@ export function Select<T extends string>({
   icon,
   accessibilityLabel,
   hideIconOnPhone,
+  iconOnly,
   placeholder,
   trigger,
   triggerStyle,
@@ -74,8 +77,9 @@ export function Select<T extends string>({
           <Button
             icon={icon}
             hideIconOnPhone={hideIconOnPhone}
-            label={selected?.label ?? placeholder}
-            trailingIcon={ChevronDown}
+            iconOnly={iconOnly}
+            label={iconOnly ? undefined : (selected?.label ?? placeholder)}
+            trailingIcon={iconOnly ? undefined : ChevronDown}
             onPress={open}
             accessibilityLabel={accessibilityLabel}
           />

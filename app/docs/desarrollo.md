@@ -12,6 +12,7 @@ npx expo run:ios     # development build (Unistyles usa módulos nativos: Expo G
 npx expo run:android
 npm run typecheck && npm run lint
 npm run contrast     # el contraste de los colores, en el tema claro y el oscuro
+npm test             # las pruebas de lo que no tiene pantalla
 ```
 
 ## Datos
@@ -22,10 +23,29 @@ domfin-api. Sin estados, las pantallas lo dicen y llevan a importarlos.
 - *Importar estados* (`/imports`) sube los PDF del banco a domfin-api
   (`POST /statements/import`), que los abre con la contraseña guardada en
   *Configuración* (o la de `STATEMENTS_PDF_PASSWORD`), y muestra qué meses
-  tiene cada cuenta. El selector de archivos
-  (`expo-document-picker`) es un módulo nativo: los development builds
-  anteriores a él no lo traen, así que hay que volver a compilarlos para
-  importar desde iOS o Android.
+  tiene cada cuenta. Los PDF van a una cola que comparte toda la app
+  (`api/importQueue.ts`) y suben uno por petición: cada uno muestra cómo le
+  fue apenas termina, ninguna subida pasa de los 32 MB de domfin-api, y los
+  que fallan por la contraseña o porque domfin-api no contestó se pueden
+  reintentar. Si un PDF necesita contraseña, la tarjeta para guardarla
+  aparece en la misma pantalla y, al guardarla, se reintenta solo. El
+  selector de archivos (`expo-document-picker`) es un módulo nativo: los
+  development builds anteriores a él no lo traen, así que hay que volver a
+  compilarlos para importar desde iOS o Android.
+- En iOS y Android, otras apps comparten PDF con Domfin (Correo, Archivos,
+  WhatsApp, Drive), uno o varios, y se importan solos.
+  `plugins/with-statement-sharing.js` configura `expo-sharing`: en iOS, una
+  extensión que solo aparece cuando todo lo compartido es PDF; en Android,
+  los intents `SEND` y `SEND_MULTIPLE` de `application/pdf`. La hoja de
+  compartir abre la app en `domfin://expo-sharing`, que `app/+native-intent.ts`
+  manda a `/imports`, y `useSharedStatements` pasa los PDF a la cola (también
+  cuando la app abre o vuelve al frente). Hace falta un development build
+  nuevo. En iOS, la extensión y la app comparten el grupo
+  `group.com.powky.domfin`, que en un teléfono de verdad tiene que estar
+  registrado en tu equipo de Apple (con la firma automática, Xcode lo
+  registra). Con un development build, compartir con la app cerrada pasa
+  por la pantalla de servidores de Expo, que en Android pierde los archivos:
+  pruébalo con la app abierta o con `npx expo run:android --variant release`.
 - *Cuentas*, *Patrimonio neto* y *Préstamos* salen de `GET /accounts`: las
   cuentas de los estados, con sus balances de fin de mes. Los historiales de
   préstamo no traen tasa ni plazo, así que Préstamos muestra balance y pagos,
@@ -69,10 +89,24 @@ domfin-api. Sin estados, las pantallas lo dicen y llevan a importarlos.
   Patrimonio neto). Una deuda con *plan de cuotas* (saldo a una fecha, tasa,
   primera y última cuota) baja con sus cuotas sin movimientos: es para un
   préstamo que otro paga por ti, y en Préstamos sus pagos salen de ese plan.
+- *Presupuesto* (`features/budget`) son los gastos fijos y el plan del mes.
+  Los pagos que se repiten salen del libro, en la app
+  (`lib/recurring.ts`): se agrupan por a quién van (el comercio o la
+  descripción sin números, `payeeOf`) y su moneda, y son sugerencia los que
+  se pagaron en al menos 3 de los últimos 12 meses completos, en 3 de cada 4
+  meses desde el primero, todavía, una o dos veces al mes y por un monto
+  parecido. Lo que sigue lo que haces ese mes (supermercado, combustible,
+  restaurantes, viajes) y la retención de la DGII nunca son gasto fijo. Lo
+  que el usuario agrega, descarta y el ingreso con que planea se guarda en
+  domfin-api (`/ledger/budget`); cada gasto fijo se sigue por su `match`, y
+  si falta un pago se juzga con el último estado de la cuenta de la que
+  sale. Las funciones de `lib/` no cargan React Native, para que
+  `npm test` las pruebe.
 - *Configuración → Respaldos* (`features/backup`) activa los respaldos
   cifrados de domfin-api en una carpeta de nube (`/backup/*`), los corre y
   restaura uno, aquí o en otra computadora. Restaurar cambia todo lo que la
-  API tiene: la app vuelve a pedir el libro, los activos y las cuentas, y las
+  API tiene: la app vuelve a pedir el libro, los activos, las cuentas y el
+  presupuesto, y las
   tarjetas de Configuración se montan de nuevo (`useRestored`). La clave de
   recuperación se muestra una vez; en la web se puede copiar, y en el
   teléfono se selecciona.
@@ -147,8 +181,17 @@ src/
 
 - Los componentes solo leen tokens semánticos del tema (`theme.colors.*`,
   `theme.space[*]`, `theme.radius.*`, `theme.font.*`); nunca hex ni números mágicos.
-- Responsive con breakpoints de Unistyles dentro de los estilos
-  (`display: { xs: 'none', md: 'flex' }`), sin re-renders.
+- Responsive con breakpoints de Unistyles dentro de los estilos para tamaños,
+  espacios y direcciones (`gap: { xs: …, md: … }`), sin re-renders. Para
+  mostrar algo solo en el celular o solo en pantallas anchas, elige la
+  versión con `usePhoneLayout()` (de `@/theme`; `rt.breakpoint` para otro
+  corte) y dibuja solo esa. Nunca `display: 'none'` por breakpoint: en las
+  compilaciones de prueba, React Native se cierra cuando cambian las vistas
+  de alrededor (facebook/react-native#52349), incluso al arrancar. Una lista
+  llama al hook una vez y pasa `phone` a sus filas.
+- Decorados dentro de un botón (un ícono, un logo) van con
+  `pointerEvents="none"`, para que el toque sea del botón: en Android, el SVG
+  de un ícono puede quedárselo.
 - Cada color tiene su versión clara y oscura (ver *Temas*): un token nuevo va
   en los dos temas.
 - Las pantallas consumen datos solo vía hooks en `features/<feature>/api`.
@@ -178,6 +221,10 @@ src/
   lo que el sistema dibuja dentro de la app (el teclado en iOS, las barras de
   desplazamiento) sigue el tema elegido (`Appearance.setColorScheme`). La app
   elige el tema y Unistyles lo pone con `setTheme`, sin `adaptiveThemes`.
+- `npm test` (`scripts/test.mjs`) corre los `*.test.ts` de `src` con el
+  corredor de pruebas de Node, que lee TypeScript solo (22.18 o más nuevo):
+  es para lo que no tiene pantalla, así que esos archivos no importan nada
+  de React Native. Corre en CI.
 - `npm run contrast` (`scripts/contrast.mjs`) revisa que lo que la app pone
   junto se lea en los dos temas, con los mínimos de WCAG 2.2 AA: 4.5:1 el
   texto; 3:1 los íconos, los gráficos y el borde de los controles. Un token

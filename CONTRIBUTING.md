@@ -45,7 +45,7 @@ request, según lo que cambies:
 
 ```bash
 cd api && go test ./... && gofmt -l .      # gofmt debe salir vacío
-cd app && npm run typecheck && npm run lint && npm run contrast
+cd app && npm run typecheck && npm run lint && npm run contrast && npm test
 ```
 
 Para trabajar sin tus datos, usa los

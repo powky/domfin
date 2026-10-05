@@ -25,6 +25,7 @@ export const common = {
     transactions: 'Transacciones',
     'cash-flow': 'Flujo de caja',
     spending: 'Gastos',
+    budget: 'Presupuesto',
     'net-worth': 'Patrimonio neto',
     accounts: 'Cuentas',
     possessions: 'Posesiones',
@@ -39,7 +40,7 @@ export const common = {
     transactions: 'Movimientos',
     'cash-flow': 'Flujo de caja',
     spending: 'Gastos',
-    'net-worth': 'Patrimonio',
+    budget: 'Presupuesto',
     more: 'Más',
   },
   period: {

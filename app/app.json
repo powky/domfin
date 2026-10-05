@@ -7,9 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.powky.domfin"
     },
     "android": {
+      "package": "com.powky.domfin",
       "adaptiveIcon": {
         "backgroundColor": "#E8622C",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -43,7 +45,8 @@
             "backgroundColor": "#121110"
           }
         }
-      ]
+      ],
+      "./plugins/with-statement-sharing"
     ],
     "scheme": "domfin",
     "experiments": {

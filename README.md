@@ -32,6 +32,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   que cubriste con préstamos), y una tabla con el porcentaje de tus
   ingresos.
 - **Gastos**: por grupo, por categoría y por comercio, mes a mes.
+- **Presupuesto**: tus gastos fijos (alquiler, servicios, cuotas,
+  suscripciones), que Domfin encuentra porque se repiten mes tras mes en tus
+  estados, cuáles ya pagaste este mes y cuánto te queda para lo demás.
 - **Transacciones**: cada movimiento clasificado solo (por el código del
   comercio, la descripción del banco, tu nómina y tus reglas). Lo que falte
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
@@ -45,6 +48,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   Central del día en que ocurrió.
 - **Montos ocultos**: el ojito de arriba los cambia por `RD$x,xxx.xx` cuando
   alguien más puede ver tu pantalla.
+- **Importar**: eliges uno o varios PDF; en iOS y Android también puedes
+  compartirlos con Domfin desde otra app (el correo, Archivos o WhatsApp), y
+  se importan solos.
 - **Respaldos cifrados**: una copia de tus datos en la carpeta de tu nube
   (iCloud Drive, Google Drive, Dropbox u OneDrive) cada día y después de cada
   importación, que solo abren tu contraseña o tu clave de recuperación.
@@ -351,12 +357,10 @@ proponer otra cosa,
 - [ ] Guardar lo que marcas como revisado, lo que ocultas y lo que agregas a
   mano. Hoy dura mientras la app está abierta.
 
-**Salario y gastos fijos**
+**Salario**
 
 - [ ] Desglose de la nómina: lo que te descuentan cada mes (ISR, AFP y SFS)
   y lo acumulado en el año.
-- [ ] Gastos fijos: cuánto suman cada mes los pagos que no puedes dejar de
-  hacer (alquiler, servicios, cuotas y suscripciones).
 
 **Planificación**
 
@@ -384,6 +388,8 @@ proponer otra cosa,
 - [x] Estados del Banco Popular (tarjetas de crédito, cuentas de ahorro y
   corrientes, préstamos y certificados financieros), incluso escaneados, y
   de las tarjetas Qik.
+- [x] Compartir los PDF con Domfin desde otra app en iOS y Android, varios
+  a la vez y de cuentas distintas.
 - [x] Clasificación automática de cada movimiento: por el código del
   comercio, la descripción del banco, tu nómina y tus reglas.
 - [x] Salario, bonos, bonificaciones, ingresos adicionales y entregas sueltas
@@ -396,6 +402,9 @@ proponer otra cosa,
   impuesto.
 - [x] La tasa del dólar del Banco Central del día de cada movimiento, con el
   histórico guardado en tu computadora.
+- [x] Gastos fijos y el presupuesto del mes: los pagos que se repiten mes
+  tras mes (alquiler, servicios, cuotas y suscripciones), cuáles pagaste y
+  cuánto te queda para lo demás.
 - [x] Patrimonio neto, préstamos y posesiones: un inmueble en plano con su
   plan de pagos, acciones, tu fondo de pensiones y tu vehículo, que se
   deprecia.

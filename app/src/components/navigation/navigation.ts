@@ -10,6 +10,7 @@ import {
   ReceiptText,
   Settings,
   TrendingUp,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react-native';
 import type { Href } from 'expo-router';
@@ -26,6 +27,7 @@ type Page =
   | 'transactions'
   | 'cash-flow'
   | 'spending'
+  | 'budget'
   | 'net-worth'
   | 'accounts'
   | 'possessions'
@@ -34,12 +36,13 @@ type Page =
   | 'imports'
   | 'more'
   | 'settings';
-type Tab = 'transactions' | 'cash-flow' | 'spending' | 'net-worth' | 'more';
+type Tab = 'transactions' | 'cash-flow' | 'spending' | 'budget' | 'more';
 
 export const primaryNav: NavItem[] = [
   { key: 'transactions', href: '/transactions', icon: ReceiptText },
   { key: 'cash-flow', href: '/cash-flow', icon: ArrowDownUp },
   { key: 'spending', href: '/spending', icon: ChartPie },
+  { key: 'budget', href: '/budget', icon: Wallet },
   { key: 'net-worth', href: '/net-worth', icon: TrendingUp },
   { key: 'accounts', href: '/accounts', icon: Landmark },
   { key: 'possessions', href: '/possessions', icon: Gem },
@@ -48,8 +51,11 @@ export const primaryNav: NavItem[] = [
   { key: 'imports', href: '/imports', icon: FileUp },
 ];
 
-/** Items shown directly in the mobile tab bar; the rest live under "More". */
-const tabKeys = ['transactions', 'cash-flow', 'spending', 'net-worth'];
+/**
+ * Items shown directly in the mobile tab bar; the rest live under "More".
+ * Five fit a phone's width: the budget, used all month, took Net worth's place.
+ */
+const tabKeys = ['transactions', 'cash-flow', 'spending', 'budget'];
 
 export const tabNav: NavItem[] = [
   ...primaryNav.filter((item) => tabKeys.includes(item.key)),

@@ -26,10 +26,16 @@ export const imports = {
       title: 'Upload statements',
       description:
         "Pick one or more PDFs. Domfin recognizes each statement, checks that it adds up and saves it; statements you already imported aren't duplicated.",
+      /** Only on iOS and Android, where other apps can share files with Domfin. */
+      share: 'You can also share them with Domfin from another app (your email, Files or WhatsApp): they import on their own, several at a time.',
       supported: 'For now it reads Banco Popular account and credit card statements, and loan and certificate histories.',
       choose: 'Choose PDFs',
-      uploading_one: 'Importing {{count}} file…',
-      uploading_other: 'Importing {{count}} files…',
+      progress: 'Importing {{current}} of {{total}}',
+      waiting: 'Waiting',
+      importing: 'Importing…',
+      notImported: 'Not imported',
+      retry_one: 'Try {{count}} file again',
+      retry_other: 'Try {{count}} files again',
       results: 'Last upload',
     },
     status: {
@@ -44,15 +50,15 @@ export const imports = {
     transactions_other: '{{count}} transactions in {{currency}}',
     reasons: {
       unsupported: "Skipped: Domfin can't read this kind of statement yet.",
-      missing_password: 'It has a password: save it in Settings → Statement PDF password.',
-      wrong_password: 'The saved password doesn’t open it: check it in Settings.',
+      missing_password: 'It has a password: save it in Statement PDF password.',
+      wrong_password: 'The saved password doesn’t open it: change it in Statement PDF password.',
       unreadable: "Couldn't read it: {{detail}}",
       not_saved: "Couldn't save it: {{detail}}",
     },
     errors: {
       offline: "Couldn't reach domfin-api. Is it running?",
       local_only: 'domfin-api only takes statements from this computer.',
-      too_large: 'Too many files at once. Upload them in smaller groups.',
+      too_large: 'A PDF is over 32 MB, the most domfin-api takes.',
       unavailable: "domfin-api couldn't open its local database.",
       failed: 'Something went wrong. Try again.',
       picker_unavailable: "This build of the app doesn't have the file picker yet. Rebuild it to import from here.",

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { refreshLiveAccounts } from '@/features/accounts';
+import { refreshBudget } from '@/features/budget';
 import { refreshAssets, refreshLedger } from '@/features/ledger';
 
 /** The last restore in this session: when its backup was made and where the data before it was kept. */
@@ -32,5 +33,5 @@ export function useRestored() {
 export async function markRestored(backupAt: string, safetyCopy: string) {
   restored = { epoch: restored.epoch + 1, backupAt, safetyCopy };
   listeners.forEach((listener) => listener());
-  await Promise.all([refreshLedger(), refreshAssets(), refreshLiveAccounts()]);
+  await Promise.all([refreshLedger(), refreshAssets(), refreshLiveAccounts(), refreshBudget()]);
 }

@@ -30,8 +30,10 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const { theme } = useUnistyles();
+  const { theme, rt } = useUnistyles();
   const primary = variant === 'primary';
+  // The narrowest phones drop the leading icon to save room.
+  const showIcon = Icon && !(hideIconOnPhone && rt.breakpoint === 'xs');
   const iconColor = primary
     ? theme.colors.accent.onAccent
     : disabled
@@ -54,8 +56,8 @@ export function Button({
       hoverStyle={hoverStyle}
       pressedStyle={hoverStyle}
     >
-      {Icon ? (
-        <View style={hideIconOnPhone && styles.hideOnPhone}>
+      {showIcon ? (
+        <View>
           <Icon size={16} strokeWidth={primary ? 2.25 : 1.75} color={iconColor} />
         </View>
       ) : null}
@@ -106,9 +108,6 @@ const styles = StyleSheet.create((theme) => ({
   // At the far end when the button is stretched, like a select's chevron in a full-width row.
   trailing: {
     marginLeft: 'auto',
-  },
-  hideOnPhone: {
-    display: { xs: 'none', sm: 'flex' },
   },
   hovered: {
     backgroundColor: theme.colors.surfaceHover,

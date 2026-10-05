@@ -14,23 +14,39 @@ import Svg, { Path, Rect } from 'react-native-svg';
 
 import { Wipe, timing, useEntranceDelay, useReducedMotion } from '@/components/motion';
 import { Text } from '@/components/ui';
-import { formatCurrency, formatPercent } from '@/lib/format';
+import { formatCurrency, formatPercent, formatWholeCurrency } from '@/lib/format';
 
 import { buildFlowGraph, type FlowGrouping } from '../lib/buildFlow';
 import { layoutSankey, type SankeyNode } from '../lib/sankey';
 import type { CashFlowSummary } from '../types';
 
-const NODE_WIDTH = 8;
-// Two lines of caption: the name, then the amount and its share.
-const LABEL_HEIGHT = 36;
-const LABEL_WIDTH = 170;
-const LABEL_GAP = 8;
-const GAP = 6;
-// The Income label sits above its node: two lines of caption and a gap.
-const TOP_LABEL_HEIGHT = 44;
-// Extra room beyond the label slots so the large flows read as thick ribbons.
-const FLOW_ROOM = 200;
-const PADDING = { top: TOP_LABEL_HEIGHT + 4, right: LABEL_WIDTH + LABEL_GAP, bottom: 4, left: LABEL_WIDTH + LABEL_GAP };
+/** Sizes of one way of drawing the chart. */
+type Metrics = {
+  nodeWidth: number;
+  /** Two lines of caption: the name, then the amount and its share. */
+  labelHeight: number;
+  labelGap: number;
+  gap: number;
+  /** The Income label sits above its node: two lines of caption and a gap. */
+  topLabelHeight: number;
+  /** Extra room beyond the label slots so the large flows read as thick ribbons. */
+  flowRoom: number;
+  /** Room on each side for the labels outside the chart; 0 puts them inside. */
+  gutter: number;
+};
+
+// Labels beside the chart, which scrolls sideways when the card is narrower.
+const FULL: Metrics = { nodeWidth: 8, labelHeight: 36, labelGap: 8, gap: 6, topLabelHeight: 44, flowRoom: 200, gutter: 170 };
+// Phones: the chart fits the card and the labels go inside, over the ribbons.
+const COMPACT: Metrics = { nodeWidth: 6, labelHeight: 32, labelGap: 6, gap: 6, topLabelHeight: 40, flowRoom: 112, gutter: 0 };
+/** Narrowest card for the labels beside the chart without scrolling, with three columns. */
+const FULL_WIDTH = 720;
+
+/** Room around the chart: the Income label on top, the labels outside on each side. */
+const paddingOf = (metrics: Metrics) => {
+  const side = metrics.gutter && metrics.gutter + metrics.labelGap;
+  return { top: metrics.topLabelHeight + 4, right: side, bottom: 4, left: side };
+};
 
 export type SankeyChartProps = {
   summary: CashFlowSummary;
@@ -59,12 +75,19 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
     [summary, grouping, theme, incomeLabel, savingsLabel, investmentsLabel, loansLabel, drawnLabel],
   );
 
-  const minWidth = graph.columns > 3 ? 1040 : 720;
+  // Three columns fit a phone with their labels inside; four keep the full chart and scroll.
+  const compact = containerWidth > 0 && containerWidth < FULL_WIDTH && graph.columns <= 3;
+  const metrics = compact ? COMPACT : FULL;
+  const minWidth = compact ? 0 : graph.columns > 3 ? 1040 : FULL_WIDTH;
   const width = Math.max(containerWidth, minWidth);
   const busiestColumn = Math.max(
     ...Array.from({ length: graph.columns }, (_, column) => graph.nodes.filter((node) => node.column === column).length),
   );
-  const height = PADDING.top + PADDING.bottom + busiestColumn * (LABEL_HEIGHT + GAP) + FLOW_ROOM;
+  const padding = paddingOf(metrics);
+  const height = padding.top + padding.bottom + busiestColumn * (metrics.labelHeight + metrics.gap) + metrics.flowRoom;
+  // Inside the chart, a label fills the space between its node and the next column.
+  const columnStep = graph.columns > 1 ? (width - padding.left - padding.right - metrics.nodeWidth) / (graph.columns - 1) : width;
+  const labelWidth = compact ? columnStep - metrics.nodeWidth - 2 * metrics.labelGap : metrics.gutter;
 
   const layout = useMemo(
     () =>
@@ -72,16 +95,21 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
         ? layoutSankey(graph.nodes, graph.links, {
             width,
             height,
-            nodeWidth: NODE_WIDTH,
-            labelHeight: LABEL_HEIGHT,
-            gap: GAP,
-            padding: PADDING,
+            nodeWidth: metrics.nodeWidth,
+            labelHeight: metrics.labelHeight,
+            topLabelHeight: metrics.topLabelHeight,
+            gap: metrics.gap,
+            padding: paddingOf(metrics),
+            // Inside a phone's card the columns start together at the top, with no gap above.
+            align: compact ? 'top' : 'center',
           })
         : null,
-    [graph, width, height, containerWidth],
+    [graph, width, height, containerWidth, metrics, compact],
   );
 
   const reveal = useFlowReveal(graph);
+  // What the drawing needs, once the layout has moved it up into free room.
+  const drawnHeight = layout ? height - layout.lift : height;
 
   const onLayout = (event: LayoutChangeEvent) => setContainerWidth(Math.round(event.nativeEvent.layout.width));
 
@@ -89,9 +117,9 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
     <View onLayout={onLayout}>
       {layout ? (
         <ScrollView horizontal scrollEnabled={width > containerWidth} showsHorizontalScrollIndicator={width > containerWidth}>
-          <View style={{ width, height }}>
+          <View style={{ width, height: drawnHeight }}>
             <Wipe reveal={reveal} width={width}>
-              <Svg width={width} height={height}>
+              <Svg width={width} height={drawnHeight}>
                 {layout.links.map((link) => (
                   <Path key={`${link.source}->${link.target}`} d={link.path} fill={link.color} />
                 ))}
@@ -109,7 +137,16 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
               </Svg>
             </Wipe>
             {layout.nodes.map((node) => (
-              <NodeLabel key={node.id} node={node} meta={graph.meta[node.id]} reveal={reveal} at={node.x0 / width} />
+              <NodeLabel
+                key={node.id}
+                node={node}
+                meta={graph.meta[node.id]}
+                reveal={reveal}
+                chartWidth={width}
+                metrics={metrics}
+                labelWidth={labelWidth}
+                inside={compact}
+              />
             ))}
           </View>
         </ScrollView>
@@ -149,68 +186,68 @@ type NodeLabelProps = {
   node: SankeyNode;
   meta: { title: string; amount: number; share: number };
   reveal: SharedValue<number>;
-  /** Where the node sits across the chart, 0..1: its label shows once the drawing gets there. */
-  at: number;
+  chartWidth: number;
+  metrics: Metrics;
+  labelWidth: number;
+  /** Labels over the ribbons, next to their node on the inner side (phones). */
+  inside: boolean;
 };
 
 /**
  * A node's name in bold, and below it its amount with its share of income:
  * "Salary" over "RD$6,928,995.13 (29.1%)". Income, the whole, shows only
- * its amount.
+ * its amount. Inside the chart the amounts drop the cents, and a halo of the
+ * card's color keeps the text clear of the ribbons under it.
  */
-function NodeLabel({ node, meta, reveal, at }: NodeLabelProps) {
+function NodeLabel({ node, meta, reveal, chartWidth, metrics, labelWidth, inside }: NodeLabelProps) {
   const { t } = useTranslation();
-  const centerY = (node.y0 + node.y1) / 2;
+  const amount = inside ? formatWholeCurrency(meta.amount) : formatCurrency(meta.amount);
+  const lines = [styles.line, inside && styles.halo];
+
+  let position: { left: number; top: number; width: number; alignItems: 'flex-start' | 'center' | 'flex-end' };
+  if (node.label === 'top') {
+    const width = inside ? Math.min(2 * labelWidth, chartWidth) : labelWidth + metrics.nodeWidth;
+    const left = node.x0 + metrics.nodeWidth / 2 - width / 2;
+    position = { left: Math.min(Math.max(left, 0), chartWidth - width), top: node.y0 - metrics.topLabelHeight, width, alignItems: 'center' };
+  } else {
+    // Sources sit at the left edge and destinations at the right: inside the
+    // chart their labels face each other, outside they face away.
+    const before = (node.label === 'left') !== inside;
+    const left = before ? node.x0 - metrics.labelGap - labelWidth : node.x1 + metrics.labelGap;
+    const top = (node.y0 + node.y1) / 2 - metrics.labelHeight / 2;
+    position = { left, top, width: labelWidth, alignItems: before ? 'flex-end' : 'flex-start' };
+  }
+  // It shows once the drawing reaches it.
+  const at = Math.max(position.left, 0) / chartWidth;
   const fade = useAnimatedStyle(() => ({ opacity: Math.min(Math.max((reveal.value - at) * 6, 0), 1) }));
 
-  if (node.label === 'top') {
-    return (
-      <Animated.View
-        style={[styles.topLabel, { left: node.x0 - LABEL_WIDTH / 2, top: node.y0 - TOP_LABEL_HEIGHT }, fade]}
-      >
-        <Text variant="captionStrong" numberOfLines={1} style={styles.line}>
-          {meta.title}
-        </Text>
-        <Text variant="caption" tone="secondary" numberOfLines={1} style={styles.line}>
-          {formatCurrency(meta.amount)}
-        </Text>
-      </Animated.View>
-    );
-  }
-
-  const isLeft = node.label === 'left';
-  const position = isLeft
-    ? { left: node.x0 - LABEL_GAP - LABEL_WIDTH, alignItems: 'flex-end' as const }
-    : { left: node.x1 + LABEL_GAP, alignItems: 'flex-start' as const };
-
   return (
-    <Animated.View style={[styles.sideLabel, position, { top: centerY - LABEL_HEIGHT / 2 }, fade]}>
-      <Text variant="captionStrong" numberOfLines={1} style={styles.line}>
+    <Animated.View
+      style={[styles.label, node.label === 'top' ? null : { height: metrics.labelHeight }, position, fade]}
+    >
+      <Text variant="captionStrong" numberOfLines={1} style={lines}>
         {meta.title}
       </Text>
-      <Text variant="caption" tone="secondary" numberOfLines={1} style={styles.line}>
-        {t('cashFlow.amountShare', { amount: formatCurrency(meta.amount), percent: formatPercent(meta.share) })}
+      <Text variant="caption" tone="secondary" numberOfLines={1} style={lines}>
+        {node.label === 'top' ? amount : t('cashFlow.amountShare', { amount, percent: formatPercent(meta.share) })}
       </Text>
     </Animated.View>
   );
 }
 
-const styles = StyleSheet.create(() => ({
-  topLabel: {
+const styles = StyleSheet.create((theme) => ({
+  label: {
     position: 'absolute',
     pointerEvents: 'none',
-    width: LABEL_WIDTH + NODE_WIDTH,
-    alignItems: 'center',
-  },
-  sideLabel: {
-    position: 'absolute',
-    pointerEvents: 'none',
-    width: LABEL_WIDTH,
-    height: LABEL_HEIGHT,
     justifyContent: 'center',
   },
   // A long name gives way within the label's width.
   line: {
     maxWidth: '100%',
+  },
+  halo: {
+    textShadowColor: theme.colors.surface,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 3,
   },
 }));

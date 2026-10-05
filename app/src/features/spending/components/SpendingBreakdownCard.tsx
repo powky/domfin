@@ -7,6 +7,7 @@ import { DonutChart } from '@/components/charts';
 import { Odometer } from '@/components/motion';
 import { Card, ColorSwatch, ProgressBar, SegmentedControl, Text, Touchable } from '@/components/ui';
 import { formatCurrency, formatPercent, formatWholeCurrency } from '@/lib/format';
+import { usePhoneLayout } from '@/theme';
 
 import type { BreakdownMode, SpendingItem, SpendingSummary } from '../types';
 
@@ -30,6 +31,7 @@ export type SpendingBreakdownCardProps = {
 export function SpendingBreakdownCard({ summary, mode, onModeChange, selectedIds, onToggleItem }: SpendingBreakdownCardProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const phone = usePhoneLayout();
   const [expanded, setExpanded] = useState(false);
   const items = summary[mode];
   const visible = expanded ? items : items.slice(0, COLLAPSED_ROWS);
@@ -84,6 +86,7 @@ export function SpendingBreakdownCard({ summary, mode, onModeChange, selectedIds
               item={item}
               barValue={max > 0 ? item.amount / max : 0}
               selected={selectedIds.includes(item.id)}
+              phone={phone}
               onPress={() => onToggleItem(item.id)}
             />
           ))}
@@ -124,11 +127,14 @@ function BreakdownRow({
   item,
   barValue,
   selected,
+  phone,
   onPress,
 }: {
   item: SpendingItem;
   barValue: number;
   selected: boolean;
+  /** Phones put the group under the name, so neither is cut. */
+  phone: boolean;
   onPress: () => void;
 }) {
   const { t } = useTranslation();
@@ -148,23 +154,23 @@ function BreakdownRow({
           <View style={styles.swatch}>
             <ColorSwatch color={color} />
           </View>
-          {/* "Groceries · Food" on one line; on phones the group goes under the name, so neither is cut. */}
-          <View style={[styles.nameText, styles.desktopOnly]}>
-            <Text numberOfLines={1}>
+          {phone ? (
+            <View style={styles.nameText}>
+              <Text variant="bodyStrong" numberOfLines={2}>
+                {item.label}
+              </Text>
+              {item.context ? (
+                <Text variant="caption" tone="secondary" numberOfLines={1}>
+                  {item.context}
+                </Text>
+              ) : null}
+            </View>
+          ) : (
+            <Text numberOfLines={1} style={styles.nameText}>
               <Text variant="bodyStrong">{item.label}</Text>
               {item.context ? <Text tone="secondary"> · {item.context}</Text> : null}
             </Text>
-          </View>
-          <View style={[styles.nameText, styles.phoneOnly]}>
-            <Text variant="bodyStrong" numberOfLines={2}>
-              {item.label}
-            </Text>
-            {item.context ? (
-              <Text variant="caption" tone="secondary" numberOfLines={1}>
-                {item.context}
-              </Text>
-            ) : null}
-          </View>
+          )}
         </View>
         <View style={styles.values}>
           <Text variant="bodyStrong">{formatCurrency(item.amount)}</Text>
@@ -237,12 +243,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   nameText: {
     flexShrink: 1,
-  },
-  phoneOnly: {
-    display: { xs: 'flex', md: 'none' },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
   },
   values: {
     flexDirection: 'row',

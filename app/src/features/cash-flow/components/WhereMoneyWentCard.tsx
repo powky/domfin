@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Card, SegmentedControl } from '@/components/ui';
+import { usePhoneLayout } from '@/theme';
 
 import type { FlowGrouping } from '../lib/buildFlow';
 import type { CashFlowSummary } from '../types';
@@ -13,55 +12,67 @@ import { SankeyChart } from './SankeyChart';
 type ChartView = 'sankey' | 'pl';
 
 const groupingValues = ['groups', 'categories', 'both'] as const satisfies readonly FlowGrouping[];
+// Phones fit three columns: groups or categories, not both.
+const phoneGroupingValues = ['groups', 'categories'] as const satisfies readonly FlowGrouping[];
 
 const viewValues = ['sankey', 'pl'] as const satisfies readonly ChartView[];
 
 export function WhereMoneyWentCard({ summary }: { summary: CashFlowSummary }) {
   const { t } = useTranslation();
-  const { rt } = useUnistyles();
+  const phone = usePhoneLayout();
   const [grouping, setGrouping] = useState<FlowGrouping>('groups');
   const [view, setView] = useState<ChartView>('sankey');
-  // Phones only get the table: the chart needs more width than they have,
-  // and a third of it, scrolled sideways, says little.
-  const compact = rt.breakpoint === 'xs' || rt.breakpoint === 'sm';
-  const shown = compact ? 'pl' : view;
+  const shownGrouping = phone && grouping === 'both' ? 'groups' : grouping;
 
-  const groupingOptions = groupingValues.map((value) => ({ value, label: t(`cashFlow.grouping.${value}`) }));
+  const groupingOptions = (phone ? phoneGroupingValues : groupingValues).map((value) => ({
+    value,
+    label: t(`cashFlow.grouping.${value}`),
+  }));
   const viewOptions = viewValues.map((value) => ({ value, label: t(`cashFlow.chartType.${value}`) }));
+
+  const groupingControl =
+    view === 'sankey' ? (
+      <SegmentedControl
+        options={groupingOptions}
+        value={shownGrouping}
+        onChange={setGrouping}
+        accessibilityLabel={t('cashFlow.grouping.label')}
+      />
+    ) : null;
+  const viewControl = (
+    <SegmentedControl
+      options={viewOptions}
+      value={view}
+      onChange={setView}
+      accessibilityLabel={t('cashFlow.chartType.label')}
+    />
+  );
 
   return (
     <Card
       title={t('cashFlow.whereMoneyWent')}
+      // On phones the controls stack under the title: the view first, so it
+      // stays put when the grouping comes and goes. On wider screens they
+      // share the title's row, the view at the end for the same reason.
       actions={
-        compact ? undefined : (
+        phone ? (
           <>
-            {view === 'sankey' ? (
-              <View style={styles.grouping}>
-                <SegmentedControl
-                  options={groupingOptions}
-                  value={grouping}
-                  onChange={setGrouping}
-                  accessibilityLabel={t('cashFlow.grouping.label')}
-                />
-              </View>
-            ) : null}
-            <SegmentedControl
-              options={viewOptions}
-              value={view}
-              onChange={setView}
-              accessibilityLabel={t('cashFlow.chartType.label')}
-            />
+            {viewControl}
+            {groupingControl}
+          </>
+        ) : (
+          <>
+            {groupingControl}
+            {viewControl}
           </>
         )
       }
     >
-      {shown === 'sankey' ? <SankeyChart summary={summary} grouping={grouping} /> : <ProfitLossTable summary={summary} />}
+      {view === 'sankey' ? (
+        <SankeyChart summary={summary} grouping={shownGrouping} />
+      ) : (
+        <ProfitLossTable summary={summary} />
+      )}
     </Card>
   );
 }
-
-const styles = StyleSheet.create(() => ({
-  grouping: {
-    display: { xs: 'none', md: 'flex' },
-  },
-}));

@@ -70,7 +70,6 @@ function TabItem({ item, active, badge }: { item: NavItem; active: boolean; badg
 
 const styles = StyleSheet.create((theme, rt) => ({
   bar: {
-    display: { xs: 'flex', md: 'none' },
     flexDirection: 'row',
     backgroundColor: theme.colors.surface,
     borderTopWidth: theme.layout.hairline,

@@ -113,7 +113,6 @@ function SidebarIcon({ icon: Icon, active }: { icon: NavItem['icon']; active: bo
 
 const styles = StyleSheet.create((theme, rt) => ({
   sidebar: {
-    display: { xs: 'none', md: 'flex' },
     width: theme.layout.sidebarWidth,
     backgroundColor: theme.colors.background,
     borderRightWidth: theme.layout.hairline,

@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, Select, Text } from '@/components/ui';
 import { dotSeparator, formatCurrency, formatNumber, keepTogether } from '@/lib/format';
+import { usePhoneLayout } from '@/theme';
 
 import type { TransactionsSummary as Summary } from '../types';
 
@@ -14,6 +15,7 @@ import type { TransactionsSummary as Summary } from '../types';
  */
 export function TransactionsSummary({ summary }: { summary: Summary }) {
   const { t } = useTranslation();
+  const phone = usePhoneLayout();
   const count = keepTogether(
     t('transactions.summary.count', { count: summary.count, formatted: formatNumber(summary.count) }),
   );
@@ -37,28 +39,28 @@ export function TransactionsSummary({ summary }: { summary: Summary }) {
         </Text>
       </>
     ) : null;
+  if (phone) {
+    return (
+      <View style={styles.phoneLines}>
+        <Text tone="secondary" style={styles.summary}>
+          {count}
+          {review}
+        </Text>
+        <Text tone="secondary" style={styles.summary}>
+          {inflow}
+          {outflow}
+        </Text>
+      </View>
+    );
+  }
   return (
-    <>
-      <View style={styles.desktopOnly}>
-        <Text tone="secondary" style={styles.summary}>
-          {count}
-          {dotSeparator}
-          {inflow}
-          {outflow}
-          {review}
-        </Text>
-      </View>
-      <View style={[styles.phoneOnly, styles.phoneLines]}>
-        <Text tone="secondary" style={styles.summary}>
-          {count}
-          {review}
-        </Text>
-        <Text tone="secondary" style={styles.summary}>
-          {inflow}
-          {outflow}
-        </Text>
-      </View>
-    </>
+    <Text tone="secondary" style={styles.summary}>
+      {count}
+      {dotSeparator}
+      {inflow}
+      {outflow}
+      {review}
+    </Text>
   );
 }
 
@@ -86,7 +88,11 @@ export type SelectionBarProps = {
 const AUTOMATIC = '__automatic__';
 const UNLINK = '__unlink__';
 
-/** Replaces the summary while transactions are selected. */
+/**
+ * Replaces the summary while transactions are selected. On phones it stays
+ * about as tall as the summary, so the list hardly moves under the finger:
+ * the count on top, then one row of actions, the rarer ones as icons.
+ */
 export function SelectionBar({
   selectedCount,
   totalCount,
@@ -102,50 +108,80 @@ export function SelectionBar({
   onClear,
 }: SelectionBarProps) {
   const { t } = useTranslation();
+  const phone = usePhoneLayout();
+  const markReviewed = t('transactions.selection.markReviewed', { count: selectedCount });
+  const hide = hidden ? t('transactions.selection.unhide') : t('transactions.selection.hide');
+
+  const count = (
+    <View style={styles.selectionText}>
+      <Text variant="bodyStrong">
+        {t('transactions.selection.selected', { count: selectedCount, formatted: formatNumber(selectedCount) })}
+      </Text>
+      {selectedCount < totalCount ? (
+        <Text tone="accent" variant="bodyMedium" onPress={onSelectAll} accessibilityRole="button" style={styles.link}>
+          {t('transactions.selection.selectAll', { formatted: formatNumber(totalCount) })}
+        </Text>
+      ) : null}
+    </View>
+  );
+  const actions = (
+    <>
+      <Select
+        icon={phone ? undefined : Tag}
+        placeholder={t('transactions.selection.categorize')}
+        value=""
+        options={[{ value: AUTOMATIC, label: t('transactions.selection.automatic') }, ...categoryChoices]}
+        onChange={(value) => onCategorize(value === AUTOMATIC ? null : value)}
+        accessibilityLabel={t('transactions.selection.categorize')}
+      />
+      {assetChoices.length > 0 ? (
+        <Select
+          icon={Link2}
+          iconOnly={phone}
+          placeholder={t('assets.link.action')}
+          value=""
+          options={[...assetChoices, { value: UNLINK, label: t('assets.link.unlink') }]}
+          onChange={(value) => onLink(value === UNLINK ? null : value)}
+          accessibilityLabel={t('assets.link.action')}
+        />
+      ) : null}
+      {canMarkReviewed ? (
+        <Button
+          icon={Check}
+          iconOnly={phone}
+          label={phone ? undefined : markReviewed}
+          onPress={onMarkReviewed}
+          accessibilityLabel={markReviewed}
+        />
+      ) : null}
+      <Button
+        icon={hidden ? Eye : EyeOff}
+        iconOnly={phone}
+        label={phone ? undefined : hide}
+        onPress={onToggleHidden}
+        accessibilityLabel={hide}
+      />
+    </>
+  );
+  const clear = <Button icon={X} iconOnly onPress={onClear} accessibilityLabel={t('transactions.selection.clear')} />;
+
+  if (phone) {
+    return (
+      <View style={styles.phoneSelection}>
+        {count}
+        <View style={styles.actions}>
+          {actions}
+          <View style={styles.clear}>{clear}</View>
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={styles.selection}>
-      <View style={styles.selectionText}>
-        <Text variant="bodyStrong">
-          {t('transactions.selection.selected', { count: selectedCount, formatted: formatNumber(selectedCount) })}
-        </Text>
-        {selectedCount < totalCount ? (
-          <Text tone="accent" variant="bodyMedium" onPress={onSelectAll} accessibilityRole="button" style={styles.link}>
-            {t('transactions.selection.selectAll', { formatted: formatNumber(totalCount) })}
-          </Text>
-        ) : null}
-      </View>
-      <View style={styles.actions}>
-        <Select
-          icon={Tag}
-          placeholder={t('transactions.selection.categorize')}
-          value=""
-          options={[{ value: AUTOMATIC, label: t('transactions.selection.automatic') }, ...categoryChoices]}
-          onChange={(value) => onCategorize(value === AUTOMATIC ? null : value)}
-          accessibilityLabel={t('transactions.selection.categorize')}
-        />
-        {assetChoices.length > 0 ? (
-          <Select
-            icon={Link2}
-            placeholder={t('assets.link.action')}
-            value=""
-            options={[...assetChoices, { value: UNLINK, label: t('assets.link.unlink') }]}
-            onChange={(value) => onLink(value === UNLINK ? null : value)}
-            accessibilityLabel={t('assets.link.action')}
-          />
-        ) : null}
-        {canMarkReviewed ? (
-          <Button
-            icon={Check}
-            label={t('transactions.selection.markReviewed', { count: selectedCount })}
-            onPress={onMarkReviewed}
-          />
-        ) : null}
-        <Button
-          icon={hidden ? Eye : EyeOff}
-          label={hidden ? t('transactions.selection.unhide') : t('transactions.selection.hide')}
-          onPress={onToggleHidden}
-        />
-        <Button icon={X} iconOnly onPress={onClear} accessibilityLabel={t('transactions.selection.clear')} />
+      {count}
+      <View style={[styles.actions, styles.wrap]}>
+        {actions}
+        {clear}
       </View>
     </View>
   );
@@ -161,12 +197,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   phoneLines: {
     gap: theme.space[0.5],
-  },
-  phoneOnly: {
-    display: { xs: 'flex', md: 'none' },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
   },
   selection: {
     flexDirection: 'row',
@@ -186,10 +216,19 @@ const styles = StyleSheet.create((theme) => ({
       cursor: 'pointer',
     },
   },
+  phoneSelection: {
+    gap: theme.space[2],
+  },
   actions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     gap: theme.space[2],
+  },
+  wrap: {
+    flexWrap: 'wrap',
+  },
+  // The way out, at the far end of the row.
+  clear: {
+    marginLeft: 'auto',
   },
 }));

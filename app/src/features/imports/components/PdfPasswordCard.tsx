@@ -9,9 +9,10 @@ import { usePdfPassword } from '../api/password';
 
 /**
  * The password statement PDFs open with, saved in domfin-api's local
- * database. It's typed here and never shown again.
+ * database. It's typed here and never shown again. `onSaved` runs once
+ * domfin-api has it.
  */
-export function PdfPasswordCard() {
+export function PdfPasswordCard({ onSaved }: { onSaved?: () => void }) {
   const { t } = useTranslation();
   const { status, password, save, forget } = usePdfPassword();
   const [draft, setDraft] = useState('');
@@ -23,6 +24,7 @@ export function PdfPasswordCard() {
       .then(() => {
         setDraft('');
         setMessage('saved');
+        onSaved?.();
       })
       .catch(() => setMessage('failed'));
   };

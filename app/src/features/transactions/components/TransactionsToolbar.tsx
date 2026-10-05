@@ -1,9 +1,10 @@
 import { Plus, SlidersHorizontal } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, SearchInput } from '@/components/ui';
+import { usePhoneLayout } from '@/theme';
 
 export type TransactionsToolbarProps = {
   query: string;
@@ -25,39 +26,39 @@ export function TransactionsToolbar({
   onAdd,
 }: TransactionsToolbarProps) {
   const { t } = useTranslation();
-  const { rt } = useUnistyles();
-  const compact = rt.breakpoint === 'xs' || rt.breakpoint === 'sm';
+  const phone = usePhoneLayout();
   return (
     <View style={styles.toolbar}>
       <View style={styles.search}>
         <SearchInput
           value={query}
           onChangeText={onQueryChange}
-          placeholder={compact ? t('transactions.search.short') : t('transactions.search.long')}
+          placeholder={phone ? t('transactions.search.short') : t('transactions.search.long')}
           accessibilityLabel={t('transactions.search.label')}
         />
       </View>
-      <View style={styles.phoneOnly}>
-        <Button
-          icon={SlidersHorizontal}
-          iconOnly
-          onPress={onToggleFilters}
-          accessibilityLabel={filtersOpen ? t('transactions.filters.hide') : t('transactions.filters.show')}
-        />
-        {activeFilterCount > 0 ? <View style={styles.filterBadge} pointerEvents="none" /> : null}
-      </View>
-      <View style={styles.phoneOnly}>
-        <Button
-          variant="primary"
-          icon={Plus}
-          iconOnly
-          onPress={onAdd}
-          accessibilityLabel={t('transactions.add.button')}
-        />
-      </View>
-      <View style={styles.desktopOnly}>
+      {phone ? (
+        <>
+          <View>
+            <Button
+              icon={SlidersHorizontal}
+              iconOnly
+              onPress={onToggleFilters}
+              accessibilityLabel={filtersOpen ? t('transactions.filters.hide') : t('transactions.filters.show')}
+            />
+            {activeFilterCount > 0 ? <View style={styles.filterBadge} pointerEvents="none" /> : null}
+          </View>
+          <Button
+            variant="primary"
+            icon={Plus}
+            iconOnly
+            onPress={onAdd}
+            accessibilityLabel={t('transactions.add.button')}
+          />
+        </>
+      ) : (
         <Button variant="primary" icon={Plus} label={t('transactions.add.button')} onPress={onAdd} />
-      </View>
+      )}
     </View>
   );
 }
@@ -82,11 +83,5 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 2,
     borderColor: theme.colors.surface,
     backgroundColor: theme.colors.accent.default,
-  },
-  phoneOnly: {
-    display: { xs: 'flex', md: 'none' },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
   },
 }));

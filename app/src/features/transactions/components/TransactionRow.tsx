@@ -1,7 +1,8 @@
+import { Check } from 'lucide-react-native';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Pressable, View } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Checkbox, Text, checkboxSize } from '@/components/ui';
 import { formatSignedCurrency } from '@/lib/format';
@@ -13,9 +14,12 @@ import { MerchantAvatar } from './MerchantAvatar';
 
 /*
  * The rows of the transactions list. From `md` up they form a table
- * (merchant, category, account, amount); on phones the category becomes a
- * second line and the amount sits at the end of the first. Both layouts come
- * from breakpoints in the styles, and all rows share them so columns line up.
+ * (checkbox, merchant, category, account, amount). On phones the merchant's
+ * logo leads the row, the merchant and amount share the first line and the
+ * category and account the second; there is no checkbox column: the logo
+ * selects the row, and so does a long press. The list says which layout to
+ * use, and each row renders only that one: a layout hidden with
+ * `display: 'none'` can crash React Native's layout in debug builds.
  */
 
 export type TransactionRowProps = {
@@ -23,6 +27,10 @@ export type TransactionRowProps = {
   accountName: string;
   categoryLabels: ReadonlyMap<string, string>;
   selected: boolean;
+  /** Some row is selected: on phones, tapping a row then selects it too. */
+  selecting: boolean;
+  /** The phone layout (below `md`), from `usePhoneLayout`. */
+  phone: boolean;
   onToggle: (id: string, selected: boolean) => void;
   /** The categories that fit the transaction, to pick one from its category. */
   categoryOptions?: readonly { value: string; label: string }[];
@@ -34,6 +42,8 @@ export const TransactionRow = memo(function TransactionRow({
   accountName,
   categoryLabels,
   selected,
+  selecting,
+  phone,
   onToggle,
   categoryOptions,
   onCategorize,
@@ -42,44 +52,80 @@ export const TransactionRow = memo(function TransactionRow({
   const { t } = useTranslation();
   const amount = formatSignedCurrency(transaction.amount, transaction.currency);
   const amountStyle = [styles.amount, transaction.amount > 0 && styles.amountIn];
-  return (
-    <View style={[styles.row, selected && styles.rowSelected]}>
-      <Checkbox
-        checked={selected}
-        onChange={(checked) => onToggle(transaction.id, checked)}
-        accessibilityLabel={t(
-          transaction.needsReview ? 'transactions.row.selectNeedsReview' : 'transactions.row.select',
-          { merchant: transaction.merchant, amount },
-        )}
-      />
-      <View style={styles.content}>
-        <View style={[styles.merchantLine, styles.merchantColumn]}>
-          {transaction.needsReview ? <View style={styles.reviewDot} /> : null}
-          <MerchantAvatar transaction={transaction} />
-          <Text numberOfLines={1} style={styles.merchant}>
-            {transaction.merchant}
-          </Text>
-          <View style={styles.phoneOnly}>
+  const selectLabel = t(transaction.needsReview ? 'transactions.row.selectNeedsReview' : 'transactions.row.select', {
+    merchant: transaction.merchant,
+    amount,
+  });
+  const toggle = () => onToggle(transaction.id, !selected);
+  const category = (
+    <CategoryLabel
+      transaction={transaction}
+      categoryLabels={categoryLabels}
+      options={categoryOptions}
+      onChange={onCategorize ? (categoryId) => onCategorize(transaction, categoryId) : undefined}
+    />
+  );
+  const reviewDot = transaction.needsReview ? <View style={styles.reviewDot} /> : null;
+
+  if (phone) {
+    return (
+      <Pressable
+        style={[styles.row, selected && styles.rowSelected]}
+        onPress={selecting ? toggle : undefined}
+        onLongPress={toggle}
+        accessible={false}
+      >
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityLabel={selectLabel}
+          accessibilityState={{ checked: selected }}
+          hitSlop={8}
+          onPress={toggle}
+        >
+          {/* The button takes the touch, not what's drawn in it (an icon's SVG can keep it on Android). */}
+          <View pointerEvents="none">
+            {selected ? <SelectedMark /> : <MerchantAvatar transaction={transaction} size="md" />}
+          </View>
+        </Pressable>
+        <View style={styles.lines}>
+          <View style={styles.line}>
+            {reviewDot}
+            <Text numberOfLines={1} style={styles.merchant}>
+              {transaction.merchant}
+            </Text>
             <Text numberOfLines={1} align="right" style={amountStyle}>
               {amount}
             </Text>
           </View>
+          <View style={styles.line}>
+            <View style={styles.categoryCell}>{category}</View>
+            <Text variant="caption" tone="secondary" numberOfLines={1} align="right" style={styles.phoneAccount}>
+              {accountName}
+            </Text>
+          </View>
         </View>
-        <View style={styles.categoryColumn}>
-          <CategoryLabel
-            transaction={transaction}
-            categoryLabels={categoryLabels}
-            options={categoryOptions}
-            onChange={onCategorize ? (categoryId) => onCategorize(transaction, categoryId) : undefined}
-          />
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={[styles.row, selected && styles.rowSelected]}>
+      <Checkbox checked={selected} onChange={toggle} accessibilityLabel={selectLabel} />
+      <View style={styles.columns}>
+        <View style={[styles.line, styles.merchantColumn]}>
+          <MerchantAvatar transaction={transaction} />
+          {reviewDot}
+          <Text numberOfLines={1} style={styles.merchant}>
+            {transaction.merchant}
+          </Text>
         </View>
-        {/* Hidden columns are Views: `display: flex` on a Text would break its alignment and ellipsis on web. */}
-        <View style={[styles.accountColumn, styles.desktopOnly]}>
+        <View style={styles.categoryColumn}>{category}</View>
+        <View style={styles.accountColumn}>
           <Text numberOfLines={1} style={styles.account}>
             {accountName}
           </Text>
         </View>
-        <View style={[styles.amountColumn, styles.desktopOnly]}>
+        <View style={styles.amountColumn}>
           <Text numberOfLines={1} align="right" style={amountStyle}>
             {amount}
           </Text>
@@ -89,24 +135,34 @@ export const TransactionRow = memo(function TransactionRow({
   );
 });
 
+/** Stands in for the logo of a selected row on phones. */
+function SelectedMark() {
+  const { theme } = useUnistyles();
+  return (
+    <View style={styles.selectedMark}>
+      <Check size={16} strokeWidth={3} color={theme.colors.accent.onAccent} />
+    </View>
+  );
+}
+
 export type TransactionTableHeaderProps = {
   checked: boolean;
   indeterminate: boolean;
   onToggleAll: (checked: boolean) => void;
 };
 
-/** Column titles, desktop only. */
+/** Column titles, for the table (`md` up). */
 export function TransactionTableHeader({ checked, indeterminate, onToggleAll }: TransactionTableHeaderProps) {
   const { t } = useTranslation();
   return (
-    <View style={[styles.row, styles.headerRow, styles.desktopOnly]}>
+    <View style={[styles.row, styles.headerRow]}>
       <Checkbox
         checked={checked}
         indeterminate={indeterminate}
         onChange={onToggleAll}
         accessibilityLabel={t('transactions.table.selectAll')}
       />
-      <View style={styles.content}>
+      <View style={styles.columns}>
         <Text style={[styles.columnTitle, styles.merchantColumn]}>{t('transactions.table.merchant')}</Text>
         <Text style={[styles.columnTitle, styles.categoryColumn]}>{t('transactions.table.category')}</Text>
         <Text style={[styles.columnTitle, styles.accountColumn]}>{t('transactions.table.account')}</Text>
@@ -118,11 +174,14 @@ export function TransactionTableHeader({ checked, indeterminate, onToggleAll }: 
   );
 }
 
-/** Gray band that opens each day: the date lines up with the merchants, the day's net sits on the right. */
-export function TransactionDayHeader({ day }: { day: TransactionDay }) {
+/**
+ * Gray band that opens each day, with the day's net on the right. In the
+ * table the date lines up with the merchants; on phones, with the logos.
+ */
+export function TransactionDayHeader({ day, phone }: { day: TransactionDay; phone: boolean }) {
   return (
     <View style={[styles.row, styles.dayRow]}>
-      <View style={styles.checkboxSpace} />
+      {phone ? null : <View style={styles.checkboxSpace} />}
       <View style={styles.dayContent}>
         <Text style={styles.dayText}>{formatDay(day.date)}</Text>
         <Text style={[styles.dayText, styles.tabular]}>{formatSignedCurrency(day.total)}</Text>
@@ -135,7 +194,7 @@ const styles = StyleSheet.create((theme) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: { xs: theme.space[4], lg: theme.space[6] },
+    gap: { xs: theme.space[3], md: theme.space[4], lg: theme.space[6] },
     minHeight: { xs: 68, md: 52 },
     paddingHorizontal: { xs: theme.space[4], md: theme.space[5], lg: theme.space[6] },
     paddingVertical: { xs: theme.space[3], md: theme.space[2] },
@@ -174,18 +233,44 @@ const styles = StyleSheet.create((theme) => ({
       },
     },
   },
-  content: {
+  // Phones: the two lines next to the logo.
+  lines: {
     flex: 1,
     minWidth: 0,
-    flexDirection: { xs: 'column', md: 'row' },
-    alignItems: { xs: 'stretch', md: 'center' },
-    gap: { xs: theme.space[1], md: theme.space[4], lg: theme.space[6] },
+    gap: theme.space[1],
   },
-  merchantLine: {
+  // The table's columns.
+  columns: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space[2.5],
+    gap: { xs: theme.space[4], lg: theme.space[6] },
+  },
+  line: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: { xs: theme.space[2], md: theme.space[2.5] },
     minWidth: 0,
+  },
+  // It takes the room the account leaves: sized by its content, the category's
+  // negative margins would make it a little too narrow and cut its name on the web.
+  categoryCell: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  phoneAccount: {
+    flexShrink: 1,
+    maxWidth: '45%',
+  },
+  selectedMark: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.accent.default,
   },
   reviewDot: {
     width: 6,
@@ -220,10 +305,10 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text.secondary,
   },
   merchantColumn: {
-    flex: { xs: undefined, md: 2.2 },
+    flex: 2.2,
   },
   categoryColumn: {
-    flex: { xs: undefined, md: 1.6 },
+    flex: 1.6,
     minWidth: 0,
   },
   accountColumn: {
@@ -253,11 +338,5 @@ const styles = StyleSheet.create((theme) => ({
   },
   tabular: {
     fontVariant: ['tabular-nums'],
-  },
-  phoneOnly: {
-    display: { xs: 'flex', md: 'none' },
-  },
-  desktopOnly: {
-    display: { xs: 'none', md: 'flex' },
   },
 }));

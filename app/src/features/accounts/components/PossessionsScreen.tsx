@@ -110,7 +110,7 @@ function AddButton({ iconOnly = false }: { iconOnly?: boolean }) {
 /** One possession, opening its page: its name, a line about it and what it's worth. */
 function PossessionRow({ asset, icon }: { asset: Asset; icon: NonNullable<Institution['icon']> }) {
   const { t } = useTranslation();
-  const { theme } = useUnistyles();
+  const { theme, rt } = useUnistyles();
   const money = (cents: number) => formatCurrency(cents / 100, asset.currency);
   const href: Href = { pathname: '/accounts/[id]', params: { id: `asset:${asset.id}` } };
   const caption = captionOf(asset, t, money);
@@ -137,9 +137,10 @@ function PossessionRow({ asset, icon }: { asset: Asset; icon: NonNullable<Instit
         <Text variant="bodyStrong" align="right" numberOfLines={1}>
           {money(asset.value)}
         </Text>
-        <View style={styles.chevron}>
+        {/* The narrowest phones drop the chevron to save room. */}
+        {rt.breakpoint === 'xs' ? null : (
           <ChevronRight size={16} strokeWidth={2} color={theme.colors.text.tertiary} />
-        </View>
+        )}
       </Touchable>
     </Link>
   );
@@ -258,9 +259,6 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     minWidth: 0,
     gap: theme.space[0.5],
-  },
-  chevron: {
-    display: { xs: 'none', sm: 'flex' },
   },
   plan: {
     gap: theme.space[1.5],

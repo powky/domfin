@@ -14,6 +14,7 @@ npx expo run:android
 npm run typecheck
 npm run lint
 npm run contrast     # el contraste de los colores, en el tema claro y el oscuro
+npm test             # las pruebas de lo que no tiene pantalla (src/**/*.test.ts)
 ```
 
 Por dentro (de dónde sale cada dato, la estructura de carpetas, el design
