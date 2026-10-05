@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, Text } from '@/components/ui';
 import { formatNumber } from '@/lib/format';
+import { usePhoneLayout } from '@/theme';
 
 import type { Transaction, TransactionDay } from '../types';
 import { TransactionDayHeader, TransactionRow, TransactionTableHeader } from './TransactionRow';
@@ -44,6 +45,7 @@ export function TransactionList({
   onCategorize,
 }: TransactionListProps) {
   const { t } = useTranslation();
+  const phone = usePhoneLayout();
   if (totalCount === 0) {
     return (
       <View style={styles.empty}>
@@ -58,14 +60,16 @@ export function TransactionList({
 
   return (
     <View>
-      <TransactionTableHeader
-        checked={allSelected}
-        indeterminate={someSelected && !allSelected}
-        onToggleAll={onToggleAll}
-      />
+      {phone ? null : (
+        <TransactionTableHeader
+          checked={allSelected}
+          indeterminate={someSelected && !allSelected}
+          onToggleAll={onToggleAll}
+        />
+      )}
       {days.map((day) => (
         <View key={day.date}>
-          <TransactionDayHeader day={day} />
+          <TransactionDayHeader day={day} phone={phone} />
           {day.transactions.map((transaction) => (
             <TransactionRow
               key={transaction.id}
@@ -73,6 +77,8 @@ export function TransactionList({
               accountName={accountNames.get(transaction.accountId) ?? transaction.accountId}
               categoryLabels={categoryLabels}
               selected={selectedIds.has(transaction.id)}
+              selecting={selectedIds.size > 0}
+              phone={phone}
               onToggle={onToggle}
               categoryOptions={categoryOptionsFor?.(transaction)}
               onCategorize={onCategorize}

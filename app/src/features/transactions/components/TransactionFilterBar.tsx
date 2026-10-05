@@ -3,6 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { SegmentedControl, Select, type SelectOption } from '@/components/ui';
+import { usePhoneLayout } from '@/theme';
 
 import type { StatusFilter, TransactionFilters } from '../types';
 
@@ -43,6 +44,7 @@ export function TransactionFilterBar({
   dropdownsOpen,
 }: TransactionFilterBarProps) {
   const { t } = useTranslation();
+  const phone = usePhoneLayout();
   const statusOptions = statusFilters.map((value) => ({ value, label: t(`transactions.filters.status.${value}`) }));
   const kindOptions = kindFilters.map((value) => ({ value, label: t(`transactions.filters.kind.${value}`) }));
   return (
@@ -60,35 +62,37 @@ export function TransactionFilterBar({
           accessibilityLabel={t('transactions.filters.status.label')}
         />
       </ScrollView>
-      <View style={styles.dropdowns(dropdownsOpen)}>
-        <Select
-          options={kindOptions}
-          value={filters.kind}
-          onChange={(value) => onFilterChange('kind', value)}
-          accessibilityLabel={t('transactions.filters.kind.label')}
-        />
-        <Select
-          options={accountOptions}
-          value={filters.accountId}
-          onChange={(value) => onFilterChange('accountId', value)}
-          accessibilityLabel={t('transactions.filters.account')}
-        />
-        <Select
-          options={categoryOptions}
-          value={filters.categoryId}
-          onChange={(value) => onFilterChange('categoryId', value)}
-          accessibilityLabel={t('transactions.filters.category')}
-        />
-        {/* Only "All tags" until some transaction has one. */}
-        {tagOptions.length > 1 ? (
+      {phone && !dropdownsOpen ? null : (
+        <View style={styles.dropdowns}>
           <Select
-            options={tagOptions}
-            value={filters.tag}
-            onChange={(value) => onFilterChange('tag', value)}
-            accessibilityLabel={t('transactions.filters.tag')}
+            options={kindOptions}
+            value={filters.kind}
+            onChange={(value) => onFilterChange('kind', value)}
+            accessibilityLabel={t('transactions.filters.kind.label')}
           />
-        ) : null}
-      </View>
+          <Select
+            options={accountOptions}
+            value={filters.accountId}
+            onChange={(value) => onFilterChange('accountId', value)}
+            accessibilityLabel={t('transactions.filters.account')}
+          />
+          <Select
+            options={categoryOptions}
+            value={filters.categoryId}
+            onChange={(value) => onFilterChange('categoryId', value)}
+            accessibilityLabel={t('transactions.filters.category')}
+          />
+          {/* Only "All tags" until some transaction has one. */}
+          {tagOptions.length > 1 ? (
+            <Select
+              options={tagOptions}
+              value={filters.tag}
+              onChange={(value) => onFilterChange('tag', value)}
+              accessibilityLabel={t('transactions.filters.tag')}
+            />
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }
@@ -110,11 +114,10 @@ const styles = StyleSheet.create((theme) => ({
   statusContent: {
     paddingHorizontal: { xs: theme.space[4], md: 0 },
   },
-  dropdowns: (open: boolean) => ({
-    display: { xs: open ? 'flex' : 'none', md: 'flex' },
+  dropdowns: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: theme.space[2],
-  }),
+  },
 }));
