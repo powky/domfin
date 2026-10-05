@@ -9,7 +9,6 @@ export const loans = {
       up: 'Subió {{amount}} en el periodo',
       paid: 'Pagado en el periodo',
       ...plural('payments', '{{count}} pago', '{{count}} pagos'),
-      loans: 'Préstamos',
     },
     card: {
       label: '{{name}}, {{amount}} adeudado',

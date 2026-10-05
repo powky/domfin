@@ -18,7 +18,7 @@ export function CoverageCard({ coverage }: { coverage: CoverageState }) {
 
   return (
     <Card title={t('imports.coverage.title')}>
-      <Text variant="caption" tone="secondary">
+      <Text variant="caption" tone="secondary" style={styles.description}>
         {t('imports.coverage.description')}
       </Text>
       {status === 'error' && error ? (
@@ -125,6 +125,9 @@ function LegendItem({ status, label }: { status: MonthStatus; label: string }) {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  description: {
+    marginTop: -theme.space[2],
+  },
   notice: {
     flexDirection: 'row',
     alignItems: 'flex-start',

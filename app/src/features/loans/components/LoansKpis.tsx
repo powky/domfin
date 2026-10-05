@@ -25,7 +25,6 @@ export function LoansKpis({ overview }: { overview: LoansOverview }) {
         value={formatCurrency(overview.paidInPeriod)}
         caption={t('loans.kpis.payments', { count: overview.paymentsInPeriod })}
       />
-      <StatCard label={t('loans.kpis.loans')} value={String(overview.loans.length)} />
     </View>
   );
 }

@@ -8,7 +8,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button, Card, StatCard, Text } from '@/components/ui';
 import { accountName, schedule, useAssets, useLedger, type Asset, type ScheduleItem } from '@/features/ledger';
 import { formatDate, formatShortDate, today } from '@/lib/dates';
-import { formatCurrency, formatPercent, formatSignedCurrency } from '@/lib/format';
+import { dotSeparator, formatCurrency, formatPercent, formatSignedCurrency, keepTogether } from '@/lib/format';
 
 /** The asset's ID from its account's: "asset:torre-las-palmas" is "torre-las-palmas". */
 export const assetIdOf = (accountId: string) => accountId.replace(/^asset:/, '');
@@ -337,14 +337,15 @@ function PaymentsCard({ asset }: { asset: Asset }) {
                   <Text variant="bodyMedium" numberOfLines={1}>
                     {payment.description}
                   </Text>
-                  <Text variant="caption" tone="secondary" numberOfLines={1}>
+                  <Text variant="caption" tone="secondary" numberOfLines={2}>
                     {[
                       formatShortDate(payment.date),
                       account ? accountName(account, ledger.accounts, t) : undefined,
                       payment.auto ? t('assets.detail.linkedByText') : undefined,
                     ]
-                      .filter(Boolean)
-                      .join(' · ')}
+                      .filter((part): part is string => !!part)
+                      .map(keepTogether)
+                      .join(dotSeparator)}
                   </Text>
                 </View>
                 <View style={styles.amounts}>

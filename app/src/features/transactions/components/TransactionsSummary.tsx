@@ -4,35 +4,61 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, Select, Text } from '@/components/ui';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { dotSeparator, formatCurrency, formatNumber, keepTogether } from '@/lib/format';
 
 import type { TransactionsSummary as Summary } from '../types';
 
-/** Non-breaking spaces keep each part whole, so the line only wraps between parts. */
-const keepTogether = (text: string) => text.replace(/ /g, '\u00A0');
-
-/** "757 transactions · $250,906.78 in · $130,731.27 out · 9 need review" */
+/**
+ * "757 transactions · $250,906.78 in · $130,731.27 out · 9 need review". On
+ * phones it takes two lines, the count and the money, so no line ends on a dot.
+ */
 export function TransactionsSummary({ summary }: { summary: Summary }) {
   const { t } = useTranslation();
-  const review = t('transactions.summary.needsReview', {
-    count: summary.needsReview,
-    formatted: formatNumber(summary.needsReview),
-  });
-  return (
-    <Text tone="secondary" style={styles.summary}>
-      {keepTogether(t('transactions.summary.count', { count: summary.count, formatted: formatNumber(summary.count) }))}
-      {' · '}
-      <Text style={styles.inflow}>
-        {keepTogether(t('transactions.summary.inflow', { amount: formatCurrency(summary.inflow) }))}
-      </Text>
-      {` · ${keepTogether(t('transactions.summary.outflow', { amount: formatCurrency(summary.outflow) }))}`}
-      {summary.needsReview > 0 ? (
-        <>
-          {' · '}
-          <Text tone="accent">{keepTogether(review)}</Text>
-        </>
-      ) : null}
+  const count = keepTogether(
+    t('transactions.summary.count', { count: summary.count, formatted: formatNumber(summary.count) }),
+  );
+  const inflow = (
+    <Text style={styles.inflow}>
+      {keepTogether(t('transactions.summary.inflow', { amount: formatCurrency(summary.inflow) }))}
     </Text>
+  );
+  const outflow = `${dotSeparator}${keepTogether(t('transactions.summary.outflow', { amount: formatCurrency(summary.outflow) }))}`;
+  const review =
+    summary.needsReview > 0 ? (
+      <>
+        {dotSeparator}
+        <Text tone="accent">
+          {keepTogether(
+            t('transactions.summary.needsReview', {
+              count: summary.needsReview,
+              formatted: formatNumber(summary.needsReview),
+            }),
+          )}
+        </Text>
+      </>
+    ) : null;
+  return (
+    <>
+      <View style={styles.desktopOnly}>
+        <Text tone="secondary" style={styles.summary}>
+          {count}
+          {dotSeparator}
+          {inflow}
+          {outflow}
+          {review}
+        </Text>
+      </View>
+      <View style={[styles.phoneOnly, styles.phoneLines]}>
+        <Text tone="secondary" style={styles.summary}>
+          {count}
+          {review}
+        </Text>
+        <Text tone="secondary" style={styles.summary}>
+          {inflow}
+          {outflow}
+        </Text>
+      </View>
+    </>
   );
 }
 
@@ -132,6 +158,15 @@ const styles = StyleSheet.create((theme) => ({
   },
   inflow: {
     color: theme.colors.positive,
+  },
+  phoneLines: {
+    gap: theme.space[0.5],
+  },
+  phoneOnly: {
+    display: { xs: 'flex', md: 'none' },
+  },
+  desktopOnly: {
+    display: { xs: 'none', md: 'flex' },
   },
   selection: {
     flexDirection: 'row',

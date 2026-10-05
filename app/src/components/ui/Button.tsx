@@ -60,13 +60,13 @@ export function Button({
         </View>
       ) : null}
       {label ? (
-        <Text variant="bodyStrong" tone={labelTone} style={styles.label}>
+        <Text variant="bodyStrong" tone={labelTone} style={styles.label} numberOfLines={1}>
           {label}
         </Text>
       ) : null}
       {children}
       {Trailing ? (
-        <View>
+        <View style={styles.trailing}>
           <Trailing size={16} strokeWidth={1.75} color={iconColor} />
         </View>
       ) : null}
@@ -100,7 +100,12 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
   },
   label: {
+    flexShrink: 1,
     fontSize: { xs: theme.font.size.md, md: theme.font.size.base },
+  },
+  // At the far end when the button is stretched, like a select's chevron in a full-width row.
+  trailing: {
+    marginLeft: 'auto',
   },
   hideOnPhone: {
     display: { xs: 'none', sm: 'flex' },

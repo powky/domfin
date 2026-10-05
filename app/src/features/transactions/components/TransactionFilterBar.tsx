@@ -47,7 +47,12 @@ export function TransactionFilterBar({
   const kindOptions = kindFilters.map((value) => ({ value, label: t(`transactions.filters.kind.${value}`) }));
   return (
     <View style={styles.bar}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statusScroll}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.statusScroll}
+        contentContainerStyle={styles.statusContent}
+      >
         <SegmentedControl
           options={statusOptions}
           value={status}
@@ -96,9 +101,14 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: { xs: 'stretch', md: 'center' },
     gap: { xs: theme.space[3], md: theme.space[2] },
   },
-  // On phones the segments scroll inside the card padding.
+  // On phones the segments scroll from edge to edge of the card, so the one
+  // cut at the edge reads as "there's more", not as a broken control.
   statusScroll: {
     flexGrow: 0,
+    marginHorizontal: { xs: -theme.space[4], md: 0 },
+  },
+  statusContent: {
+    paddingHorizontal: { xs: theme.space[4], md: 0 },
   },
   dropdowns: (open: boolean) => ({
     display: { xs: open ? 'flex' : 'none', md: 'flex' },

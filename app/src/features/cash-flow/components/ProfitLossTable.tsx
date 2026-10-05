@@ -132,9 +132,11 @@ export function ProfitLossTable({ summary }: { summary: CashFlowSummary }) {
         <Text variant="caption" tone="secondary" style={styles.categoryCol}>
           {t('cashFlow.table.category')}
         </Text>
-        <Text variant="caption" tone="secondary" align="right" style={styles.percentCol}>
-          {t('cashFlow.table.percentOfIncome')}
-        </Text>
+        <View style={[styles.percentCol, styles.desktopOnly]}>
+          <Text variant="caption" tone="secondary" align="right">
+            {t('cashFlow.table.percentOfIncome')}
+          </Text>
+        </View>
         <Text variant="caption" tone="secondary" align="right" style={[styles.amountCol, amountWidth]}>
           {t('cashFlow.table.amount')}
         </Text>
@@ -200,12 +202,24 @@ function Row({
           {label}
         </Text>
       </View>
-      <Text variant="body" tone="secondary" align="right" numberOfLines={1} style={[styles.percentCol, styles.cellText]}>
-        {percent ?? ''}
-      </Text>
-      <Text variant={textVariant} align="right" numberOfLines={1} style={[styles.amountCol, styles.cellText, amountWidth]}>
-        {amount}
-      </Text>
+      <View style={[styles.percentCol, styles.desktopOnly]}>
+        <Text variant="body" tone="secondary" align="right" numberOfLines={1} style={styles.cellText}>
+          {percent ?? ''}
+        </Text>
+      </View>
+      {/* On phones the share sits under the amount, which leaves the name more room. */}
+      <View style={[styles.amountCol, amountWidth]}>
+        <Text variant={textVariant} align="right" numberOfLines={1} style={styles.cellText}>
+          {amount}
+        </Text>
+        {percent ? (
+          <View style={styles.phoneOnly}>
+            <Text variant="caption" tone="secondary" align="right">
+              {percent}
+            </Text>
+          </View>
+        ) : null}
+      </View>
       {/* The amount again, unseen and at its own width: what the column measures. */}
       <View pointerEvents="none" aria-hidden style={styles.measure}>
         <Text
@@ -269,10 +283,18 @@ const styles = StyleSheet.create((theme) => ({
     minWidth: 0,
   },
   percentCol: {
-    width: { xs: 56, md: 110 },
+    width: 110,
   },
+  // The gap keeps the widest amount, which fills its column, off the percentage.
   amountCol: {
     width: { xs: 92, md: 140 },
+    marginLeft: { xs: theme.space[2], md: theme.space[3] },
+  },
+  phoneOnly: {
+    display: { xs: 'flex', md: 'none' },
+  },
+  desktopOnly: {
+    display: { xs: 'none', md: 'flex' },
   },
   measure: {
     position: 'absolute',

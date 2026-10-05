@@ -68,7 +68,7 @@ function LoanLink({ loan }: { loan: LoanSummary }) {
         </View>
 
         <View style={styles.facts}>
-          <Fact label={t('loans.card.paid')} value={formatCurrency(loan.paidInPeriod, loan.currency)} />
+          <Fact label={t('loans.card.paid')} value={formatCurrency(loan.paidInPeriod, loan.currency)} amount />
           <Fact
             label={t('loans.card.lastPayment')}
             value={loan.lastPayment ? formatShortDate(loan.lastPayment.date) : '—'}
@@ -80,9 +80,10 @@ function LoanLink({ loan }: { loan: LoanSummary }) {
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+/** The amount keeps its full width; the dates share what's left. */
+function Fact({ label, value, amount }: { label: string; value: string; amount?: boolean }) {
   return (
-    <View style={styles.fact}>
+    <View style={amount ? styles.amountFact : styles.fact}>
       <Text variant="caption" tone="secondary">
         {label}
       </Text>
@@ -153,6 +154,10 @@ const styles = StyleSheet.create((theme) => ({
   fact: {
     flex: 1,
     minWidth: 0,
+    gap: theme.space[0.5],
+  },
+  amountFact: {
+    flexShrink: 1,
     gap: theme.space[0.5],
   },
 }));

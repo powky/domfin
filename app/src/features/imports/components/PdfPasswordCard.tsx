@@ -44,7 +44,9 @@ export function PdfPasswordCard() {
 
   return (
     <Card title={t('imports.password.title')}>
-      <Text tone="secondary">{t('imports.password.description')}</Text>
+      <Text tone="secondary" style={styles.description}>
+        {t('imports.password.description')}
+      </Text>
       <Text variant="bodyMedium">{state}</Text>
       <TextField
         value={draft}
@@ -75,6 +77,9 @@ export function PdfPasswordCard() {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  description: {
+    marginTop: -theme.space[2],
+  },
   actions: {
     flexDirection: 'row',
     flexWrap: 'wrap',

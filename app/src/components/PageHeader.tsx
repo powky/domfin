@@ -1,8 +1,10 @@
+import type { Href } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AmountsToggle } from '@/components/AmountsToggle';
+import { BackLink } from '@/components/BackLink';
 import { LogoMark } from '@/components/brand/Logo';
 import { Text } from '@/components/ui';
 
@@ -17,14 +19,26 @@ export type PageHeaderProps = {
   desktopAction?: ReactNode;
   /** Action shown at the right of the title on phones. */
   mobileAction?: ReactNode;
+  /** "‹ All accounts" above a detail page's title. */
+  back?: { href: Href; label: string };
 };
 
 /**
  * Page title block. On phones it carries the logo (there is no sidebar)
  * and stacks: title row, actions, subtitle. Every page has the eye that
- * hides amounts, last among its buttons.
+ * hides amounts, last among its buttons. A detail page's back link takes
+ * the logo's place on phones, with the buttons beside it, so a long name
+ * gets the whole width.
  */
-export function PageHeader({ title, subtitle, subtitleIcon, actions, desktopAction, mobileAction }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  subtitle,
+  subtitleIcon,
+  actions,
+  desktopAction,
+  mobileAction,
+  back,
+}: PageHeaderProps) {
   const subtitleContent = (
     <>
       {subtitleIcon}
@@ -34,20 +48,26 @@ export function PageHeader({ title, subtitle, subtitleIcon, actions, desktopActi
     </>
   );
 
-  return (
+  const phoneButtons = (
+    <View style={[styles.phoneButtons, styles.mobileOnly]}>
+      {mobileAction}
+      <AmountsToggle />
+    </View>
+  );
+
+  const header = (
     <View style={styles.container}>
       <View style={styles.titleBlock}>
         <View style={styles.titleRow}>
-          <View style={styles.mobileOnly}>
-            <LogoMark size={32} />
-          </View>
-          <Text variant="display" style={styles.title} numberOfLines={1}>
+          {back ? null : (
+            <View style={styles.mobileOnly}>
+              <LogoMark size={32} />
+            </View>
+          )}
+          <Text variant="display" style={styles.title} numberOfLines={2}>
             {title}
           </Text>
-          {mobileAction ? <View style={styles.mobileOnly}>{mobileAction}</View> : null}
-          <View style={styles.mobileOnly}>
-            <AmountsToggle />
-          </View>
+          {back ? null : phoneButtons}
         </View>
         {subtitle ? <View style={[styles.subtitle, styles.desktopOnly]}>{subtitleContent}</View> : null}
       </View>
@@ -62,14 +82,37 @@ export function PageHeader({ title, subtitle, subtitleIcon, actions, desktopActi
       {subtitle ? <View style={[styles.subtitle, styles.mobileOnly]}>{subtitleContent}</View> : null}
     </View>
   );
+
+  if (!back) return header;
+  return (
+    <View style={styles.withBack}>
+      <View style={styles.backRow}>
+        <BackLink href={back.href} label={back.label} />
+        {phoneButtons}
+      </View>
+      {header}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create((theme) => ({
+  withBack: {
+    gap: { xs: theme.space[2], md: theme.space[1] },
+  },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.space[3],
+  },
+  // On a narrow desktop the buttons go under the title instead of squeezing it.
   container: {
     flexDirection: { xs: 'column', md: 'row' },
+    flexWrap: { xs: 'nowrap', md: 'wrap' },
     alignItems: { xs: 'stretch', md: 'flex-start' },
     justifyContent: 'space-between',
-    gap: { xs: theme.space[3], md: theme.space[6] },
+    rowGap: theme.space[3],
+    columnGap: theme.space[6],
   },
   titleBlock: {
     flexShrink: 1,
@@ -82,6 +125,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   title: {
     flex: { xs: 1, md: undefined },
+  },
+  phoneButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space[2],
   },
   subtitle: {
     flexDirection: 'row',

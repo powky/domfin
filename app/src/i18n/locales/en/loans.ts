@@ -7,7 +7,6 @@ export const loans = {
       paid: 'Paid this period',
       payments_one: '{{count}} payment',
       payments_other: '{{count}} payments',
-      loans: 'Loans',
     },
     card: {
       label: '{{name}}, {{amount}} owed',

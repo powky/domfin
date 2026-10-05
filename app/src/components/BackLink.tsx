@@ -31,7 +31,6 @@ export function BackLink({ href, label }: { href: Href; label: string }) {
 const styles = StyleSheet.create((theme) => ({
   container: {
     alignSelf: 'flex-start',
-    marginBottom: -theme.space[2],
   },
   link: {
     flexDirection: 'row',
