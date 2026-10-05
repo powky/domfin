@@ -54,10 +54,13 @@ export function shiftRange(range: MonthRange, direction: -1 | 1): MonthRange | n
 const monthLabel = (key: string, style: 'short' | 'long') =>
   formatDateValue(key, style === 'long' ? { month: 'short', year: 'numeric' } : { month: 'short' });
 
+/** "Jan – Oct 2026" within a year, "Nov 2025 – Oct 2026" across two. */
 export function formatRange(range: MonthRange) {
-  const start = monthLabel(LEDGER_MONTHS[range.start], 'long');
-  if (range.start === range.end) return start;
-  return `${start} – ${monthLabel(LEDGER_MONTHS[range.end], 'long')}`;
+  const start = LEDGER_MONTHS[range.start];
+  const end = LEDGER_MONTHS[range.end];
+  if (range.start === range.end) return monthLabel(start, 'long');
+  const sameYear = start.slice(0, 4) === end.slice(0, 4);
+  return `${monthLabel(start, sameYear ? 'short' : 'long')} – ${monthLabel(end, 'long')}`;
 }
 
 export const shortMonthLabel = (key: string) => monthLabel(key, 'short');

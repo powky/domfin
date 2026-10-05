@@ -29,7 +29,8 @@ export type SpendingTrendCardProps = {
 
 export function SpendingTrendCard({ summary, selected }: SpendingTrendCardProps) {
   const { t } = useTranslation();
-  const { theme } = useUnistyles();
+  const { theme, rt } = useUnistyles();
+  const tap = rt.breakpoint === 'xs' || rt.breakpoint === 'sm';
   const [view, setView] = useState<TrendView>('monthly');
   const viewOptions = viewValues.map((value) => ({ value, label: t(`spending.trend.views.${value}`) }));
 
@@ -55,8 +56,10 @@ export function SpendingTrendCard({ summary, selected }: SpendingTrendCardProps)
     >
       <Text variant="body" tone="secondary" style={styles.hint}>
         {selected.length > 0
-          ? t('spending.trend.showing', { items: selected.map((item) => item.label).join(', ') })
-          : t('spending.trend.hint')}
+          ? t(tap ? 'spending.trend.showingTap' : 'spending.trend.showing', {
+              items: selected.map((item) => item.label).join(', '),
+            })
+          : t(tap ? 'spending.trend.hintTap' : 'spending.trend.hint')}
       </Text>
       <BarChart
         labels={summary.months.map(shortMonthLabel)}

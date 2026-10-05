@@ -337,19 +337,17 @@ export function AssetFormScreen({ id }: { id?: string }) {
   return (
     <Screen
       header={
-        <View style={styles.header}>
-          <BackLink href={back} label={t('assets.form.back')} />
-          <PageHeader
-            title={
-              existing
-                ? t('assets.form.editTitle', { name: existing.name })
-                : byKind(
-                    { debt: t('assets.form.newDebtTitle'), vehicle: t('assets.form.newVehicleTitle') },
-                    t('assets.form.newTitle'),
-                  )
-            }
-          />
-        </View>
+        <PageHeader
+          back={{ href: back, label: t('assets.form.back') }}
+          title={
+            existing
+              ? t('assets.form.editTitle', { name: existing.name })
+              : byKind(
+                  { debt: t('assets.form.newDebtTitle'), vehicle: t('assets.form.newVehicleTitle') },
+                  t('assets.form.newTitle'),
+                )
+          }
+        />
       }
     >
       <Card>
@@ -557,9 +555,6 @@ export function AssetFormScreen({ id }: { id?: string }) {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  header: {
-    gap: theme.space[3],
-  },
   row: {
     flexDirection: 'row',
     gap: theme.space[3],

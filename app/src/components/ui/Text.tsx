@@ -65,8 +65,9 @@ const styles = StyleSheet.create((theme) => ({
       variant: {
         display: {
           fontFamily: theme.font.family.bold,
-          fontSize: theme.font.size['3xl'],
-          lineHeight: theme.font.lineHeight['3xl'],
+          // 26 on phones fits every page title on one line at 375 points, beside the logo and two buttons.
+          fontSize: { xs: 26, md: theme.font.size['3xl'] },
+          lineHeight: { xs: 32, md: theme.font.lineHeight['3xl'] },
           letterSpacing: theme.font.letterSpacing.tight,
         },
         kpi: {

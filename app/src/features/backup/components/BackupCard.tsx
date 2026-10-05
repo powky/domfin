@@ -133,7 +133,9 @@ export function BackupCard() {
   } else {
     body = (
       <>
-        <Text tone="secondary">{t('backup.description')}</Text>
+        <Text tone="secondary" style={styles.description}>
+          {t('backup.description')}
+        </Text>
         <View style={styles.actions}>
           <Button variant="primary" label={t('backup.turnOn')} onPress={() => open('setup')} />
           <Button label={t('backup.restoreOne')} onPress={() => open('restore')} />
@@ -241,6 +243,9 @@ function Overview({
 const styles = StyleSheet.create((theme) => ({
   body: {
     gap: theme.space[3],
+  },
+  description: {
+    marginTop: -theme.space[2],
   },
   row: {
     flexDirection: 'row',

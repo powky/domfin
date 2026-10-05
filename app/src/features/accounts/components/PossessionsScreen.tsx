@@ -13,7 +13,7 @@ import { inDisplay, useConverter } from '@/features/currency';
 import { schedule, useAssets, type Asset } from '@/features/ledger';
 import { sumCents } from '@/lib/currency';
 import { formatDate, today } from '@/lib/dates';
-import { formatCurrency, formatPercent } from '@/lib/format';
+import { formatCurrency, formatPercent, keepTogether } from '@/lib/format';
 
 import type { Institution } from '../types';
 import { scheduleLabel } from './AssetDetail';
@@ -73,7 +73,10 @@ export function PossessionsScreen() {
             <Card key={kind} title={t(`possessions.groups.${kind}`)}>
               <View accessibilityRole="list">
                 {items.map((asset, index) => (
-                  <View key={asset.id} style={[styles.item, index > 0 && styles.divider]}>
+                  <View
+                    key={asset.id}
+                    style={[styles.item, index > 0 && styles.divider, index < items.length - 1 && styles.spaced]}
+                  >
                     <PossessionRow asset={asset} icon={icon} />
                     {asset.kind === 'property' ? <PlanSummary asset={asset} /> : null}
                   </View>
@@ -126,7 +129,7 @@ function PossessionRow({ asset, icon }: { asset: Asset; icon: NonNullable<Instit
             {asset.name}
           </Text>
           {caption ? (
-            <Text variant="caption" tone="secondary" numberOfLines={1}>
+            <Text variant="caption" tone="secondary" numberOfLines={2}>
               {caption}
             </Text>
           ) : null}
@@ -202,8 +205,8 @@ function PlanSummary({ asset }: { asset: Asset }) {
         <Text variant="caption" tone={next.status === 'overdue' ? 'accent' : 'secondary'}>
           {t(next.status === 'overdue' ? 'possessions.plan.overdue' : 'possessions.plan.next', {
             amount: money(next.amount - next.covered),
-            date: next.date ? formatDate(next.date) : '',
-            label: scheduleLabel(next, t),
+            date: next.date ? keepTogether(formatDate(next.date)) : '',
+            label: keepTogether(scheduleLabel(next, t)),
           })}
         </Text>
       ) : null}
@@ -229,6 +232,9 @@ function PlanSummary({ asset }: { asset: Asset }) {
 const styles = StyleSheet.create((theme) => ({
   item: {
     gap: theme.space[1],
+  },
+  // Room before the next one's divider; the last one has the card's padding.
+  spaced: {
     paddingBottom: theme.space[2],
   },
   divider: {

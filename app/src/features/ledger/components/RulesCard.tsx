@@ -8,7 +8,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Button, Card, Checkbox, SegmentedControl, Select, Text, TextField } from '@/components/ui';
 import type { Currency } from '@/lib/currency';
 import { formatDateValue } from '@/lib/dates';
-import { formatCurrency } from '@/lib/format';
+import { dotSeparator, formatCurrency, keepTogether } from '@/lib/format';
 
 import { useRules, type Rule } from '../api/classification';
 import { useLedger } from '../api/ledger';
@@ -79,17 +79,22 @@ function toRule(draft: Draft): Rule | null {
 function describe(rule: Rule, t: TFunction) {
   const currency = (rule.currency as Currency | undefined) ?? 'DOP';
   const parts: string[] = [];
+  // The texts can be long, so this part may still break.
   if (rule.contains?.length) {
     parts.push(t('classification.rules.summary.contains', { texts: joinList(rule.contains.map((text) => `"${text}"`), t) }));
   }
-  if (rule.direction) parts.push(t(`classification.rules.summary.${rule.direction}`));
-  if (rule.minAmount) parts.push(t('classification.rules.summary.from', { amount: formatCurrency(rule.minAmount / 100, currency) }));
-  if (rule.maxAmount) parts.push(t('classification.rules.summary.upTo', { amount: formatCurrency(rule.maxAmount / 100, currency) }));
+  if (rule.direction) parts.push(keepTogether(t(`classification.rules.summary.${rule.direction}`)));
+  if (rule.minAmount) {
+    parts.push(keepTogether(t('classification.rules.summary.from', { amount: formatCurrency(rule.minAmount / 100, currency) })));
+  }
+  if (rule.maxAmount) {
+    parts.push(keepTogether(t('classification.rules.summary.upTo', { amount: formatCurrency(rule.maxAmount / 100, currency) })));
+  }
   if (rule.months?.length) {
     const names = rule.months.map((month) => formatDateValue(`2026-${String(month).padStart(2, '0')}`, { month: 'short' }));
-    parts.push(t('classification.rules.summary.months', { months: joinList(names, t) }));
+    parts.push(keepTogether(t('classification.rules.summary.months', { months: joinList(names, t) })));
   }
-  return parts.join(' · ');
+  return parts.join(dotSeparator);
 }
 
 /**
@@ -155,7 +160,7 @@ export function RulesCard() {
                   {rule.name}
                 </Text>
                 <Text variant="caption" tone="secondary">
-                  {`${describe(rule, t)} → ${names.category(rule.categoryId)}`}
+                  {`${describe(rule, t)} ${keepTogether(`→ ${names.category(rule.categoryId)}`)}`}
                 </Text>
               </View>
               <Button

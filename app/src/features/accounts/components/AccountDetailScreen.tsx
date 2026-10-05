@@ -1,8 +1,6 @@
 import { Link } from 'expo-router';
 import { FileUp } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
 
 import { BackLink } from '@/components/BackLink';
 import { PageHeader } from '@/components/PageHeader';
@@ -36,19 +34,17 @@ export function AccountDetailScreen({ id }: { id: string }) {
   return (
     <Screen
       header={
-        <View style={styles.header}>
-          <BackLink href="/accounts" label={t('accounts.detail.back')} />
-          <PageHeader
-            title={account.name}
-            subtitle={subtitle}
-            subtitleIcon={<InstitutionAvatar institution={account.institution} size="xs" />}
-            actions={
-              <PeriodControls range={range} preset={preset} onRangeChange={setRange} onPresetChange={setPreset} />
-            }
-            desktopAction={asset ? <EditAssetButton accountId={account.id} /> : <ImportButton />}
-            mobileAction={asset ? <EditAssetButton accountId={account.id} /> : <ImportButton iconOnly />}
-          />
-        </View>
+        <PageHeader
+          back={{ href: '/accounts', label: t('accounts.detail.back') }}
+          title={account.name}
+          subtitle={subtitle}
+          subtitleIcon={<InstitutionAvatar institution={account.institution} size="xs" />}
+          actions={
+            <PeriodControls range={range} preset={preset} onRangeChange={setRange} onPresetChange={setPreset} />
+          }
+          desktopAction={asset ? <EditAssetButton accountId={account.id} /> : <ImportButton />}
+          mobileAction={asset ? <EditAssetButton accountId={account.id} /> : <ImportButton iconOnly />}
+        />
       }
     >
       {asset ? (
@@ -85,13 +81,7 @@ function ImportButton({ iconOnly = false }: { iconOnly?: boolean }) {
 function AccountLoading() {
   const { t } = useTranslation();
   return (
-    <Screen
-      header={
-        <View style={styles.header}>
-          <BackLink href="/accounts" label={t('accounts.detail.back')} />
-        </View>
-      }
-    >
+    <Screen header={<BackLink href="/accounts" label={t('accounts.detail.back')} />}>
       <Card>
         <Text tone="secondary">{t('accounts.live.loading')}</Text>
       </Card>
@@ -104,10 +94,10 @@ function AccountNotFound() {
   return (
     <Screen
       header={
-        <View style={styles.header}>
-          <BackLink href="/accounts" label={t('accounts.detail.back')} />
-          <PageHeader title={t('accounts.detail.notFoundTitle')} />
-        </View>
+        <PageHeader
+          back={{ href: '/accounts', label: t('accounts.detail.back') }}
+          title={t('accounts.detail.notFoundTitle')}
+        />
       }
     >
       <Card>
@@ -116,9 +106,3 @@ function AccountNotFound() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create((theme) => ({
-  header: {
-    gap: theme.space[3],
-  },
-}));

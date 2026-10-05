@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Card, SegmentedControl } from '@/components/ui';
 
@@ -16,13 +16,15 @@ const groupingValues = ['groups', 'categories', 'both'] as const satisfies reado
 
 const viewValues = ['sankey', 'pl'] as const satisfies readonly ChartView[];
 
-const isCompact = () => UnistylesRuntime.breakpoint === 'xs' || UnistylesRuntime.breakpoint === 'sm';
-
 export function WhereMoneyWentCard({ summary }: { summary: CashFlowSummary }) {
   const { t } = useTranslation();
+  const { rt } = useUnistyles();
   const [grouping, setGrouping] = useState<FlowGrouping>('groups');
-  // Phones open on the table, which reads better than a wide chart.
-  const [view, setView] = useState<ChartView>(() => (isCompact() ? 'pl' : 'sankey'));
+  const [view, setView] = useState<ChartView>('sankey');
+  // Phones only get the table: the chart needs more width than they have,
+  // and a third of it, scrolled sideways, says little.
+  const compact = rt.breakpoint === 'xs' || rt.breakpoint === 'sm';
+  const shown = compact ? 'pl' : view;
 
   const groupingOptions = groupingValues.map((value) => ({ value, label: t(`cashFlow.grouping.${value}`) }));
   const viewOptions = viewValues.map((value) => ({ value, label: t(`cashFlow.chartType.${value}`) }));
@@ -31,27 +33,29 @@ export function WhereMoneyWentCard({ summary }: { summary: CashFlowSummary }) {
     <Card
       title={t('cashFlow.whereMoneyWent')}
       actions={
-        <>
-          {view === 'sankey' ? (
-            <View style={styles.grouping}>
-              <SegmentedControl
-                options={groupingOptions}
-                value={grouping}
-                onChange={setGrouping}
-                accessibilityLabel={t('cashFlow.grouping.label')}
-              />
-            </View>
-          ) : null}
-          <SegmentedControl
-            options={viewOptions}
-            value={view}
-            onChange={setView}
-            accessibilityLabel={t('cashFlow.chartType.label')}
-          />
-        </>
+        compact ? undefined : (
+          <>
+            {view === 'sankey' ? (
+              <View style={styles.grouping}>
+                <SegmentedControl
+                  options={groupingOptions}
+                  value={grouping}
+                  onChange={setGrouping}
+                  accessibilityLabel={t('cashFlow.grouping.label')}
+                />
+              </View>
+            ) : null}
+            <SegmentedControl
+              options={viewOptions}
+              value={view}
+              onChange={setView}
+              accessibilityLabel={t('cashFlow.chartType.label')}
+            />
+          </>
+        )
       }
     >
-      {view === 'sankey' ? <SankeyChart summary={summary} grouping={grouping} /> : <ProfitLossTable summary={summary} />}
+      {shown === 'sankey' ? <SankeyChart summary={summary} grouping={grouping} /> : <ProfitLossTable summary={summary} />}
     </Card>
   );
 }

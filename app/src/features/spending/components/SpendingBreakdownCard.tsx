@@ -145,11 +145,26 @@ function BreakdownRow({
     >
       <View style={styles.rowHeader}>
         <View style={styles.name}>
-          <ColorSwatch color={color} />
-          <Text numberOfLines={1} style={styles.nameText}>
-            <Text variant="bodyStrong">{item.label}</Text>
-            {item.context ? <Text tone="secondary"> · {item.context}</Text> : null}
-          </Text>
+          <View style={styles.swatch}>
+            <ColorSwatch color={color} />
+          </View>
+          {/* "Groceries · Food" on one line; on phones the group goes under the name, so neither is cut. */}
+          <View style={[styles.nameText, styles.desktopOnly]}>
+            <Text numberOfLines={1}>
+              <Text variant="bodyStrong">{item.label}</Text>
+              {item.context ? <Text tone="secondary"> · {item.context}</Text> : null}
+            </Text>
+          </View>
+          <View style={[styles.nameText, styles.phoneOnly]}>
+            <Text variant="bodyStrong" numberOfLines={2}>
+              {item.label}
+            </Text>
+            {item.context ? (
+              <Text variant="caption" tone="secondary" numberOfLines={1}>
+                {item.context}
+              </Text>
+            ) : null}
+          </View>
         </View>
         <View style={styles.values}>
           <Text variant="bodyStrong">{formatCurrency(item.amount)}</Text>
@@ -205,18 +220,29 @@ const styles = StyleSheet.create((theme) => ({
   },
   rowHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: { xs: 'flex-start', md: 'center' },
     justifyContent: 'space-between',
     gap: theme.space[3],
   },
   name: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: { xs: 'flex-start', md: 'center' },
     gap: theme.space[2],
     flexShrink: 1,
   },
+  // As tall as the name's first line, so the dot stays beside it when the group goes under.
+  swatch: {
+    height: theme.font.lineHeight.base,
+    justifyContent: 'center',
+  },
   nameText: {
     flexShrink: 1,
+  },
+  phoneOnly: {
+    display: { xs: 'flex', md: 'none' },
+  },
+  desktopOnly: {
+    display: { xs: 'none', md: 'flex' },
   },
   values: {
     flexDirection: 'row',

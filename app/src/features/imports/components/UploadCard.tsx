@@ -117,6 +117,7 @@ function ResultRow({ result, divided }: { result: ImportResult; divided: boolean
 
 const styles = StyleSheet.create((theme) => ({
   intro: {
+    marginTop: -theme.space[2],
     gap: theme.space[1],
   },
   action: {

@@ -3,3 +3,4 @@ export * from './Entrance';
 export * from './Odometer';
 export * from './reducedMotion';
 export * from './useSlidingIndicator';
+export * from './Wipe';

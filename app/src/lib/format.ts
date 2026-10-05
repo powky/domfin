@@ -83,3 +83,9 @@ export function formatNumber(value: number, options: Intl.NumberFormatOptions = 
 export function decimalSeparator() {
   return formatNumber(1.5, { minimumFractionDigits: 1 }).replace(/\d/g, '');
 }
+
+/** Non-breaking spaces keep a short phrase whole, like "Installment 3 of 7": a line only wraps around it. */
+export const keepTogether = (text: string) => text.replace(/ /g, '\u00A0');
+
+/** " · " between parts of a line: when it wraps, the dot ends a line instead of starting the next. */
+export const dotSeparator = '\u00A0· ';

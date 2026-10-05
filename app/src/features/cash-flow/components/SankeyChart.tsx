@@ -1,9 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   ReduceMotion,
-  useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -11,9 +10,9 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 
-import { timing, useEntranceDelay, useReducedMotion } from '@/components/motion';
+import { Wipe, timing, useEntranceDelay, useReducedMotion } from '@/components/motion';
 import { Text } from '@/components/ui';
 import { formatCurrency, formatPercent } from '@/lib/format';
 
@@ -32,8 +31,6 @@ const TOP_LABEL_HEIGHT = 44;
 // Extra room beyond the label slots so the large flows read as thick ribbons.
 const FLOW_ROOM = 200;
 const PADDING = { top: TOP_LABEL_HEIGHT + 4, right: LABEL_WIDTH + LABEL_GAP, bottom: 4, left: LABEL_WIDTH + LABEL_GAP };
-
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 export type SankeyChartProps = {
   summary: CashFlowSummary;
@@ -85,8 +82,6 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
   );
 
   const reveal = useFlowReveal(graph);
-  const clipId = `sankey-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  const clipProps = useAnimatedProps(() => ({ width: reveal.value * width }));
 
   const onLayout = (event: LayoutChangeEvent) => setContainerWidth(Math.round(event.nativeEvent.layout.width));
 
@@ -95,13 +90,8 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
       {layout ? (
         <ScrollView horizontal scrollEnabled={width > containerWidth} showsHorizontalScrollIndicator={width > containerWidth}>
           <View style={{ width, height }}>
-            <Svg width={width} height={height}>
-              <Defs>
-                <ClipPath id={clipId}>
-                  <AnimatedRect x={0} y={0} height={height} animatedProps={clipProps} />
-                </ClipPath>
-              </Defs>
-              <G clipPath={`url(#${clipId})`}>
+            <Wipe reveal={reveal} width={width}>
+              <Svg width={width} height={height}>
                 {layout.links.map((link) => (
                   <Path key={`${link.source}->${link.target}`} d={link.path} fill={link.color} />
                 ))}
@@ -116,8 +106,8 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
                     fill={node.color}
                   />
                 ))}
-              </G>
-            </Svg>
+              </Svg>
+            </Wipe>
             {layout.nodes.map((node) => (
               <NodeLabel key={node.id} node={node} meta={graph.meta[node.id]} reveal={reveal} at={node.x0 / width} />
             ))}
