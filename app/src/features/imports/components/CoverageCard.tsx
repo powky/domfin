@@ -55,13 +55,14 @@ function AccountMonths({ item, divided }: { item: AccountCoverage; divided: bool
         </Text>
       </View>
       <View style={styles.months}>
+        {/* An account can have two statements in a month, when its cut day changes. */}
         {months.map((month) => (
-          <MonthChip key={month.month} month={month} />
+          <MonthChip key={`${month.month}-${month.date ?? ''}`} month={month} />
         ))}
       </View>
       {flagged.flatMap((month) =>
         (month.issues ?? []).map((issue) => (
-          <Text key={`${month.month}-${issue}`} variant="caption" tone="secondary">
+          <Text key={`${month.month}-${month.date ?? ''}-${issue}`} variant="caption" tone="secondary">
             {t('imports.coverage.issue', { month: formatMonthYear(month.month), issue })}
           </Text>
         )),
