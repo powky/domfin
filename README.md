@@ -32,6 +32,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   que cubriste con préstamos), y una tabla con el porcentaje de tus
   ingresos.
 - **Gastos**: por grupo, por categoría y por comercio, mes a mes.
+- **Presupuesto**: tus gastos fijos (alquiler, servicios, cuotas,
+  suscripciones), que Domfin encuentra porque se repiten mes tras mes en tus
+  estados, cuáles ya pagaste este mes y cuánto te queda para lo demás.
 - **Transacciones**: cada movimiento clasificado solo (por el código del
   comercio, la descripción del banco, tu nómina y tus reglas). Lo que falte
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
@@ -351,12 +354,10 @@ proponer otra cosa,
 - [ ] Guardar lo que marcas como revisado, lo que ocultas y lo que agregas a
   mano. Hoy dura mientras la app está abierta.
 
-**Salario y gastos fijos**
+**Salario**
 
 - [ ] Desglose de la nómina: lo que te descuentan cada mes (ISR, AFP y SFS)
   y lo acumulado en el año.
-- [ ] Gastos fijos: cuánto suman cada mes los pagos que no puedes dejar de
-  hacer (alquiler, servicios, cuotas y suscripciones).
 
 **Planificación**
 
@@ -396,6 +397,9 @@ proponer otra cosa,
   impuesto.
 - [x] La tasa del dólar del Banco Central del día de cada movimiento, con el
   histórico guardado en tu computadora.
+- [x] Gastos fijos y el presupuesto del mes: los pagos que se repiten mes
+  tras mes (alquiler, servicios, cuotas y suscripciones), cuáles pagaste y
+  cuánto te queda para lo demás.
 - [x] Patrimonio neto, préstamos y posesiones: un inmueble en plano con su
   plan de pagos, acciones, tu fondo de pensiones y tu vehículo, que se
   deprecia.

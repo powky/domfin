@@ -70,10 +70,24 @@ domfin-api. Sin estados, las pantallas lo dicen y llevan a importarlos.
   Patrimonio neto). Una deuda con *plan de cuotas* (saldo a una fecha, tasa,
   primera y última cuota) baja con sus cuotas sin movimientos: es para un
   préstamo que otro paga por ti, y en Préstamos sus pagos salen de ese plan.
+- *Presupuesto* (`features/budget`) son los gastos fijos y el plan del mes.
+  Los pagos que se repiten salen del libro, en la app
+  (`lib/recurring.ts`): se agrupan por a quién van (el comercio o la
+  descripción sin números, `payeeOf`) y su moneda, y son sugerencia los que
+  se pagaron en al menos 3 de los últimos 12 meses completos, en 3 de cada 4
+  meses desde el primero, todavía, una o dos veces al mes y por un monto
+  parecido. Lo que sigue lo que haces ese mes (supermercado, combustible,
+  restaurantes, viajes) y la retención de la DGII nunca son gasto fijo. Lo
+  que el usuario agrega, descarta y el ingreso con que planea se guarda en
+  domfin-api (`/ledger/budget`); cada gasto fijo se sigue por su `match`, y
+  si falta un pago se juzga con el último estado de la cuenta de la que
+  sale. Las funciones de `lib/` no cargan React Native, para que
+  `npm test` las pruebe.
 - *Configuración → Respaldos* (`features/backup`) activa los respaldos
   cifrados de domfin-api en una carpeta de nube (`/backup/*`), los corre y
   restaura uno, aquí o en otra computadora. Restaurar cambia todo lo que la
-  API tiene: la app vuelve a pedir el libro, los activos y las cuentas, y las
+  API tiene: la app vuelve a pedir el libro, los activos, las cuentas y el
+  presupuesto, y las
   tarjetas de Configuración se montan de nuevo (`useRestored`). La clave de
   recuperación se muestra una vez; en la web se puede copiar, y en el
   teléfono se selecciona.

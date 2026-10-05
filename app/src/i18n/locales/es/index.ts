@@ -3,6 +3,7 @@ import type { Translation } from '../types';
 import { accounts } from './accounts';
 import { assets } from './assets';
 import { backup } from './backup';
+import { budget } from './budget';
 import { cashFlow } from './cashFlow';
 import { classification } from './classification';
 import { common } from './common';
@@ -23,6 +24,7 @@ export const es = {
   ...currency,
   ...cashFlow,
   ...spending,
+  ...budget,
   ...transactions,
   ...netWorth,
   ...accounts,
