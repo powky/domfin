@@ -13,6 +13,7 @@ npm run web                 # dev server web
 npm run typecheck           # tsc --noEmit
 npm run lint                # expo lint
 npm run contrast            # contraste de los colores, en el tema claro y el oscuro
+npm test                    # pruebas (src/**/*.test.ts) con el corredor de Node
 npx expo install <paquete>  # siempre en vez de npm install <paquete>: elige la versión del SDK
 npx expo-doctor             # problemas de dependencias y configuración
 ```

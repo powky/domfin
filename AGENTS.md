@@ -21,7 +21,7 @@ la misma computadora.
 cd api && go run ./cmd/api                    # :8080
 cd api && go test ./... && gofmt -l .         # gofmt debe salir vacío
 cd app && npm run web                         # :8081
-cd app && npm run typecheck && npm run lint && npm run contrast
+cd app && npm run typecheck && npm run lint && npm run contrast && npm test
 ```
 
 ## Reglas

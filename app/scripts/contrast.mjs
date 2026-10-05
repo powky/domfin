@@ -2,27 +2,7 @@
 // and the dark theme: text needs a contrast of 4.5:1 with what's behind it,
 // and icons, chart marks and the outline of controls 3:1 (WCAG 2.2 AA,
 // 1.4.3 and 1.4.11). `npm run contrast`; `--all` lists every pair.
-import module from 'node:module';
-
-// The theme is TypeScript, which Node reads itself from 22.18 on.
-if (!process.features.typescript || typeof module.registerHooks !== 'function') {
-  console.error(`npm run contrast necesita Node 22.18 o más nuevo, que lee TypeScript; este es ${process.version}.`);
-  process.exit(1);
-}
-// Its imports leave out the extension, as Metro takes them: this finds the files.
-module.registerHooks({
-  resolve(specifier, context, nextResolve) {
-    const candidates = specifier.startsWith('.') ? [specifier, `${specifier}.ts`, `${specifier}/index.ts`] : [specifier];
-    for (const [index, candidate] of candidates.entries()) {
-      try {
-        const resolved = nextResolve(candidate, context);
-        return resolved.url.endsWith('.ts') ? { ...resolved, format: 'module-typescript' } : resolved;
-      } catch (error) {
-        if (index === candidates.length - 1) throw error;
-      }
-    }
-  },
-});
+import './typescript.mjs';
 
 const { appThemes } = await import('../src/theme/themes.ts');
 const { selectionColors } = await import('../src/features/net-worth/lib/selection.ts');

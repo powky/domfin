@@ -12,6 +12,7 @@ npx expo run:ios     # development build (Unistyles usa módulos nativos: Expo G
 npx expo run:android
 npm run typecheck && npm run lint
 npm run contrast     # el contraste de los colores, en el tema claro y el oscuro
+npm test             # las pruebas de lo que no tiene pantalla
 ```
 
 ## Datos
@@ -187,6 +188,10 @@ src/
   lo que el sistema dibuja dentro de la app (el teclado en iOS, las barras de
   desplazamiento) sigue el tema elegido (`Appearance.setColorScheme`). La app
   elige el tema y Unistyles lo pone con `setTheme`, sin `adaptiveThemes`.
+- `npm test` (`scripts/test.mjs`) corre los `*.test.ts` de `src` con el
+  corredor de pruebas de Node, que lee TypeScript solo (22.18 o más nuevo):
+  es para lo que no tiene pantalla, así que esos archivos no importan nada
+  de React Native. Corre en CI.
 - `npm run contrast` (`scripts/contrast.mjs`) revisa que lo que la app pone
   junto se lea en los dos temas, con los mínimos de WCAG 2.2 AA: 4.5:1 el
   texto; 3:1 los íconos, los gráficos y el borde de los controles. Un token
