@@ -39,6 +39,8 @@ export type SankeyLayoutOptions = {
   labelHeight: number;
   gap: number;
   padding: { top: number; right: number; bottom: number; left: number };
+  /** Where a column shorter than the chart sits: centered (the default) or at the top. */
+  align?: 'center' | 'top';
 };
 
 export type SankeyLayout = {
@@ -53,7 +55,7 @@ export function layoutSankey(
   linksIn: SankeyLinkInput[],
   options: SankeyLayoutOptions,
 ): SankeyLayout {
-  const { width, height, nodeWidth, labelHeight, gap, padding } = options;
+  const { width, height, nodeWidth, labelHeight, gap, padding, align = 'center' } = options;
 
   const inValue = new Map<string, number>();
   const outValue = new Map<string, number>();
@@ -93,7 +95,7 @@ export function layoutSankey(
   columns.forEach((column, columnIndex) => {
     const slots = column.map((node) => Math.max(value(node.id) * k, slotMin(node)));
     const used = slots.reduce((a, b) => a + b, 0) + gap * (column.length - 1);
-    let y = padding.top + (available - used) / 2;
+    let y = padding.top + (align === 'top' ? 0 : (available - used) / 2);
     const x0 = padding.left + columnIndex * step;
 
     column.forEach((node, index) => {
