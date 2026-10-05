@@ -234,7 +234,10 @@ Con Reanimated, en web y nativo. Duraciones, curvas y resortes salen de
 - **Números**: `StatCard` pinta su valor con `Odometer`; los dígitos ruedan al
   cambiar de periodo.
 - **Gráficos**: se dibujan la primera vez y después se transforman hacia los
-  datos nuevos (líneas, barras, dona, Sankey, barras de progreso).
+  datos nuevos (líneas, barras, dona, Sankey, barras de progreso). Las líneas
+  y el Sankey aparecen de izquierda a derecha con `Wipe`, que recorta con una
+  vista y no con un `ClipPath` animado dentro del SVG: Android no vuelve a
+  pintar un `ClipPath` que cambia y la gráfica se quedaba vacía.
 - **Reduce motion**: `useReducedMotion()` (de `components/motion`) sigue el
   ajuste del sistema en vivo. Con él activo nada se mueve: fundidos cortos y los
   valores saltan. Para probarlo en web: `__setReducedMotion(true)` en la consola.

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   ReduceMotion,
@@ -9,9 +9,9 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import Svg, { Circle, ClipPath, Defs, G, Line, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, G, Line, Path } from 'react-native-svg';
 
-import { ease, timing, useEntranceDelay, useFadeInOnChange, useReducedMotion } from '@/components/motion';
+import { Wipe, ease, timing, useEntranceDelay, useFadeInOnChange, useReducedMotion } from '@/components/motion';
 import { ColorSwatch, Text } from '@/components/ui';
 import { elevation, motion } from '@/theme';
 
@@ -62,7 +62,6 @@ const HOVER_OUT_DELAY = 80;
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedG = Animated.createAnimatedComponent(G);
 
 export function LineChart({
@@ -106,8 +105,6 @@ export function LineChart({
         })
       : [];
   const { morph, progress, reveal } = useLineMorph(shapes, width, height, plotBottom);
-  const clipId = `line-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  const clipProps = useAnimatedProps(() => ({ width: reveal.value * width }));
   // A new scale or new months: the axis fades in while the lines morph.
   const axis = useFadeInOnChange(`${scale.ticks.join()}|${labels.join()}`);
 
@@ -135,11 +132,6 @@ export function LineChart({
       {width > 0 && count > 0 ? (
         <>
           <Svg width={width} height={height}>
-            <Defs>
-              <ClipPath id={clipId}>
-                <AnimatedRect x={0} y={0} height={height} animatedProps={clipProps} />
-              </ClipPath>
-            </Defs>
             <AnimatedG animatedProps={axis.props}>
               {scale.ticks.map((tick) => (
                 <Line
@@ -164,7 +156,10 @@ export function LineChart({
                 strokeDasharray="4 4"
               />
             ) : null}
-            <G clipPath={`url(#${clipId})`}>
+          </Svg>
+          {/* Over the grid, in its own SVG: the lines draw themselves left to right. */}
+          <Wipe reveal={reveal} width={width}>
+            <Svg width={width} height={height}>
               {area && main ? (
                 <MorphPath shape={main} generation={morph.generation} progress={progress} baseline={plotBottom} />
               ) : null}
@@ -184,8 +179,8 @@ export function LineChart({
                   />
                 )),
               )}
-            </G>
-          </Svg>
+            </Svg>
+          </Wipe>
 
           <Animated.View style={[styles.axis, axis.style]}>
             {scale.ticks.map((tick) => (
