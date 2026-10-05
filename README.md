@@ -48,6 +48,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   Central del día en que ocurrió.
 - **Montos ocultos**: el ojito de arriba los cambia por `RD$x,xxx.xx` cuando
   alguien más puede ver tu pantalla.
+- **Importar**: eliges uno o varios PDF; en iOS y Android también puedes
+  compartirlos con Domfin desde otra app (el correo, Archivos o WhatsApp), y
+  se importan solos.
 - **Respaldos cifrados**: una copia de tus datos en la carpeta de tu nube
   (iCloud Drive, Google Drive, Dropbox u OneDrive) cada día y después de cada
   importación, que solo abren tu contraseña o tu clave de recuperación.
@@ -385,6 +388,8 @@ proponer otra cosa,
 - [x] Estados del Banco Popular (tarjetas de crédito, cuentas de ahorro y
   corrientes, préstamos y certificados financieros), incluso escaneados, y
   de las tarjetas Qik.
+- [x] Compartir los PDF con Domfin desde otra app en iOS y Android, varios
+  a la vez y de cuentas distintas.
 - [x] Clasificación automática de cada movimiento: por el código del
   comercio, la descripción del banco, tu nómina y tus reglas.
 - [x] Salario, bonos, bonificaciones, ingresos adicionales y entregas sueltas
