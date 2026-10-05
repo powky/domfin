@@ -97,6 +97,7 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
             height,
             nodeWidth: metrics.nodeWidth,
             labelHeight: metrics.labelHeight,
+            topLabelHeight: metrics.topLabelHeight,
             gap: metrics.gap,
             padding: paddingOf(metrics),
             // Inside a phone's card the columns start together at the top, with no gap above.
@@ -107,6 +108,8 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
   );
 
   const reveal = useFlowReveal(graph);
+  // What the drawing needs, once the layout has moved it up into free room.
+  const drawnHeight = layout ? height - layout.lift : height;
 
   const onLayout = (event: LayoutChangeEvent) => setContainerWidth(Math.round(event.nativeEvent.layout.width));
 
@@ -114,9 +117,9 @@ export function SankeyChart({ summary, grouping }: SankeyChartProps) {
     <View onLayout={onLayout}>
       {layout ? (
         <ScrollView horizontal scrollEnabled={width > containerWidth} showsHorizontalScrollIndicator={width > containerWidth}>
-          <View style={{ width, height }}>
+          <View style={{ width, height: drawnHeight }}>
             <Wipe reveal={reveal} width={width}>
-              <Svg width={width} height={height}>
+              <Svg width={width} height={drawnHeight}>
                 {layout.links.map((link) => (
                   <Path key={`${link.source}->${link.target}`} d={link.path} fill={link.color} />
                 ))}
