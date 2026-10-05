@@ -46,6 +46,8 @@ var santoDomingo = time.FixedZone("AST", -4*60*60)
 //	PUT   /ledger/assets/{id}          changes one
 //	DELETE /ledger/assets/{id}         removes one
 //	PUT   /ledger/assets/links         links movements to an asset, or unlinks them
+//	GET   /ledger/budget               the monthly budget: fixed costs, dismissed suggestions, planned income
+//	PUT   /ledger/budget               replaces it
 //
 // Like the statement endpoints, they only answer this computer and pages
 // served from localhost. convert expresses a movement in an asset's
@@ -71,6 +73,8 @@ func Handler(s *store.Store, convert store.Converter, rateOn assets.RateOn) http
 	mux.HandleFunc("PUT /ledger/assets/links", b.linkAssets)
 	mux.HandleFunc("PUT /ledger/assets/{id}", b.updateAsset)
 	mux.HandleFunc("DELETE /ledger/assets/{id}", b.deleteAsset)
+	mux.HandleFunc("GET /ledger/budget", b.serveBudget)
+	mux.HandleFunc("PUT /ledger/budget", b.setBudget)
 	return localonly.Handler(b.withStore(mux))
 }
 

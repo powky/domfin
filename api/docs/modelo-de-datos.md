@@ -336,6 +336,23 @@ En `GET /accounts` cada activo sale como una cuenta más (`asset:<id>`, tipo
 final de cada mes y el de hoy; antes del primer pago (del primer estado del
 fondo, de la compra o del préstamo) no tiene balance.
 
+## Presupuesto: gastos fijos
+
+Lo que pagas todos los meses pase lo que pase (alquiler, servicios, cuotas,
+suscripciones). La app encuentra en el libro los pagos que se repiten y los
+sugiere; el usuario agrega los que son fijos, descarta los que no y puede
+fijar el ingreso con que planea el mes (sin él, la app usa su salario). La
+API guarda solo eso, en `settings` (`budget`):
+
+| Campo | Qué es |
+| --- | --- |
+| `items` | Los gastos fijos: `id`, `name`, `amount` (centavos al mes) y `currency`; además `match` (a quién va el pago, como la app lo agrupa: `PAG CLARO`; vacío en uno agregado a mano), `categoryId`, `accountId` (la cuenta de la que sale) y `day` (el día del mes en que se paga). |
+| `dismissed` | Los `match` de las sugerencias que el usuario descartó. |
+| `income` | `{amount, currency}`: el ingreso con que se planea el mes, si el usuario lo fijó. |
+
+Cómo detecta la app un pago que se repite está en `app/docs/desarrollo.md`
+(*Presupuesto*).
+
 ## Cómo lo usan las pantallas
 
 - **Montos en otra moneda:** ingresos, gastos, inversiones y préstamos se
@@ -377,6 +394,8 @@ los de estados de cuenta.
 | `POST /ledger/groups` | Crea un grupo de ingresos o gastos: `{"name", "flow"}`. |
 | `PATCH /ledger/groups/{id}` | Le cambia el nombre: `{"name"}`. El id y lo que tiene adentro no cambian. |
 | `PUT /ledger/assets/links` | Vincula movimientos a un activo: `{"movementIds", "assetId"}`; con `assetId: null` los desvincula. |
+| `GET /ledger/budget` | El presupuesto: `{"items", "dismissed", "income"?}` (ver *Presupuesto*). |
+| `PUT /ledger/budget` | Lo reemplaza entero; a los gastos fijos nuevos les pone `id` a partir del nombre. Responde lo guardado. |
 
 Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 `amounts` (su valor en pesos y dólares a la tasa de su fecha), `flow`,
