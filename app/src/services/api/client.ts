@@ -13,9 +13,9 @@ const COMPUTER_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 let base: Promise<string> | undefined;
 
 /**
- * Where the API answers. An app with the engine built in (the iOS proof of
- * concept, modules/domfin-engine) starts it and uses its port; the rest talk
- * to domfin-api.
+ * Where the API answers. An app with the engine built in (the iOS and
+ * Android proof of concept, modules/domfin-engine) starts it and uses its
+ * port; the web talks to domfin-api.
  */
 function apiBase() {
   base ??= DomfinEngine ? startEngine(DomfinEngine) : Promise.resolve(COMPUTER_URL);
@@ -44,8 +44,8 @@ async function apiFetch(path: string, init: RequestInit) {
   return response;
 }
 
-// Back from the background, iOS may have closed the engine's socket: start
-// opens it again, on the same port.
+// Back from the background, the system may have closed the engine's socket:
+// start opens it again, on the same port.
 if (DomfinEngine) {
   AppState.addEventListener('change', (state) => {
     if (state === 'active') DomfinEngine?.start().catch(() => undefined);

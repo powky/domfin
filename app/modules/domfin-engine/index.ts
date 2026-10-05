@@ -7,6 +7,6 @@ type DomfinEngineModule = {
 
 /**
  * Domfin's engine inside the app (api/mobile), or null where it isn't built
- * in: the web, Android and builds without it talk to domfin-api.
+ * in: the web and builds without it talk to domfin-api.
  */
 export const DomfinEngine = requireOptionalNativeModule<DomfinEngineModule>('DomfinEngine');
