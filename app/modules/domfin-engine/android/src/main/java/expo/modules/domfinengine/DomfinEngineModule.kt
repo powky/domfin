@@ -12,10 +12,11 @@ class DomfinEngineModule : Module() {
     Name("DomfinEngine")
 
     // Starts the engine, with its database in the app's files/Domfin, and
-    // returns its port. Again, it returns the same port.
+    // returns its port and the token its requests need. Again, the same.
     AsyncFunction("start") {
       val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
-      mobile.Mobile.start(File(context.filesDir, "Domfin").path)
+      val port = mobile.Mobile.start(File(context.filesDir, "Domfin").path)
+      mapOf("port" to port, "token" to mobile.Mobile.token())
     }
   }
 }

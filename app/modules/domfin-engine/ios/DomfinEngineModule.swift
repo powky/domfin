@@ -8,8 +8,8 @@ public class DomfinEngineModule: Module {
     Name("DomfinEngine")
 
     // Starts the engine, with its database in Application Support/Domfin,
-    // and returns its port. Again, it returns the same port.
-    AsyncFunction("start") { () -> Int in
+    // and returns its port and the token its requests need. Again, the same.
+    AsyncFunction("start") { () -> [String: Any] in
       let support = try FileManager.default.url(
         for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
       let dataDir = support.appendingPathComponent("Domfin", isDirectory: true)
@@ -18,7 +18,7 @@ public class DomfinEngineModule: Module {
       guard MobileStart(dataDir.path, &port, &error) else {
         throw error ?? EngineDidNotStart()
       }
-      return port
+      return ["port": port, "token": MobileToken()]
     }
   }
 }

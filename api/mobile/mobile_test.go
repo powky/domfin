@@ -26,6 +26,24 @@ func samples(t *testing.T) map[string][]byte {
 	}
 }
 
+// call makes a request to the engine with its token, as the app does.
+func call(t *testing.T, method, url, contentType string, body io.Reader) *http.Response {
+	t.Helper()
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer "+Token())
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return res
+}
+
 func TestStartServesTheAPIAndImports(t *testing.T) {
 	dir := t.TempDir()
 	began := time.Now()
@@ -39,10 +57,7 @@ func TestStartServesTheAPIAndImports(t *testing.T) {
 	}
 	base := "http://127.0.0.1:" + strconv.Itoa(port)
 
-	res, err := http.Get(base + "/health")
-	if err != nil {
-		t.Fatal(err)
-	}
+	res := call(t, "GET", base+"/health", "", nil)
 	body, _ := io.ReadAll(res.Body)
 	res.Body.Close()
 	if string(body) != "ok" {
@@ -60,10 +75,7 @@ func TestStartServesTheAPIAndImports(t *testing.T) {
 	}
 	writer.Close()
 	began = time.Now()
-	res, err = http.Post(base+"/statements/import", writer.FormDataContentType(), &form)
-	if err != nil {
-		t.Fatal(err)
-	}
+	res = call(t, "POST", base+"/statements/import", writer.FormDataContentType(), &form)
 	var imported struct {
 		Results []struct {
 			File   string `json:"file"`
@@ -82,10 +94,7 @@ func TestStartServesTheAPIAndImports(t *testing.T) {
 		}
 	}
 
-	res, err = http.Get(base + "/accounts")
-	if err != nil {
-		t.Fatal(err)
-	}
+	res = call(t, "GET", base+"/accounts", "", nil)
 	var accounts struct {
 		Accounts []json.RawMessage `json:"accounts"`
 	}
@@ -96,6 +105,38 @@ func TestStartServesTheAPIAndImports(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "domfin.db")); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Other apps on the phone reach 127.0.0.1 too: without the token, or with
+// another one, the engine doesn't answer.
+func TestStartTurnsAwayRequestsWithoutTheToken(t *testing.T) {
+	port, err := Start(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(Token()) < 26 {
+		t.Fatalf("token %q is too short", Token())
+	}
+	base := "http://127.0.0.1:" + strconv.Itoa(port)
+	for _, path := range []string{"/health", "/accounts", "/ledger/movements", "/statements/password"} {
+		for _, auth := range []string{"", "Bearer ", "Bearer otro", Token(), "bearer " + Token()} {
+			req, _ := http.NewRequest("GET", base+path, nil)
+			if auth != "" {
+				req.Header.Set("Authorization", auth)
+			}
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			res.Body.Close()
+			if res.StatusCode != http.StatusUnauthorized {
+				t.Errorf("GET %s with %q: %d, want 401", path, auth, res.StatusCode)
+			}
+		}
+	}
+	if res := call(t, "GET", base+"/accounts", "", nil); res.StatusCode != http.StatusOK {
+		t.Errorf("GET /accounts with the token: %d", res.StatusCode)
 	}
 }
 

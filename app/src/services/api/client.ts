@@ -10,7 +10,13 @@ import { DomfinEngine } from '../../../modules/domfin-engine';
 /** domfin-api on this computer: the launcher's port, or 8080. */
 const COMPUTER_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-let base: Promise<string> | undefined;
+/** Where the API answers, and the headers each request to it carries. */
+type Api = { url: string; headers: Record<string, string> };
+
+/** A request's options, with its headers as a plain object. */
+type Init = Omit<RequestInit, 'headers'> & { headers?: Record<string, string> };
+
+let base: Promise<Api> | undefined;
 
 /**
  * Where the API answers. An app with the engine built in (the iOS and
@@ -18,26 +24,29 @@ let base: Promise<string> | undefined;
  * port; the web talks to domfin-api.
  */
 function apiBase() {
-  base ??= DomfinEngine ? startEngine(DomfinEngine) : Promise.resolve(COMPUTER_URL);
+  base ??= DomfinEngine ? startEngine(DomfinEngine) : Promise.resolve({ url: COMPUTER_URL, headers: {} });
   return base;
 }
 
-async function startEngine(engine: NonNullable<typeof DomfinEngine>) {
+async function startEngine(engine: NonNullable<typeof DomfinEngine>): Promise<Api> {
   const began = Date.now();
   try {
-    const port = await engine.start();
+    const { port, token } = await engine.start();
     if (__DEV__) console.log(`motor de Domfin: listo en ${Date.now() - began} ms, puerto ${port}`);
-    return `http://localhost:${port}`;
+    // Other apps on the phone reach 127.0.0.1 too: the engine only answers requests with its token.
+    return { url: `http://localhost:${port}`, headers: { Authorization: `Bearer ${token}` } };
   } catch (error) {
+    if (__DEV__) console.warn('motor de Domfin: no arrancó', error);
     base = undefined;
     throw error;
   }
 }
 
 /** fetch from the API; while developing with the engine, Metro's console shows how long each answer took. */
-async function apiFetch(path: string, init: RequestInit) {
+async function apiFetch(path: string, init: Init) {
   const began = Date.now();
-  const response = await fetch(`${await apiBase()}${path}`, init);
+  const { url, headers } = await apiBase();
+  const response = await fetch(`${url}${path}`, { ...init, headers: { ...headers, ...init.headers } });
   if (__DEV__ && DomfinEngine) {
     console.log(`motor de Domfin: ${init.method ?? 'GET'} ${path} ${response.status} en ${Date.now() - began} ms`);
   }
@@ -61,7 +70,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiGet<T>(path: string, init?: Init): Promise<T> {
   const response = await apiFetch(path, {
     ...init,
     headers: { Accept: 'application/json', ...init?.headers },
@@ -74,7 +83,8 @@ export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
 export async function apiPostForm<T>(path: string, form: FormData): Promise<T> {
   if (Platform.OS !== 'web') {
     const began = Date.now();
-    const { status, body } = await sendForm(`${await apiBase()}${path}`, form);
+    const { url, headers } = await apiBase();
+    const { status, body } = await sendForm(`${url}${path}`, form, headers);
     if (__DEV__ && DomfinEngine) console.log(`motor de Domfin: POST ${path} ${status} en ${Date.now() - began} ms`);
     if (status < 200 || status >= 300) throw new ApiError(status, body);
     return JSON.parse(body) as T;
@@ -93,11 +103,12 @@ export async function apiPostForm<T>(path: string, form: FormData): Promise<T> {
  * expo/fetch, which can't send React Native's `{ uri, name, type }` files;
  * XMLHttpRequest still can, with their names.
  */
-function sendForm(url: string, form: FormData) {
+function sendForm(url: string, form: FormData, headers: Record<string, string>) {
   return new Promise<{ status: number; body: string }>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open('POST', url);
     request.setRequestHeader('Accept', 'application/json');
+    for (const [name, value] of Object.entries(headers)) request.setRequestHeader(name, value);
     request.onload = () => resolve({ status: request.status, body: request.responseText });
     // Like fetch when nothing answers (see importErrorOf).
     request.onerror = () => reject(new TypeError('Network request failed'));

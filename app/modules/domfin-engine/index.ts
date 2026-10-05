@@ -1,8 +1,11 @@
 import { requireOptionalNativeModule } from 'expo';
 
 type DomfinEngineModule = {
-  /** Starts the engine, if it isn't running, and returns its port on 127.0.0.1. */
-  start(): Promise<number>;
+  /**
+   * Starts the engine, if it isn't running: its port on 127.0.0.1 and the
+   * token each request carries (other apps on the phone reach 127.0.0.1 too).
+   */
+  start(): Promise<{ port: number; token: string }>;
 };
 
 /**
