@@ -223,6 +223,16 @@ func TestMovements(t *testing.T) {
 	if movements[2].Amount != -300_000 || movements[2].MCC != "5411" || movements[1].Amount != 100_000 {
 		t.Errorf("amounts: %+v", movements[1:3])
 	}
+	// A loan's movements say what went to capital; a card's, nothing.
+	if p := movements[4].Principal; p == nil || *p != 40_000 || movements[4].Amount != 100_000 {
+		t.Errorf("loan payment: principal %v of %d", p, movements[4].Amount)
+	}
+	if p := movements[0].Principal; p == nil || *p != 10_000_000 {
+		t.Errorf("disbursement: principal %v", p)
+	}
+	if movements[1].Principal != nil {
+		t.Errorf("card payment with a principal: %d", *movements[1].Principal)
+	}
 
 	c, err := s.Classifier(ctx)
 	if err != nil {

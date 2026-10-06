@@ -48,6 +48,8 @@ var santoDomingo = time.FixedZone("AST", -4*60*60)
 //	PUT   /ledger/assets/links         links movements to an asset, or unlinks them
 //	GET   /ledger/budget               the monthly budget: fixed costs, dismissed suggestions, planned income
 //	PUT   /ledger/budget               replaces it
+//	GET   /ledger/loans                each loan's rate, installment and what someone else pays of it
+//	PUT   /ledger/loans                replaces them
 //
 // Like the statement endpoints, they only answer this computer and pages
 // served from localhost. convert expresses a movement in an asset's
@@ -75,6 +77,8 @@ func Handler(s *store.Store, convert store.Converter, rateOn assets.RateOn) http
 	mux.HandleFunc("DELETE /ledger/assets/{id}", b.deleteAsset)
 	mux.HandleFunc("GET /ledger/budget", b.serveBudget)
 	mux.HandleFunc("PUT /ledger/budget", b.setBudget)
+	mux.HandleFunc("GET /ledger/loans", b.serveLoans)
+	mux.HandleFunc("PUT /ledger/loans", b.setLoans)
 	return localonly.Handler(b.withStore(mux))
 }
 
@@ -125,6 +129,9 @@ type movementJSON struct {
 	Review     bool    `json:"review"`
 	PairID     string  `json:"pairId,omitempty"`
 	AssetID    string  `json:"assetId,omitempty"`
+	// Principal is what a loan's movement moved its balance: of a payment,
+	// the capital (the rest was interest and charges). Absent otherwise.
+	Principal *int64 `json:"principal,omitempty"`
 }
 
 type movementsResponse struct {
@@ -174,6 +181,7 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 			MCC: m.MCC, Kind: string(m.Kind), Amount: m.Amount, Currency: m.Currency, Amounts: rates.value(ctx, m, c.Flow),
 			Flow:       string(c.Flow),
 			CategoryID: category, By: string(c.By), RuleID: c.RuleID, Review: c.Review, PairID: c.PairID, AssetID: c.AssetID,
+			Principal: m.Principal,
 		})
 	}
 	writeJSON(w, http.StatusOK, body)

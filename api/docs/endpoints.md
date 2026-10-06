@@ -143,7 +143,8 @@ El libro: las cuentas y movimientos de todos los estados importados, ya
 clasificados como ingreso, gasto o transferencia, lo que los clasifica
 (categorías, tus reglas y correcciones, y la configuración de nómina), los
 activos que ningún estado muestra (un apartamento en plano, acciones), con
-los movimientos que les pagan, y el presupuesto (tus gastos fijos). Como los
+los movimientos que les pagan, el presupuesto (tus gastos fijos) y la tasa y
+la cuota de tus préstamos. Como los
 de estados de cuenta, solo responden a esta computadora. El modelo, las reglas
 y cada endpoint están en [modelo-de-datos.md](modelo-de-datos.md).
 
