@@ -1,7 +1,6 @@
 import type { LedgerAccount } from '@/features/ledger';
 import type { Currency } from '@/lib/currency';
 import type { MonthRange } from '@/lib/period';
-import type { AvatarTone } from '@/theme';
 
 export type { MonthRange, PeriodPreset } from '@/lib/period';
 
@@ -18,8 +17,10 @@ export type Transaction = {
   /** Posting date, `YYYY-MM-DD`. */
   date: string;
   merchant: string;
-  /** Brand color standing in for the merchant logo, when known. */
-  merchantLogo?: AvatarTone;
+  /** A known merchant (its logo), one of the bank's operations, or a person, as domfin-api tells (see LedgerMovement). */
+  merchantId?: string;
+  operation?: string;
+  person?: boolean;
   /** Signed: negative is money out of the account. */
   amount: number;
   /** The account's currency, which `amount` and the splits are in. */

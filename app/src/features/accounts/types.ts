@@ -86,6 +86,11 @@ export type AccountTransaction = {
   /** 'YYYY-MM-DD' */
   date: string;
   merchant: string;
+  /** What draws its avatar (see MerchantAvatar). */
+  merchantId?: string;
+  operation?: string;
+  person?: boolean;
+  undetailedCash?: boolean;
   category: string;
   /** Positive for money in, negative for money out. */
   amount: number;

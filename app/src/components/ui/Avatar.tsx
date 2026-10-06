@@ -1,5 +1,6 @@
+import type { LucideIcon } from 'lucide-react-native';
 import { Image, View, type ImageSourcePropType } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import type { AvatarTone } from '@/theme';
 
@@ -11,12 +12,18 @@ export type AvatarProps = {
   tone?: AvatarTone;
   /** Logo drawn instead of the initials, clipped to the circle (square images read best). */
   source?: ImageSourcePropType;
+  /** Icon drawn instead of the initials, in the tone's foreground color. */
+  icon?: LucideIcon;
   /** `xs` (20) sits inline with a line of text, `sm` (24) in compact rows, `md` (32) leads a list item. */
   size?: 'xs' | 'sm' | 'md';
 };
 
-/** Circular avatar with a logo or initials. Decorative: the name it stands for is always shown next to it. */
-export function Avatar({ initials, tone = 'neutral', source, size = 'md' }: AvatarProps) {
+/** Icon sizes for each avatar size. */
+const iconSizes = { xs: 12, sm: 14, md: 18 } as const;
+
+/** Circular avatar with a logo, an icon or initials. Decorative: the name it stands for is always shown next to it. */
+export function Avatar({ initials, tone = 'neutral', source, icon: Icon, size = 'md' }: AvatarProps) {
+  const { theme } = useUnistyles();
   styles.useVariants({ size });
 
   if (source) {
@@ -32,9 +39,13 @@ export function Avatar({ initials, tone = 'neutral', source, size = 'md' }: Avat
   }
   return (
     <View style={[styles.circle, styles.tone(tone)]} accessible={false} importantForAccessibility="no-hide-descendants">
-      <Text style={[styles.initials, styles.toneText(tone)]} numberOfLines={1}>
-        {initials}
-      </Text>
+      {Icon ? (
+        <Icon size={iconSizes[size]} strokeWidth={1.75} color={theme.colors.avatar[tone].foreground} />
+      ) : (
+        <Text style={[styles.initials, styles.toneText(tone)]} numberOfLines={1}>
+          {initials}
+        </Text>
+      )}
     </View>
   );
 }

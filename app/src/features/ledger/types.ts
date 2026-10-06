@@ -80,6 +80,8 @@ export type LedgerMovement = {
   merchantId?: string;
   operation?: string;
   ref?: string;
+  /** The other side of a transfer, named by it. */
+  person?: boolean;
 };
 
 export type LedgerGroup = { id: string; name: string; flow: Flow };

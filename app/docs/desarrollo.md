@@ -77,6 +77,12 @@ responde a quien manda el secreto que genera al arrancar
   `src/i18n`). Lo que el banco imprimió se sigue buscando (`description`), y
   *Cambiar nombre* en la selección (`PUT /ledger/names`) cambia todos los
   movimientos de su `nameKey`.
+- El círculo de cada fila (`MerchantAvatar`, con `avatarLook` de
+  `features/transactions/lib/avatar.ts`) es el logo del comercio conocido
+  (`app/assets/merchants`, la lista en `lib/merchantLogos.ts`, que escribe
+  `scripts/merchant-logo.sh`); si no lo hay, un ícono de lo que es (una
+  operación del banco, una persona, el efectivo sin detallar) en el tono
+  `neutral`; y si no, la inicial.
 - *Efectivo* (`kind: 'cash'`) es una cuenta más del libro, una por moneda,
   sin saldo: no sale en Cuentas ni en Patrimonio neto. El formulario de
   agregar empieza en ella. domfin-api calcula lo que quedó sin detallar de

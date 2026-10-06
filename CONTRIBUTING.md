@@ -133,6 +133,12 @@ de uno más general va el más específico (*Uber Eats* antes que *Uber*), y
 comercios públicos: nunca personas ni negocios sacados de tus estados que te
 identifiquen.
 
+Su logo sale del propio comercio: el ícono que publica en su sitio (su
+`apple-touch-icon`, los íconos de su manifiesto web, un `favicon.svg`) o el
+de su app. `app/scripts/merchant-logo.sh <id> <imagen>` lo ajusta al círculo
+de la app (`app/assets/merchants/<id>.png`, 96 px) y lo agrega a la lista.
+Míralo antes de subirlo: si se ve borroso, mejor sin logo.
+
 ## Commits y pull requests
 
 - [Conventional Commits](https://www.conventionalcommits.org/), en inglés:

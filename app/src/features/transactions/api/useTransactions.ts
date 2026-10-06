@@ -75,6 +75,9 @@ const fromLedger = (
   cash: cashAccounts.has(movement.accountId),
   description: movement.merchant || movement.description,
   nameKey: movement.nameKey,
+  merchantId: movement.merchantId,
+  operation: movement.operation,
+  person: movement.person,
 });
 
 export function useTransactions(): { data: TransactionsData; isLoading: boolean } {

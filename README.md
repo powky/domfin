@@ -394,8 +394,6 @@ proponer otra cosa,
 
 **Movimientos más claros**
 
-- [ ] Logos de los comercios, incluidos en la app (sin pedírselos a
-  internet).
 - [ ] Proyectos: juntar gastos de distintas categorías en un mismo proyecto
   (una mudanza, una boda, un negocio propio) y ver cuánto lleva cada uno.
 
@@ -440,6 +438,9 @@ proponer otra cosa,
   comercio, la descripción del banco, tu nómina y tus reglas.
 - [x] Nombres de los comercios en lugar de la descripción del banco, iguales
   aunque cada banco los imprima distinto, y que puedes cambiar.
+- [x] Logos de los comercios, incluidos en la app (nunca se piden a
+  internet), y un ícono para lo que no es una empresa: tu nómina, una
+  transferencia a una persona, tu tarjeta, el efectivo.
 - [x] Movimientos agregados a mano, que el del estado reemplaza cuando llega
   (con tu categoría y tus notas), y lo que marcas como revisado u ocultas,
   guardados en tu base.
@@ -493,3 +494,6 @@ Domfin es de código abierto, con la licencia [MIT](LICENSE): puedes usarlo,
 estudiarlo, modificarlo, compartirlo y venderlo, siempre que mantengas el
 aviso de copyright. El nombre "Domfin" y su logo no son parte de la
 licencia: no los uses para presentar otro producto como si fuera este.
+Los logos de los comercios (`app/assets/merchants`) son marcas de sus
+dueños, sacadas de sus propios sitios y apps: Domfin los muestra solo para
+que reconozcas a quién le pagaste.
