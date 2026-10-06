@@ -10,7 +10,7 @@ export type { MonthRange, PeriodPreset } from '@/lib/period';
 /**
  * A loan found in the imported histories. The bank's history lists
  * disbursements, payments and the balance after each, not the rate or the
- * term, so there is no schedule to project.
+ * term: with the ones the user gives it, `plan` says when it ends.
  */
 export type LoanSummary = {
   /** Same id as the loan's account. */
