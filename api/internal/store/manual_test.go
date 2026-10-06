@@ -273,3 +273,28 @@ func TestAddManualChecksWhatItGets(t *testing.T) {
 	}
 	m.expect("2026-01-01", "2026-12-31")
 }
+
+func TestManualInCash(t *testing.T) {
+	m := newManualTest(t)
+	m.save(card("2026-01-28"))
+	id := m.add(Manual{AccountID: "cash:cash::DOP", Date: "2026-02-10", Description: "Colmado", Amount: -50_000})
+	// No statement brings cash: it waits for none, and never goes missing.
+	pending, err := pendingManual(m.ctx, m.s.db)
+	if err != nil || len(pending) != 0 {
+		t.Errorf("waiting: %+v, %v", pending, err)
+	}
+	m.save(card("2026-03-28"))
+	m.expect("2026-02-01", "2026-02-28", id+" 2026-02-10 a mano")
+
+	c, err := m.s.Classifier(m.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(c.Accounts, func(a ledger.Account) bool { return a.ID == "cash:cash::DOP" && a.Kind == ledger.Cash }) {
+		t.Errorf("accounts without cash: %+v", c.Accounts)
+	}
+	// Only in the currencies of the accounts.
+	if _, err := m.s.AddManual(m.ctx, Manual{AccountID: "cash:cash::USD", Date: "2026-02-10", Description: "Taxi", Amount: -1_000}); !errors.Is(err, ErrInvalid) {
+		t.Errorf("cash in dollars without dollar accounts: %v", err)
+	}
+}

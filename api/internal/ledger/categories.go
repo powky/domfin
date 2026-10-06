@@ -112,6 +112,7 @@ var DefaultCategories = []Category{
 	{ID: CategoryBankFees, Name: "Comisiones y cargos", Flow: Expense, Group: "finance"},
 	{ID: CategoryWithholding, Name: "Retenciones (DGII)", Flow: Expense, Group: "taxes"},
 	{ID: "taxes", Name: "Impuestos y trámites", Flow: Expense, Group: "taxes"},
+	{ID: CategoryUndetailedCash, Name: "Efectivo sin detallar", Flow: Expense, Group: "other-expenses"},
 
 	{ID: CategoryCardPayment, Name: "Pago de tarjeta", Flow: Transfer, Group: "transfers"},
 	{ID: CategoryLoanPayment, Name: "Pago a préstamo", Flow: Transfer, Group: "transfers"},

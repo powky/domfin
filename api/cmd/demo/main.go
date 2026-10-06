@@ -578,6 +578,21 @@ func (d *demo) settings(ctx context.Context, db *store.Store) error {
 			return fmt.Errorf("%s: %w", a.Name, err)
 		}
 	}
+	// Part of the cash taken out on the 12th, written down by hand in the
+	// last months; the rest stays as Efectivo sin detallar.
+	for n := range 3 {
+		m := d.fromEnd(n)
+		for _, spent := range []store.Manual{
+			{Date: day(m, 13).Format(time.DateOnly), Description: "Colmado La Esquina", Amount: -125_000 - int64(n)*10_000, CategoryID: "groceries"},
+			{Date: day(m, 16).Format(time.DateOnly), Description: "Motoconcho", Amount: -25_000, CategoryID: "rides"},
+			{Date: day(m, 21).Format(time.DateOnly), Description: "Propina del delivery", Amount: -15_000, CategoryID: "restaurants"},
+		} {
+			spent.AccountID = ledger.CashAccountID("DOP")
+			if _, err := db.AddManual(ctx, spent); err != nil {
+				return fmt.Errorf("%s: %w", spent.Description, err)
+			}
+		}
+	}
 	return db.SyncAssetLinks(ctx, convert)
 }
 

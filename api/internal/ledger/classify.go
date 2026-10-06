@@ -19,6 +19,7 @@ const (
 	ByTransfer Source = "transfer" // paired with its other side in another account
 	ByBank     Source = "bank"     // what the bank says the movement is, and its MCC
 	ByMerchant Source = "merchant" // the category its merchant has in your other purchases
+	ByCash     Source = "cash"     // cash the user hasn't said how they spent (see UndetailedCash)
 	ByDefault  Source = "default"  // nothing recognized it
 )
 
@@ -126,6 +127,13 @@ func (c Classifier) Classify(movements []Movement) []Classification {
 		}
 		if decide(i, categoryID, ByAsset) || decided[i] {
 			out[i].AssetID = link.AssetID
+		}
+	}
+
+	// Cash the user hasn't detailed is spent, unless they filed it.
+	for i, m := range movements {
+		if m.Kind == UndetailedCash {
+			decide(i, CategoryUndetailedCash, ByCash)
 		}
 	}
 

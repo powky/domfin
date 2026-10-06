@@ -54,7 +54,8 @@ type Manual struct {
 
 // AddManual adds a movement by hand and returns its ID. When the account's
 // statements don't cover its days yet, it waits for the one that brings it
-// (see settleManual), which may be here already.
+// (see settleManual), which may be here already; one in a cash account has
+// no statements to wait for.
 func (s *Store) AddManual(ctx context.Context, m Manual) (string, error) {
 	m.Description, m.Notes = strings.TrimSpace(m.Description), strings.TrimSpace(m.Notes)
 	date, err := time.Parse(dateLayout, m.Date)
@@ -72,6 +73,7 @@ func (s *Store) AddManual(ctx context.Context, m Manual) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	accounts = append(accounts, ledger.CashAccounts(accounts)...)
 	i := slices.IndexFunc(accounts, func(a ledger.Account) bool { return a.ID == m.AccountID })
 	if i == -1 {
 		return "", fmt.Errorf("%w: no account %q", ErrInvalid, m.AccountID)
@@ -88,8 +90,9 @@ func (s *Store) AddManual(ctx context.Context, m Manual) (string, error) {
 		return "", err
 	}
 	status := manualPending
-	if ends[m.AccountID] >= date.AddDate(0, 0, matchDays).Format(dateLayout) {
-		// Its statements are here already: it's what they don't show.
+	if accounts[i].Kind == ledger.Cash || ends[m.AccountID] >= date.AddDate(0, 0, matchDays).Format(dateLayout) {
+		// Its statements are here already, or there are none: it's what
+		// they don't show.
 		status = manualKept
 	}
 	now := s.now().UTC().Format(time.RFC3339)

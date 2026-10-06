@@ -34,9 +34,12 @@ dólares son dos cuentas (Contigo RD$ y Contigo US$).
 | `loan` | Préstamo (incluye el Extracrédito) | Pasivos |
 | `certificate` | Certificado financiero / depósito a plazo | Inversiones |
 | `brokerage` | Cuenta en un puesto de bolsa (acciones) | Inversiones |
+| `cash` | Efectivo: lo que gastas en efectivo, anotado a mano (ver *Efectivo*) | No sale: se da por gastado |
 
 El **id** se arma con lo que imprime el banco y no cambia:
 `banco:tipo:últimos4:moneda`, por ejemplo `popular:credit_card:5678:DOP`.
+Las cuentas de efectivo, que no son de un banco, son `cash:cash::DOP` y una
+por cada otra moneda de tus cuentas (`cash:cash::USD`).
 
 Qué se importa hoy: las cuentas de ahorro del Popular (nómina, dólares y
 digital), sus tarjetas (Contigo, Gnial, Infinia, ISI) y los historiales de
@@ -115,7 +118,7 @@ tuyas. Un movimiento que nada reconoce queda en **Sin categoría** (sin
 | Gasto | Educación | Colegios y cursos |
 | Gasto | Finanzas | Cuotas de préstamos, Intereses de tarjetas, Comisiones y cargos |
 | Gasto | Impuestos | Retenciones (DGII), Impuestos y trámites |
-| Gasto | Otros gastos | (vacío, para las tuyas) |
+| Gasto | Otros gastos | Efectivo sin detallar (ver *Efectivo*) |
 | Transferencia | Transferencias | Pago de tarjeta, Pago a préstamo, Desembolso de préstamo, Retiro de efectivo, Avance de efectivo, Depósito de efectivo, Reversos y devoluciones, Aporte a inversión, Retiro de inversión, Entre mis cuentas, Cambio de moneda |
 
 Los ids (`salary`, `groceries`, `card-payment`…) están en
@@ -137,6 +140,8 @@ Se aplica lo primero que decida, en este orden:
 1. **Tu corrección manual** para ese movimiento.
 2. **El activo al que paga**, si está vinculado a uno: Aporte a inversión (o
    Retiro de inversión si el dinero vuelve).
+   El efectivo que no detallaste (ver *Efectivo*) va a Efectivo sin
+   detallar.
 3. **Tus reglas**, en el orden en que las pongas: la primera que coincide gana.
 4. **Nómina**: en fecha es Salario; fuera de fecha, Ingreso adicional (ver abajo).
 5. **Transferencias entre tus cuentas**: un pago de tarjeta o de préstamo, un
@@ -293,6 +298,32 @@ Cuando llega el estado que lo trae, el movimiento del banco toma su lugar
 
 Solo se borran los agregados a mano (`DELETE /ledger/movements/{id}`), con
 su categoría, marcas y vínculo; los importados se ocultan.
+
+## Efectivo
+
+Lo que sacas del cajero no es un gasto todavía: pasa de tu cuenta a tu
+bolsillo. **Efectivo** es la cuenta de tu bolsillo, una en pesos y una en
+cada otra moneda de tus cuentas, sin estados: ahí anotas a mano lo que
+gastas en efectivo (y lo que te pagan en efectivo), y nunca queda pendiente
+de un estado.
+
+- **Entra** lo que el libro clasifica como Retiro de efectivo (un `COD CASH`
+  o un retiro en cajero de tu cuenta; un avance de tu tarjeta que no entró a
+  una de tus cuentas) y lo positivo que anotas en Efectivo.
+- **Sale** lo negativo que anotas en Efectivo y lo que vuelve a un banco
+  (Depósito de efectivo).
+- Lo que sale toma del efectivo más reciente que entró hasta su fecha, y si
+  no alcanza, del anterior. Lo que no anotaste cuenta como gastado el día que
+  entró: un movimiento de Efectivo, **Efectivo sin detallar** (`kind:
+  "undetailed_cash"`, `by: "cash"`), con el id `cash:` más el id del retiro.
+  Se calcula al leer el libro, desde el primer movimiento: cada gasto que
+  anotas lo baja. El retiro sigue siendo una transferencia.
+- Como cualquier movimiento, el que queda sin detallar se puede
+  recategorizar (la parte que falta de ese retiro fue, por ejemplo, para tu
+  pareja) u ocultar (no se gastó): una corrección o una marca con su id. Un
+  retiro oculto no alimenta Efectivo.
+- Efectivo no sale en *Cuentas* ni en *Patrimonio neto*: lo que no anotas se
+  da por gastado, así que no lleva saldo.
 
 ## Inversiones y activos
 
@@ -473,7 +504,8 @@ del mes conocido más cercano. Con eso estima:
   **préstamos** recibidos en el periodo (desembolsos que entran a tus
   cuentas, que no son ingreso) y el resto sale **de tus cuentas** (lo que ya
   tenías, o tus tarjetas).
-- **Gastos:** solo `expense`, por grupo y categoría.
+- **Gastos:** solo `expense`, por grupo y categoría, con el efectivo que no
+  detallaste en Efectivo sin detallar.
 - **Patrimonio neto:** saldos de las cuentas; Inversiones suma el capital de
   los certificados y el valor de mercado de las acciones, en dólares
   convertidos con la tasa del BCRD.
@@ -488,7 +520,7 @@ los de estados de cuenta.
 
 | Método y ruta | Qué hace |
 | --- | --- |
-| `GET /ledger/movements?from=&to=` | Cuentas y movimientos del rango (por defecto, el año en curso), ya clasificados, del más nuevo al más viejo. |
+| `GET /ledger/movements?from=&to=` | Cuentas (con las de efectivo) y movimientos del rango (por defecto, el año en curso), ya clasificados, del más nuevo al más viejo, con el efectivo sin detallar. |
 | `GET /ledger/categories` | Grupos y categorías, incluidas las archivadas. |
 | `POST /ledger/categories` | Crea una: `{"name", "flow", "group"}`. |
 | `PATCH /ledger/categories/{id}` | Renombra, mueve de grupo o archiva: `{"name", "group", "archived"}`. |
@@ -515,7 +547,7 @@ los de estados de cuenta.
 Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 `amounts` (su valor en pesos y dólares a la tasa de su fecha), `flow`,
 `categoryId` (`null` si es Sin categoría), `by` (qué lo decidió: `manual`,
-`asset`, `rule`, `payroll`, `transfer`, `bank`, `merchant` o `default`), `ruleId`, `review`,
+`asset`, `cash`, `rule`, `payroll`, `transfer`, `bank`, `merchant` o `default`), `ruleId`, `review`,
 `pairId`, `assetId` (el activo al que paga) y, en los de un préstamo,
 `principal` (lo que movió su saldo: de un pago, lo que fue a capital; falta
 cuando el historial no lo dice). `review` ya cuenta lo que marcaste como

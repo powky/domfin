@@ -160,7 +160,8 @@ func TestMovements(t *testing.T) {
 
 	var list movementsResponse
 	do(t, h, "GET", "/ledger/movements?from=2026-01-01&to=2026-01-31", "", &list)
-	if len(list.Accounts) != 1 || len(list.Movements) != 2 {
+	// The card, and cash in pesos to write down what's spent in it.
+	if len(list.Accounts) != 2 || list.Accounts[1].ID != "cash:cash::DOP" || list.Accounts[1].Kind != "cash" || len(list.Movements) != 2 {
 		t.Fatalf("got %+v", list)
 	}
 	newest, oldest := list.Movements[0], list.Movements[1]
@@ -260,5 +261,62 @@ func TestMovementsByHand(t *testing.T) {
 	}
 	if got := get("2026-02-01", "2026-02-28"); len(got) != 0 {
 		t.Errorf("after deleting: %+v", got)
+	}
+}
+
+func TestUndetailedCash(t *testing.T) {
+	s := openStore(t)
+	cut := time.Date(2026, 3, 31, 0, 0, 0, 0, time.UTC)
+	withdrawn := time.Date(2026, 3, 5, 0, 0, 0, 0, time.UTC)
+	st := statements.AccountStatement{
+		Institution: "popular", Product: "AHORRO EMPLEADO", Last4: "1111", Currency: "DOP", CutDate: cut,
+		PreviousBalance: 1_000_000, Balance: 500_000,
+		Transactions: []statements.AccountTransaction{
+			{PostedOn: withdrawn, TransactedOn: withdrawn, Description: "COD CASH 1234", Amount: -500_000, Balance: 500_000},
+		},
+	}
+	if _, err := s.SaveAccountStatement(context.Background(), st, nil, store.Source{Name: "marzo.pdf"}); err != nil {
+		t.Fatal(err)
+	}
+	h := Handler(s, testConvert, nil)
+	get := func() []movementJSON {
+		t.Helper()
+		var list movementsResponse
+		do(t, h, "GET", "/ledger/movements?from=2026-03-01&to=2026-03-31", "", &list)
+		return list.Movements
+	}
+
+	// 1,200 of the 5,000 went to the colmado.
+	body := `{"accountId": "cash:cash::DOP", "date": "2026-03-06", "description": "Colmado", "amount": -120000, "categoryId": "groceries"}`
+	if w := do(t, h, "POST", "/ledger/movements", body, nil); w.Code != http.StatusCreated {
+		t.Fatalf("add: %d %s", w.Code, w.Body)
+	}
+	got := get()
+	if len(got) != 3 {
+		t.Fatalf("movements: %+v", got)
+	}
+	colmado, rest, withdrawal := got[0], got[1], got[2]
+	if colmado.AccountID != "cash:cash::DOP" || withdrawal.Flow != "transfer" || *withdrawal.CategoryID != ledger.CategoryCashWithdrawal {
+		t.Errorf("colmado %+v, withdrawal %+v", colmado, withdrawal)
+	}
+	if rest.ID != "cash:"+withdrawal.ID || rest.AccountID != "cash:cash::DOP" || rest.Date != "2026-03-05" || rest.Amount != -380_000 ||
+		rest.Flow != "expense" || *rest.CategoryID != ledger.CategoryUndetailedCash || rest.By != "cash" || rest.Kind != "undetailed_cash" {
+		t.Errorf("undetailed: %+v", rest)
+	}
+
+	// Filed elsewhere, it's no longer undetailed.
+	if w := do(t, h, "PUT", "/ledger/classifications", `{"movementId": "`+rest.ID+`", "categoryId": "personal-care"}`, nil); w.Code != http.StatusNoContent {
+		t.Fatalf("classify: %d %s", w.Code, w.Body)
+	}
+	if got := get(); *got[1].CategoryID != "personal-care" || got[1].By != "manual" {
+		t.Errorf("filed: %+v", got[1])
+	}
+
+	// A hidden withdrawal leaves nothing to detail.
+	if w := do(t, h, "PUT", "/ledger/marks", `{"movementIds": ["`+withdrawal.ID+`"], "hidden": true}`, nil); w.Code != http.StatusNoContent {
+		t.Fatalf("hide: %d %s", w.Code, w.Body)
+	}
+	if got := get(); len(got) != 2 || !got[1].Hidden || got[0].ID != colmado.ID {
+		t.Errorf("after hiding the withdrawal: %+v", got)
 	}
 }

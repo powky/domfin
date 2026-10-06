@@ -174,7 +174,9 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "ledger_failed")
 		return
 	}
-	movements, err := b.store.Movements(ctx, day(from.AddDate(0, 0, -margin)), day(to.AddDate(0, 0, margin)))
+	// From the start: cash spent in the range may come from a withdrawal
+	// before it (see ledger.UndetailedCash).
+	movements, err := b.store.Movements(ctx, "0000-01-01", day(to.AddDate(0, 0, margin)))
 	if err != nil {
 		log.Printf("movimientos: %v", err)
 		writeError(w, http.StatusInternalServerError, "ledger_failed")
@@ -187,6 +189,8 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "ledger_failed")
 		return
 	}
+	cash := classifier.UndetailedCash(movements, classes, func(m ledger.Movement) bool { return marks[m.ID].Hidden })
+	movements, classes = merged(movements, classes, cash, classifier.Classify(cash))
 
 	body := movementsResponse{From: day(from), To: day(to), Accounts: []accountJSON{}, Movements: []movementJSON{}}
 	for _, a := range classifier.Accounts {
@@ -212,6 +216,28 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	writeJSON(w, http.StatusOK, body)
+}
+
+// merged puts movements b among movements a by date, both oldest first,
+// with their classifications.
+func merged(a []ledger.Movement, ac []ledger.Classification, b []ledger.Movement, bc []ledger.Classification) ([]ledger.Movement, []ledger.Classification) {
+	type classified struct {
+		m ledger.Movement
+		c ledger.Classification
+	}
+	all := make([]classified, 0, len(a)+len(b))
+	for i := range a {
+		all = append(all, classified{a[i], ac[i]})
+	}
+	for i := range b {
+		all = append(all, classified{b[i], bc[i]})
+	}
+	slices.SortStableFunc(all, func(x, y classified) int { return strings.Compare(x.m.Date, y.m.Date) })
+	movements, classes := make([]ledger.Movement, len(all)), make([]ledger.Classification, len(all))
+	for i, item := range all {
+		movements[i], classes[i] = item.m, item.c
+	}
+	return movements, classes
 }
 
 // dateRange reads from and to (YYYY-MM-DD, both included); by default the

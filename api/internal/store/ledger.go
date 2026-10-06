@@ -539,8 +539,9 @@ func importedMovements(ctx context.Context, q querier, from, to string) ([]ledge
 	return movements, rows.Err()
 }
 
-// Classifier loads what classifies movements: the accounts, the categories,
-// the user's rules and corrections and the payroll settings.
+// Classifier loads what classifies movements: the accounts (with the cash
+// accounts, see ledger.CashAccounts), the categories, the user's rules and
+// corrections and the payroll settings.
 func (s *Store) Classifier(ctx context.Context) (ledger.Classifier, error) {
 	var c ledger.Classifier
 	accounts, err := s.Accounts(ctx)
@@ -567,7 +568,7 @@ func (s *Store) Classifier(ctx context.Context) (ledger.Classifier, error) {
 	if err != nil {
 		return c, err
 	}
-	c.Accounts, c.Rules, c.Payroll, c.Overrides, c.Links = accounts, rules, payroll, overrides, links
+	c.Accounts, c.Rules, c.Payroll, c.Overrides, c.Links = append(accounts, ledger.CashAccounts(accounts)...), rules, payroll, overrides, links
 	for _, category := range categories {
 		c.Categories = append(c.Categories, category.Category)
 	}
