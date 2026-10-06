@@ -53,6 +53,7 @@ Android, `client.ts` le habla al motor que la app lleva adentro
 | Importar estados | `POST /statements/import`, `GET /statements/coverage` |
 | Cuentas, Patrimonio neto, Préstamos | `GET /accounts` (`features/accounts`, `useLiveAccounts`) |
 | Transacciones, Gastos, Flujo de caja, detalle de cuenta | El libro: `GET /ledger/movements` y `/ledger/categories` (`features/ledger`, `useLedger`) |
+| Lo que se agrega a mano y lo marcado como revisado u oculto (Transacciones) | `POST` y `DELETE /ledger/movements`, `PUT /ledger/marks` (`features/ledger/api/movements.ts`) |
 | Tasa de cambio (Configuración, sidebar) | `GET /rates/usd-dop` |
 | Respaldos (Configuración) | `/backup/*` (`features/backup`) |
 | Posesiones e inversiones (casa en plano, acciones, fondo de pensiones, vehículo) y deudas fuera de tus estados | `/ledger/assets` (`features/ledger`, `useAssets`); salen también en `GET /accounts` como `asset:<id>` |
