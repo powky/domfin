@@ -51,7 +51,7 @@ var santoDomingo = time.FixedZone("AST", -4*60*60)
 //	GET   /ledger/loans                each loan's rate, installment and what someone else pays of it
 //	PUT   /ledger/loans                replaces them
 //	GET   /ledger/payslips             the imported pay stubs, concept by concept
-//	GET   /ledger/salary               salaries set by hand, the day the job started and the bonus's month
+//	GET   /ledger/salary               salaries set by hand, the day the job started and the extra payments
 //	PUT   /ledger/salary               replaces them
 //
 // Like the statement endpoints, they only answer this computer and pages

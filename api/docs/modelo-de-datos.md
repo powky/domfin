@@ -379,7 +379,7 @@ que ya se pagó de intereses sale de los movimientos: cada pago de un
 préstamo trae `principal`, lo que fue a capital, y el resto fueron
 intereses y cargos.
 
-## Sueldo: volantes, salario de Navidad y bonificación
+## Sueldo: volantes, salario de Navidad y otros pagos
 
 Los volantes de pago (ver *Volantes de pago del Banco Popular* en
 [estados-de-cuenta.md](estados-de-cuenta.md)) quedan en `payslips` (la
@@ -392,20 +392,37 @@ Lo que el usuario dice de su sueldo va en `settings` (`salary`):
 
 | Campo | Qué es |
 | --- | --- |
-| `entries` | Sueldos brutos puestos a mano: `{since: "2026-07", amount, currency}`, del más viejo al más nuevo. Cuentan desde su mes hasta que un volante diga otra cosa. |
-| `hiredOn` | El día en que empezó a trabajar ahí: la bonificación son 60 días de sueldo desde los tres años, y 45 antes. |
-| `bonusMonth` | El mes en que le pagan la bonificación, de 1 a 12; 0 si no se la pagan. Sin él, la app pregunta. |
+| `entries` | Sueldos brutos puestos a mano: `{since: "2026-07", amount, currency}`, del más viejo al más nuevo, para quien no tiene volantes que Domfin lea. Cuentan desde su mes hasta que un volante diga otra cosa. Pueden traer lo que dice su volante: `isr`, `afp`, `sfs` y `other`, en centavos al mes; los que falten, la app los calcula por ley. |
+| `hiredOn` | El día en que empezó a trabajar ahí, para los pagos que van por antigüedad. |
+| `extras` | Los pagos que le hace su trabajo además del sueldo, como él los describe (ver abajo). |
+
+Cada pago extra (`extras`) es `{id, name, month, kind, tax}` más lo que use:
+
+| Campo | Qué es |
+| --- | --- |
+| `month` | El mes en que se paga, de 1 a 12. |
+| `kind` | Cuánto es: `days` (días de sueldo, a 23.83 días el mes), `salaries` (sueldos) o `fixed` (un monto). |
+| `value` | Los días o los sueldos. |
+| `seniority` | Con `days`: los días son los de la bonificación de ley, 45 antes de tres años en el trabajo y 60 después (necesita `hiredOn`). |
+| `amount` | Con `fixed`: el monto, en centavos de pesos. |
+| `base` | Sobre qué sueldo van los días y los sueldos: `average` (el promedio del año) o `month` (el del mes en que se paga). |
+| `tax` | El ISR: `scale` (lo que agrega al ingreso del año, con la escala de la DGII de 2026), `rate` (un porcentaje fijo, en `rate`: 0.25 es 25%) o `none`. |
+
+Antes de los pagos extra, la bonificación de ley se guardaba como
+`bonusMonth`: al leerlo, se vuelve un pago extra.
 
 La app arma el sueldo bruto de cada mes con eso (`features/salary`): el de
 los volantes en un mes que cubren entero, si no el puesto a mano, si no el
 del mes conocido más cercano. Con eso estima:
 
-- **Salario de Navidad** (Código de Trabajo, art. 219): la doceava parte del
-  sueldo del año. No paga ISR hasta ese monto (art. 222) ni TSS.
-- **Bonificación** (art. 223), lo que da la ley: el sueldo promedio del año
-  entre 23.83, por 45 o 60 días. Su ISR es lo que agrega al ingreso del año
-  (el sueldo menos la TSS, más los otros bonos), con la escala de la DGII
-  de 2026.
+- **Salario de Navidad** (Código de Trabajo, art. 219), para todos: la
+  doceava parte del sueldo del año. No paga ISR hasta ese monto (art. 222)
+  ni TSS.
+- **Los pagos extra**, cada uno como dice, en el orden en que se pagan: el
+  ISR de uno por escala cuenta lo que se pagó antes en el año.
+- **Los descuentos de un sueldo puesto a mano** que no se dijeron: AFP
+  2.87%, SFS 3.04% y la doceava parte del ISR de un año con ese sueldo
+  menos la TSS, como lo hacen las nóminas.
 
 ## Cómo lo usan las pantallas
 
@@ -453,8 +470,8 @@ los de estados de cuenta.
 | `GET /ledger/loans` | La tasa, la cuota y lo que paga otra persona de cada préstamo: `{"plans"}` (ver *Préstamos: cuándo terminas*). |
 | `PUT /ledger/loans` | Los reemplaza todos. Responde lo guardado. |
 | `GET /ledger/payslips` | Los volantes de pago importados, del más viejo al más nuevo: `{"payslips": [{"id", "employer", "paidOn", "net", "status", "issues"?, "lines": [{"concept", "kind", "deduction"?, "amount", "yearToDate"}]}]}`. |
-| `GET /ledger/salary` | Lo que dijiste de tu sueldo: `{"entries", "hiredOn"?, "bonusMonth"?}` (ver *Sueldo*). |
-| `PUT /ledger/salary` | Lo reemplaza; ordena los sueldos por mes. Responde lo guardado. |
+| `GET /ledger/salary` | Lo que dijiste de tu sueldo: `{"entries", "hiredOn"?, "extras"}` (ver *Sueldo*). |
+| `PUT /ledger/salary` | Lo reemplaza; ordena los sueldos por mes y a los pagos extra nuevos les pone `id` a partir del nombre. Responde lo guardado. |
 
 Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 `amounts` (su valor en pesos y dólares a la tasa de su fecha), `flow`,
