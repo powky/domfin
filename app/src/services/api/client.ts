@@ -19,9 +19,9 @@ type Init = Omit<RequestInit, 'headers'> & { headers?: Record<string, string> };
 let base: Promise<Api> | undefined;
 
 /**
- * Where the API answers. An app with the engine built in (the iOS and
- * Android proof of concept, modules/domfin-engine) starts it and uses its
- * port; the web talks to domfin-api.
+ * Where the API answers. An app with the engine built in (iOS and Android,
+ * modules/domfin-engine) starts it and uses its port; the web talks to
+ * domfin-api.
  */
 function apiBase() {
   base ??= DomfinEngine ? startEngine(DomfinEngine) : Promise.resolve({ url: COMPUTER_URL, headers: {} });

@@ -274,6 +274,10 @@ git pull
 `start` instala lo que haya cambiado antes de arrancar, y tu base se pone al
 día sola.
 
+En el teléfono, después del `git pull`, vuelve a instalar la app como en
+[En el teléfono](#en-el-teléfono): tus datos se quedan y se ponen al día
+solos.
+
 ### A mano
 
 Si prefieres tus propias herramientas, necesitas [Go](https://go.dev/dl/)

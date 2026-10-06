@@ -72,7 +72,9 @@ de simularlo en la app. Sin datos para el periodo, usa `DataNotice`.
   `src/i18n/locales/en/<feature>.ts` y su traducción en `es/`, en español
   neutro de "tú" (glosario: Transacciones, que en la pestaña es
   Movimientos; Flujo de caja, Gastos, Patrimonio neto, Cuentas, Préstamos,
-  Configuración, Saldo, Comercio, Monto).
+  Configuración, Saldo, Comercio, Monto). Un texto que habla de domfin-api
+  o de la computadora lleva su versión del teléfono en
+  `locales/<idioma>/phone.ts` (un test lo revisa).
 - Solo tokens semánticos del tema; nada de hex ni números sueltos, tampoco en
   las animaciones (`theme.motion`). Cada color tiene versión clara y oscura:
   un token nuevo va en los dos temas, y si es texto o ícono, en los pares de

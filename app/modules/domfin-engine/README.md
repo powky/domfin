@@ -78,8 +78,6 @@ Falta para no depender de la API:
   guardarlos en iCloud Drive (el contenedor de iCloud de la app) y, en
   Android, en la carpeta que se elija con el selector del sistema (Drive,
   OneDrive, Dropbox), y restaurar eligiendo el archivo.
-- Textos: unos 26 hablan de domfin-api, de "esta computadora" o de la
-  terminal, y el aviso de versiones dice que se actualiza con `git pull`.
 - Escritorio sin servidor (por ejemplo, Wails con la web de Expo y el motor
   en el mismo proceso). La web sigue necesitando domfin-api.
 - Sincronizar entre dispositivos: hoy solo se puede restaurar, y restaurar
@@ -99,6 +97,8 @@ Falta para no depender de la API:
   base en *Application Support/Domfin* (iOS) o en `files/Domfin` (Android), y
   devuelven el puerto.
 - `src/services/api/client.ts` usa ese puerto cuando la app trae el módulo.
+- Con el módulo, los textos que hablan de domfin-api o de la computadora
+  cambian por los de `src/i18n/locales/<idioma>/phone.ts`.
 - Android solo deja usar HTTP sin cifrar en las compilaciones de prueba; las
   release lo permiten solo para `localhost`
   (`android/src/release/res/xml/domfin_engine_network.xml`).

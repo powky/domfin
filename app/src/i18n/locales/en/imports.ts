@@ -58,7 +58,7 @@ export const imports = {
     errors: {
       offline: "Couldn't reach domfin-api. Is it running?",
       local_only: 'domfin-api only takes statements from this computer.',
-      too_large: 'A PDF is over 32 MB, the most domfin-api takes.',
+      too_large: 'A PDF is over 32 MB, the most Domfin takes.',
       unavailable: "domfin-api couldn't open its local database.",
       failed: 'Something went wrong. Try again.',
       picker_unavailable: "This build of the app doesn't have the file picker yet. Rebuild it to import from here.",

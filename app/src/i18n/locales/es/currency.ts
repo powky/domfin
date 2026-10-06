@@ -18,7 +18,7 @@ export const currency = {
       status: {
         loading: 'Buscando la tasa más reciente…',
         live: 'Tasa de referencia publicada por el Banco Central de la República Dominicana.',
-        stale: 'domfin-api no pudo consultar al Banco Central; esta es la última tasa que guardó.',
+        stale: 'Domfin no pudo consultar al Banco Central; esta es la última tasa que guardó.',
         offline: 'domfin-api no responde; esta es la última tasa conocida.',
       },
       summary: 'BCRD · {{date}}',

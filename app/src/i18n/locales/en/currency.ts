@@ -15,7 +15,7 @@ export const currency = {
       status: {
         loading: 'Getting the latest rate…',
         live: 'Reference rate published by the Banco Central de la República Dominicana.',
-        stale: "domfin-api couldn't reach the Banco Central, so this is the last rate it saved.",
+        stale: "Domfin couldn't reach the Banco Central, so this is the last rate it saved.",
         offline: "domfin-api isn't answering, so this is the last rate known.",
       },
       /** Sidebar line under the rate: "BCRD · Sep 28, 2026". */

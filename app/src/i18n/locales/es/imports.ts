@@ -57,7 +57,7 @@ export const imports = {
     errors: {
       offline: 'No se pudo conectar con domfin-api. ¿Está corriendo?',
       local_only: 'domfin-api solo recibe estados desde esta computadora.',
-      too_large: 'Un PDF pasa de 32 MB, lo máximo que recibe domfin-api.',
+      too_large: 'Un PDF pasa de 32 MB, lo máximo que recibe Domfin.',
       unavailable: 'domfin-api no pudo abrir su base local.',
       failed: 'Algo salió mal. Vuelve a intentarlo.',
       picker_unavailable: 'Esta versión de la app todavía no tiene el selector de archivos. Vuelve a compilarla para importar desde aquí.',

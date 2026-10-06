@@ -13,6 +13,6 @@ export const updates = {
     release: 'Domfin {{version}}',
     upToDate: 'You have the latest version.',
     howTo: 'To update, pull the new version (git pull) and follow the steps in the README.',
-    privacy: 'domfin-api checks GitHub for new releases at most twice a day, and only asks about Domfin’s repository.',
+    privacy: 'Domfin checks GitHub for new releases at most twice a day, and only asks about its own repository.',
   },
 };

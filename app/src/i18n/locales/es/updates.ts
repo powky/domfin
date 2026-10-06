@@ -14,6 +14,6 @@ export const updates = {
     release: 'Domfin {{version}}',
     upToDate: 'Tienes la última versión.',
     howTo: 'Para actualizar, baja la versión nueva (git pull) y sigue los pasos del README.',
-    privacy: 'domfin-api revisa los releases en GitHub como mucho dos veces al día, y solo pregunta por el repositorio de Domfin.',
+    privacy: 'Domfin revisa los releases en GitHub como mucho dos veces al día, y solo pregunta por su propio repositorio.',
   },
 } satisfies Translation<typeof en>;

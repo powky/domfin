@@ -219,6 +219,12 @@ src/
   que vienen de los datos (comercios, cuentas, notas) no se traducen. domfin-api nombra
   sus categorías en español; en inglés se traducen por id con `categoryLabel` y
   `groupLabel` (`src/i18n/locales/en/categories.ts`).
+- En iOS y Android, Domfin corre dentro de la app: no hay domfin-api que
+  arrancar ni computadora. Los textos que hablan de ellas (como "¿Está corriendo
+  domfin-api?" o "en esta computadora") tienen su versión del teléfono en
+  `src/i18n/locales/en/phone.ts` y `es/phone.ts`, que reemplaza a la de la web cuando
+  la app lleva el motor adentro. `phone.test.ts` falla si un texto que se ve en el
+  teléfono nombra domfin-api, la computadora o la terminal.
 - Montos y fechas siempre con `src/lib/format.ts` y `src/lib/dates.ts`, que usan el
   idioma de la app con la región del dispositivo (es-US, es-DO...). Nunca `'en-US'` fijo.
 - Dentro de `<Link asChild>` usar `Touchable` (de `components/ui`), porque el
