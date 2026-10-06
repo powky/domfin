@@ -11,7 +11,7 @@ import { canRetry, type QueuedStatement, type StatementFile, type StatementSourc
 import type { ImportResult } from '../types';
 
 export type ImportQueue = {
-  /** The PDFs of the last import, in the order they came. */
+  /** The files of the last import, PDFs or zips, in the order they came. */
   entries: QueuedStatement[];
   running: boolean;
   /** How many PDFs saved something since the app opened: screens reload what they show when it changes. */
@@ -46,8 +46,9 @@ export function useImportQueue() {
 }
 
 /**
- * Imports PDFs, from the file picker or another app's share sheet. Added
- * while others are importing, they join them; otherwise they start a new list.
+ * Imports PDFs and zips of them, from the file picker or another app's
+ * share sheet. Added while others are importing, they join them; otherwise
+ * they start a new list.
  */
 export function importStatements(files: readonly StatementFile[], source: StatementSource) {
   if (files.length === 0) return;
@@ -56,12 +57,16 @@ export function importStatements(files: readonly StatementFile[], source: Statem
   if (!queue.running) void run();
 }
 
-/** Tries again the PDFs that failed for a reason that can change: no connection, no password. */
+/**
+ * Tries again the files that failed for a reason that can change: no
+ * connection, no password. A zip goes again whole: what it already brought
+ * comes back unchanged.
+ */
 export function retryFailed() {
   if (!queue.entries.some(canRetry)) return;
   update({
     entries: queue.entries.map((entry) =>
-      canRetry(entry) ? { ...entry, state: 'waiting', result: undefined, error: undefined } : entry,
+      canRetry(entry) ? { ...entry, state: 'waiting', results: undefined, error: undefined } : entry,
     ),
   });
   if (!queue.running) void run();
@@ -69,9 +74,9 @@ export function retryFailed() {
 
 const nextWaiting = () => queue.entries.find((entry) => entry.state === 'waiting');
 
-// One PDF per request: a share can bring many from different accounts, a
-// big batch would pass domfin-api's 32 MB per upload, and each one shows
-// how it went as soon as it's done.
+// One file per request: a share can bring many from different accounts, a
+// big batch would pass domfin-api's 128 MB per upload, and each one shows
+// how it went as soon as it's done. A zip answers for each PDF inside it.
 async function run() {
   update({ running: true });
   let saved = false;
@@ -82,11 +87,13 @@ async function run() {
         '/statements/import',
         statementForm([entry.file]),
       );
-      const result: ImportResult = results[0] ?? { file: entry.file.name, status: 'failed', reason: 'unreadable' };
-      updateEntry(entry.id, { state: 'done', result });
-      if (result.status === 'added' || result.status === 'replaced') {
+      const answered: ImportResult[] =
+        results.length > 0 ? results : [{ file: entry.file.name, status: 'failed', reason: 'unreadable' }];
+      updateEntry(entry.id, { state: 'done', results: answered });
+      const added = answered.filter((result) => result.status === 'added' || result.status === 'replaced').length;
+      if (added > 0) {
         saved = true;
-        update({ saved: queue.saved + 1 });
+        update({ saved: queue.saved + added });
       }
     } catch (error) {
       updateEntry(entry.id, { state: 'error', error: importErrorOf(error) });

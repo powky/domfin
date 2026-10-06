@@ -54,9 +54,10 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   Central del día en que ocurrió.
 - **Montos ocultos**: el ojito de arriba los cambia por `RD$x,xxx.xx` cuando
   alguien más puede ver tu pantalla.
-- **Importar**: eliges uno o varios PDF; en iOS y Android también puedes
-  compartirlos con Domfin desde otra app (el correo, Archivos o WhatsApp), y
-  se importan solos.
+- **Importar**: eliges uno o varios PDF, o un .zip con tus estados en las
+  carpetas que sea, y Domfin reconoce cada uno; en iOS y Android también
+  puedes compartirlos con Domfin desde otra app (el correo, Archivos o
+  WhatsApp), y se importan solos.
 - **Respaldos cifrados**: una copia de tus datos en la carpeta de tu nube
   (iCloud Drive, Google Drive, Dropbox u OneDrive) cada día y después de cada
   importación, que solo abren tu contraseña o tu clave de recuperación.
@@ -221,9 +222,10 @@ Tu base no se toca, y la de ejemplo se borra al salir.
 1. **Configuración → Contraseña de los PDF**: guarda la contraseña con que
    tu banco protege los estados (en el Popular, la de los estados de
    tarjeta).
-2. **Importar estados**: elige tus PDF, varios a la vez si quieres. Domfin
-   te dice qué meses tiene cada cuenta y si algo no cuadró. Importar dos
-   veces el mismo estado no duplica nada.
+2. **Importar estados**: elige tus PDF, varios a la vez si quieres, o un
+   .zip con todos (en carpetas, si así los tienes). Domfin te dice qué meses
+   tiene cada cuenta y si algo no cuadró. Importar dos veces el mismo estado
+   no duplica nada.
 3. **Configuración → Nómina**: la cuenta donde cobras, el texto con que
    llega tu salario (como `nomina`) y tus días de pago. Así separa tu salario
    de los ingresos adicionales.
@@ -320,8 +322,8 @@ sin el `DOMFIN_DATA_DIR=` del principio.
 La app de iOS y Android lleva adentro el motor de Domfin, el mismo código de
 domfin-api: lee tus PDF, los guarda y los clasifica en el teléfono, sin
 computadora y sin internet (salvo para la tasa del dólar y el aviso de
-versiones). En el teléfono, comparte tus estados con Domfin desde el
-correo, Archivos o WhatsApp, y se importan solos.
+versiones). En el teléfono, comparte tus estados con Domfin (los PDF o un
+.zip con ellos) desde el correo, Archivos o WhatsApp, y se importan solos.
 
 Por ahora se instala compilándola, con un
 [development build](https://docs.expo.dev/develop/development-builds/introduction/)
@@ -427,8 +429,10 @@ proponer otra cosa,
 - [x] Estados del Banco Popular (tarjetas de crédito, cuentas de ahorro y
   corrientes, préstamos y certificados financieros), incluso escaneados, y
   de las tarjetas Qik.
-- [x] Compartir los PDF con Domfin desde otra app en iOS y Android, varios
-  a la vez y de cuentas distintas.
+- [x] Un .zip con tus estados, en las carpetas que sea: Domfin reconoce
+  cada PDF, sin que tengas que ordenarlos.
+- [x] Compartir los PDF, o un .zip con ellos, con Domfin desde otra app en
+  iOS y Android, varios a la vez y de cuentas distintas.
 - [x] Clasificación automática de cada movimiento: por el código del
   comercio, la descripción del banco, tu nómina y tus reglas.
 - [x] Salario, bonos, bonificaciones, ingresos adicionales y entregas sueltas

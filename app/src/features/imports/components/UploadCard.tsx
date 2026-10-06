@@ -20,7 +20,7 @@ import { formatCurrency, keepTogether } from '@/lib/format';
 
 import type { ImportQueue } from '../api/importQueue';
 import { accountLabel, sectionLabels } from '../lib/labels';
-import { canRetry, progressOf, type QueuedStatement } from '../lib/queue';
+import { canRetry, isZip, progressOf, type QueuedStatement } from '../lib/queue';
 import type { ImportResult } from '../types';
 
 type UploadCardProps = {
@@ -101,9 +101,21 @@ function Alert({ message }: { message: string }) {
 function QueuedRow({ entry, divided }: { entry: QueuedStatement; divided: boolean }) {
   const { theme } = useUnistyles();
   const { t } = useTranslation();
-  if (entry.state === 'done' && entry.result) return <ResultRow result={entry.result} divided={divided} />;
+  if (entry.state === 'done' && entry.results) {
+    // A zip brings a row for each PDF inside it.
+    return entry.results.map((result, index) => (
+      <ResultRow key={`${result.file}-${index}`} result={result} divided={divided || index > 0} />
+    ));
+  }
 
-  const detail = entry.state === 'importing' || entry.state === 'waiting' ? entry.state : 'notImported';
+  const detail =
+    entry.state === 'importing'
+      ? isZip(entry.file)
+        ? 'importingZip'
+        : 'importing'
+      : entry.state === 'waiting'
+        ? 'waiting'
+        : 'notImported';
   const icon =
     entry.state === 'importing' ? (
       <Spin size={ICON}>
@@ -142,7 +154,7 @@ function ResultRow({ result, divided }: { result: ImportResult; divided: boolean
   if (result.status === 'skipped') {
     Icon = CircleMinus;
     color = theme.colors.text.tertiary;
-    details = [t('imports.reasons.unsupported')];
+    details = [t(result.reason === 'empty_archive' ? 'imports.reasons.empty_archive' : 'imports.reasons.unsupported')];
   } else if (result.status === 'failed') {
     Icon = CircleX;
     color = theme.colors.negative;

@@ -28,25 +28,27 @@ Cualquier app del teléfono llega a ese puerto, así que el motor solo le
 responde a quien manda el secreto que genera al arrancar
 (`Authorization: Bearer …`). Su base vive en el teléfono.
 
-- *Importar estados* (`/imports`) sube los PDF del banco a domfin-api
-  (`POST /statements/import`), que los abre con la contraseña guardada en
-  *Configuración* (o la de `STATEMENTS_PDF_PASSWORD`), y muestra qué meses
-  tiene cada cuenta. Los PDF van a una cola que comparte toda la app
-  (`api/importQueue.ts`) y suben uno por petición: cada uno muestra cómo le
-  fue apenas termina, ninguna subida pasa de los 32 MB de domfin-api, y los
-  que fallan por la contraseña o porque domfin-api no contestó se pueden
+- *Importar estados* (`/imports`) sube los PDF del banco, o un .zip con
+  ellos, a domfin-api (`POST /statements/import`), que los abre con la
+  contraseña guardada en *Configuración* (o la de `STATEMENTS_PDF_PASSWORD`),
+  y muestra qué meses tiene cada cuenta. Los archivos van a una cola que
+  comparte toda la app (`api/importQueue.ts`) y suben uno por petición: cada
+  uno muestra cómo le fue apenas termina (un .zip, con una fila por cada PDF
+  que traía), ninguna subida pasa de los 128 MB de domfin-api, y los que
+  fallan por la contraseña o porque domfin-api no contestó se pueden
   reintentar. Si un PDF necesita contraseña, la tarjeta para guardarla
   aparece en la misma pantalla y, al guardarla, se reintenta solo. El
   selector de archivos (`expo-document-picker`) es un módulo nativo: los
   development builds anteriores a él no lo traen, así que hay que volver a
   compilarlos para importar desde iOS o Android.
-- En iOS y Android, otras apps comparten PDF con Domfin (Correo, Archivos,
-  WhatsApp, Drive), uno o varios, y se importan solos.
+- En iOS y Android, otras apps comparten PDF o .zip con Domfin (Correo,
+  Archivos, WhatsApp, Drive), uno o varios, y se importan solos.
   `plugins/with-statement-sharing.js` configura `expo-sharing`: en iOS, una
-  extensión que solo aparece cuando todo lo compartido es PDF; en Android,
-  los intents `SEND` y `SEND_MULTIPLE` de `application/pdf`. La hoja de
-  compartir abre la app en `domfin://expo-sharing`, que `app/+native-intent.ts`
-  manda a `/imports`, y `useSharedStatements` pasa los PDF a la cola (también
+  extensión que solo aparece cuando todo lo compartido es PDF o .zip; en
+  Android, los intents `SEND` y `SEND_MULTIPLE` de `application/pdf` y
+  `application/zip`. La hoja de compartir abre la app en
+  `domfin://expo-sharing`, que `app/+native-intent.ts` manda a `/imports`, y
+  `useSharedStatements` pasa los archivos a la cola (también
   cuando la app abre o vuelve al frente). Hace falta un development build
   nuevo. En iOS, la extensión y la app comparten el grupo
   `group.com.powky.domfin`, que en un teléfono de verdad tiene que estar

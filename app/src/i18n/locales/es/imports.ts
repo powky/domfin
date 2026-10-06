@@ -27,13 +27,14 @@ export const imports = {
     upload: {
       title: 'Subir estados de cuenta',
       description:
-        'Elige uno o varios PDF. Domfin reconoce cada estado, revisa que cuadre y lo guarda; los que ya importaste no se duplican.',
-      share: 'También puedes compartirlos con Domfin desde otra app (el correo, Archivos o WhatsApp): se importan solos, varios a la vez.',
+        'Elige uno o varios PDF, o un .zip con carpetas de PDF. Domfin reconoce cada estado, revisa que cuadre y lo guarda; los que ya importaste no se duplican.',
+      share: 'También puedes compartirlos con Domfin desde otra app (el correo, Archivos o WhatsApp), sueltos o en un .zip: se importan solos, varios a la vez.',
       supported: 'Por ahora lee los estados de cuenta y de tarjeta de crédito, los historiales de préstamo y de certificado, y los volantes de pago del Banco Popular.',
-      choose: 'Elegir PDF',
+      choose: 'Elegir PDF o .zip',
       progress: 'Importando {{current}} de {{total}}',
       waiting: 'En espera',
       importing: 'Importando…',
+      importingZip: 'Abriendo el .zip e importando sus PDF…',
       notImported: 'No se importó',
       ...plural('retry', 'Reintentar {{count}} archivo', 'Reintentar {{count}} archivos'),
       results: 'Última subida',
@@ -56,6 +57,8 @@ export const imports = {
     ...plural('transactions', '{{count}} movimiento en {{currency}}', '{{count}} movimientos en {{currency}}'),
     reasons: {
       unsupported: 'Omitido: Domfin todavía no sabe leer este tipo de estado.',
+      empty_archive: 'Omitido: el .zip no trae PDF.',
+      encrypted_archive: 'El .zip tiene contraseña: descomprímelo y sube sus PDF.',
       missing_password: 'Tiene contraseña: guárdala en Contraseña de los PDF.',
       wrong_password: 'La contraseña guardada no lo abre: cámbiala en Contraseña de los PDF.',
       unreadable: 'No se pudo leer: {{detail}}',
@@ -64,7 +67,7 @@ export const imports = {
     errors: {
       offline: 'No se pudo conectar con domfin-api. ¿Está corriendo?',
       local_only: 'domfin-api solo recibe estados desde esta computadora.',
-      too_large: 'Un PDF pasa de 32 MB, lo máximo que recibe Domfin.',
+      too_large: 'Un archivo pasa de 128 MB, lo máximo que recibe Domfin.',
       unavailable: 'domfin-api no pudo abrir su base local.',
       failed: 'Algo salió mal. Vuelve a intentarlo.',
       picker_unavailable: 'Esta versión de la app todavía no tiene el selector de archivos. Vuelve a compilarla para importar desde aquí.',

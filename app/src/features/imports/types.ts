@@ -24,9 +24,16 @@ export type StatementSection = { currency: Currency; transactions: number };
 
 export type ImportStatus = 'added' | 'replaced' | 'unchanged' | 'skipped' | 'failed';
 
-export type ImportReason = 'unsupported' | 'missing_password' | 'wrong_password' | 'unreadable' | 'not_saved';
+export type ImportReason =
+  | 'unsupported'
+  | 'missing_password'
+  | 'wrong_password'
+  | 'unreadable'
+  | 'not_saved'
+  | 'empty_archive'
+  | 'encrypted_archive';
 
-/** What importing one PDF did. */
+/** What importing one PDF did; a zip gives one for each PDF inside it, or one for itself when it has none. */
 export type ImportResult = {
   file: string;
   status: ImportStatus;

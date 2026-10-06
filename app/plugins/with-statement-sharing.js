@@ -1,16 +1,20 @@
-// Lets other apps (Mail, Files, WhatsApp, Drive) share statement PDFs with
-// Domfin, which imports them (src/features/imports/api/useSharedStatements.ts).
-// expo-sharing adds a share extension on iOS and the intent filters on
-// Android; this asks it for PDFs only, one or several at a time.
+// Lets other apps (Mail, Files, WhatsApp, Drive) share statement PDFs, or
+// zips of folders with them, with Domfin, which imports them
+// (src/features/imports/api/useSharedStatements.ts). expo-sharing adds a share
+// extension on iOS and the intent filters on Android; this asks it for PDFs
+// and zips only, one or several at a time.
 const fs = require('node:fs');
 const path = require('node:path');
 const { withDangerousMod, withPlugins } = require('expo/config-plugins');
 
-// iOS shows Domfin in the share sheet when every item shared is a PDF.
-const ONLY_PDFS =
+// iOS shows Domfin in the share sheet when every item shared is a PDF or a zip.
+const ONLY_PDFS_AND_ZIPS =
   'SUBQUERY (extensionItems, $item, $item.attachments.@count > 0 AND ' +
-  'SUBQUERY ($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf")' +
+  'SUBQUERY ($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf" ' +
+  'OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.zip-archive")' +
   '.@count == $item.attachments.@count).@count >= 1';
+
+const TYPES = ['application/pdf', 'application/zip'];
 
 // expo-sharing's extension target. The share sheet shows the extension by
 // its display name, which expo-sharing leaves as the target's.
@@ -38,11 +42,11 @@ module.exports = function withStatementSharing(config) {
     [
       'expo-sharing',
       {
-        ios: { enabled: true, activationRule: ONLY_PDFS },
+        ios: { enabled: true, activationRule: ONLY_PDFS_AND_ZIPS },
         android: {
           enabled: true,
-          singleShareMimeTypes: ['application/pdf'],
-          multipleShareMimeTypes: ['application/pdf'],
+          singleShareMimeTypes: TYPES,
+          multipleShareMimeTypes: TYPES,
         },
       },
     ],

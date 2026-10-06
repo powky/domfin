@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { ImportResult } from '../types';
-import { canRetry, needsPassword, progressOf, sharedStatements, type QueuedStatement, type SharedPayload } from './queue';
+import { canRetry, isZip, needsPassword, progressOf, sharedStatements, type QueuedStatement, type SharedPayload } from './queue';
 
 let next = 0;
 
@@ -21,7 +21,7 @@ function entry(extra: Partial<QueuedStatement> = {}): QueuedStatement {
 
 const failed = (reason: ImportResult['reason']): Partial<QueuedStatement> => ({
   state: 'done',
-  result: { file: 'estado.pdf', status: 'failed', reason },
+  results: [{ file: 'estado.pdf', status: 'failed', reason }],
 });
 
 /** What expo-sharing hands over on Android: the shared URI, and Domfin's copy named after the file. */
@@ -47,8 +47,8 @@ describe('the import queue', () => {
     assert.equal(canRetry(entry(failed('not_saved'))), true);
     // The same PDF would fail the same way.
     assert.equal(canRetry(entry(failed('unreadable'))), false);
-    assert.equal(canRetry(entry({ state: 'done', result: { file: 'otro.pdf', status: 'skipped', reason: 'unsupported' } })), false);
-    assert.equal(canRetry(entry({ state: 'done', result: { file: 'estado.pdf', status: 'added' } })), false);
+    assert.equal(canRetry(entry({ state: 'done', results: [{ file: 'otro.pdf', status: 'skipped', reason: 'unsupported' }] })), false);
+    assert.equal(canRetry(entry({ state: 'done', results: [{ file: 'estado.pdf', status: 'added' }] })), false);
     assert.equal(canRetry(entry()), false);
   });
 
@@ -58,17 +58,32 @@ describe('the import queue', () => {
     assert.equal(needsPassword([entry(failed('wrong_password'))]), true);
   });
 
+  it('tries a zip again when a PDF inside it could go in, and asks for its password', () => {
+    const zip = entry({
+      file: { name: 'estados.zip', type: 'application/zip', uri: 'file:///cache/estados.zip' },
+      state: 'done',
+      results: [
+        { file: 'estados.zip/enero.pdf', status: 'added' },
+        { file: 'estados.zip/tarjeta.pdf', status: 'failed', reason: 'missing_password' },
+      ],
+    });
+    assert.equal(canRetry(zip), true);
+    assert.equal(needsPassword([zip]), true);
+    const empty = entry({ state: 'done', results: [{ file: 'fotos.zip', status: 'skipped', reason: 'empty_archive' }] });
+    assert.equal(canRetry(empty), false);
+  });
+
   it('counts the PDFs finished and the one going', () => {
     assert.deepEqual(progressOf([]), { finished: 0, current: 0, total: 0 });
     const entries = [
-      entry({ state: 'done', result: { file: 'a.pdf', status: 'added' } }),
+      entry({ state: 'done', results: [{ file: 'a.pdf', status: 'added' }] }),
       entry({ state: 'error', error: 'offline' }),
       entry({ state: 'importing' }),
       entry(),
     ];
     assert.deepEqual(progressOf(entries), { finished: 2, current: 3, total: 4 });
     // When one is retried, the count keeps going up.
-    assert.deepEqual(progressOf([entry(), entry({ state: 'done', result: { file: 'b.pdf', status: 'added' } })]), {
+    assert.deepEqual(progressOf([entry(), entry({ state: 'done', results: [{ file: 'b.pdf', status: 'added' }] })]), {
       finished: 1,
       current: 2,
       total: 2,
@@ -114,5 +129,19 @@ describe('PDFs shared from another app', () => {
     assert.equal(file.type, 'application/pdf');
     assert.deepEqual(sharedStatements([{ ...ios('nota.txt'), contentMimeType: 'text/plain' }]), []);
     assert.deepEqual(sharedStatements([{ ...ios('vacío.pdf'), contentUri: null }]), []);
+  });
+});
+
+describe('zips', () => {
+  it('knows a zip by its type or its name', () => {
+    assert.equal(isZip({ name: 'estados.zip', type: '' }), true);
+    assert.equal(isZip({ name: 'estados', type: 'application/x-zip-compressed' }), true);
+    assert.equal(isZip({ name: 'estado.pdf', type: 'application/pdf' }), false);
+  });
+
+  it('takes the zips another app shares, as zips', () => {
+    const [zip] = sharedStatements([android('estados.zip', 20, 'application/zip')]);
+    assert.equal(zip?.type, 'application/zip');
+    assert.equal(zip?.name, 'estados.zip');
   });
 });
