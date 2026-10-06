@@ -38,13 +38,15 @@ type Name struct {
 	// Operation is one of the bank's own (see operations), and Ref the last
 	// digits of the card or account it names.
 	Operation, Ref string
+	// Person is the other side of a transfer, named by it.
+	Person bool
 }
 
 // Of names a movement's other side; renames are the user's names, by Key.
 func Of(m ledger.Movement, renames map[string]string) Name {
 	n := of(m)
 	if name := renames[n.Key]; name != "" && n.Key != "" {
-		return Name{Name: name, Key: n.Key, MerchantID: n.MerchantID}
+		return Name{Name: name, Key: n.Key, MerchantID: n.MerchantID, Person: n.Person}
 	}
 	return n
 }
@@ -81,6 +83,14 @@ func byName(text string) Name {
 
 func named(m Merchant) Name {
 	return Name{Name: m.Name, Key: "merchant:" + m.ID, MerchantID: m.ID}
+}
+
+// person names who a transfer went to or came from, unless it's a known
+// merchant.
+func person(text string) Name {
+	n := byName(text)
+	n.Person = n.MerchantID == ""
+	return n
 }
 
 // nameKey ties together names that read the same: "SUPERMERCADO UNO" and
@@ -215,10 +225,10 @@ func operation(text string) (Name, bool) {
 		if strings.TrimSpace(match[1]) == "" {
 			return opName(OpDollarsIn, ""), true
 		}
-		return byName(match[1]), true
+		return person(match[1]), true
 	}
 	if match := toke.FindStringSubmatch(strings.TrimSpace(text)); match != nil {
-		return byName(match[1]), true
+		return person(match[1]), true
 	}
 	words := wordsOf(text)
 	for _, p := range operationPatterns {
@@ -235,7 +245,7 @@ func operation(text string) (Name, bool) {
 		switch p.op {
 		case opTransferredTo:
 			// The name the bank printed, from the original text.
-			return byName(tail(text, groups[len(groups)-1])), true
+			return person(tail(text, groups[len(groups)-1])), true
 		case opPaidThrough:
 			return byName(tail(text, groups[0])), true
 		case OpCard, OpAccount:

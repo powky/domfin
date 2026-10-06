@@ -164,6 +164,8 @@ type movementJSON struct {
 	MerchantID string `json:"merchantId,omitempty"`
 	Operation  string `json:"operation,omitempty"`
 	Ref        string `json:"ref,omitempty"`
+	// Person marks the other side of a transfer, named by it.
+	Person bool `json:"person,omitempty"`
 }
 
 type movementsResponse struct {
@@ -233,6 +235,7 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 			PairID: c.PairID, AssetID: c.AssetID, Principal: m.Principal,
 			Manual: m.Manual, Missing: m.Missing, Notes: m.Notes, Hidden: marks[m.ID].Hidden,
 			Name: name.Name, NameKey: name.Key, MerchantID: name.MerchantID, Operation: name.Operation, Ref: name.Ref,
+			Person: name.Person,
 		})
 	}
 	writeJSON(w, http.StatusOK, body)

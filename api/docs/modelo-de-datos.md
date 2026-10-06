@@ -79,9 +79,9 @@ que imprimió el banco (`internal/merchants`):
   nombra por su número va por sus últimos 4 dígitos (`ref`): `PAGOTC VIA
   MB****1234` es *Tarjeta \*\*\*\*1234* y `Transf. via MB a 700123333`, *Cuenta
   \*\*\*\*3333*.
-- **Una transferencia, por la persona**: `MB a 0123456789 ANA PEREZ`,
-  `TOKE A ANA PEREZ AB12CD3` o los dólares que te envían (`TRNFUSD…`) son de
-  Ana Perez.
+- **Una transferencia, por la persona** (`person`): `MB a 0123456789 ANA
+  PEREZ`, `TOKE A ANA PEREZ AB12CD3` o los dólares que te envían
+  (`TRNFUSD…`) son de Ana Perez.
 - **Lo demás, limpio**: sin el procesador de pagos delante (`PAYPAL *`,
   `SQ *`), sin los números y códigos del final ni la forma legal (SRL, INC, C.
   POR A.), con mayúscula inicial: `SUPERMERCADO UNO SRL` es *Supermercado
@@ -585,5 +585,5 @@ cuando el historial no lo dice). `review` ya cuenta lo que marcaste como
 revisado; `hidden` viene en los ocultos, `manual` en los agregados a mano
 (`missing` si su estado llegó sin ellos) y `notes` con lo que escribiste,
 también en el movimiento del estado que tomó su lugar. `name` es su nombre
-para la pantalla, con `nameKey`, `merchantId`, `operation` y `ref` (ver
-*Nombres*).
+para la pantalla, con `nameKey`, `merchantId`, `operation`, `ref` y `person`
+(ver *Nombres*).
