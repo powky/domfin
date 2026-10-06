@@ -105,6 +105,12 @@ type Movement struct {
 	// of a payment, what went to capital (the rest was interest and
 	// charges). Nil for other accounts, and when the history can't tell.
 	Principal *int64
+	// Manual marks one the user added by hand, and Missing one of those
+	// that the statement covering its date came without.
+	Manual, Missing bool
+	// Notes is what the user wrote about a movement they added by hand,
+	// also on the imported movement that took its place.
+	Notes string
 }
 
 var accents = strings.NewReplacer("á", "a", "é", "e", "í", "i", "ó", "o", "ú", "u", "ü", "u", "ñ", "n")

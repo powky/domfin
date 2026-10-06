@@ -81,6 +81,10 @@ func (s *Store) SaveLoanHistory(ctx context.Context, h statements.LoanHistory, i
 			return "", fmt.Errorf("save loan movement %d: %w", i+1, err)
 		}
 	}
+	// What the user added by hand before this statement may be in it.
+	if err := settleManual(ctx, tx); err != nil {
+		return "", fmt.Errorf("settle movements added by hand: %w", err)
+	}
 	if err := tx.Commit(); err != nil {
 		return "", err
 	}

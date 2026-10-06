@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -185,5 +186,79 @@ func TestMovements(t *testing.T) {
 	}
 	if w := do(t, h, "GET", "/ledger/movements?from=2026-02-01&to=2026-01-01", "", nil); w.Code != http.StatusBadRequest {
 		t.Errorf("backwards range: %d", w.Code)
+	}
+}
+
+func TestMovementsByHand(t *testing.T) {
+	s := openStore(t)
+	cut := time.Date(2026, 1, 28, 0, 0, 0, 0, time.UTC)
+	st := statements.Statement{
+		Institution: "popular", Product: "MC PRUEBA", Brand: "Mastercard", Last4: "1234", CutDate: cut, DueDate: cut.AddDate(0, 0, 25),
+		Sections: []statements.Section{{
+			Currency: "DOP", CreditLimit: 5_000_000,
+			Transactions: []statements.Transaction{
+				// A code Domfin doesn't know: it asks for a look.
+				{PostedOn: cut, TransactedOn: cut, Reference: "10000000000000000000001", Description: "COMERCIO RARO", MCC: "1234", Amount: 80_000},
+			},
+		}},
+	}
+	if _, err := s.SaveStatement(context.Background(), st, nil, store.Source{Name: "enero.pdf"}); err != nil {
+		t.Fatal(err)
+	}
+	h := Handler(s, testConvert, nil)
+	get := func(from, to string) []movementJSON {
+		t.Helper()
+		var list movementsResponse
+		do(t, h, "GET", "/ledger/movements?from="+from+"&to="+to, "", &list)
+		return list.Movements
+	}
+
+	var added struct{ ID string }
+	body := `{"accountId": "popular:credit_card:1234:DOP", "date": "2026-02-05", "description": "Colmado", "amount": -50000,
+		"categoryId": "groceries", "notes": "pan"}`
+	if w := do(t, h, "POST", "/ledger/movements", body, &added); w.Code != http.StatusCreated || added.ID != "manual:1" {
+		t.Fatalf("add: %d %s", w.Code, w.Body)
+	}
+	got := get("2026-02-01", "2026-02-28")
+	if len(got) != 1 || !got[0].Manual || got[0].Notes != "pan" || got[0].Amount != -50_000 || got[0].Currency != "DOP" ||
+		*got[0].CategoryID != "groceries" || got[0].By != "manual" || got[0].Review || got[0].Hidden {
+		t.Fatalf("added: %+v", got)
+	}
+	if w := do(t, h, "POST", "/ledger/movements", `{"accountId": "popular:credit_card:1234:DOP", "date": "2026-02-05", "description": "Nada", "amount": 0}`, nil); w.Code != http.StatusBadRequest {
+		t.Errorf("without an amount: %d", w.Code)
+	}
+
+	// Hide the one added by hand; mark the imported one reviewed.
+	imported := get("2026-01-28", "2026-01-28")[0]
+	if !imported.Review {
+		t.Fatalf("imported: %+v", imported)
+	}
+	for _, body := range []string{
+		`{"movementIds": ["manual:1"], "hidden": true}`,
+		`{"movementIds": ["` + imported.ID + `"], "reviewed": true}`,
+	} {
+		if w := do(t, h, "PUT", "/ledger/marks", body, nil); w.Code != http.StatusNoContent {
+			t.Fatalf("mark %s: %d %s", body, w.Code, w.Body)
+		}
+	}
+	if got := get("2026-01-28", "2026-02-28"); len(got) != 2 || !got[0].Hidden || got[1].Review || got[1].Hidden {
+		t.Errorf("marked: %+v", got)
+	}
+	for _, body := range []string{`{"movementIds": []}`, `{"movementIds": ["manual:1"]}`} {
+		if w := do(t, h, "PUT", "/ledger/marks", body, nil); w.Code != http.StatusBadRequest {
+			t.Errorf("marks %s: %d", body, w.Code)
+		}
+	}
+
+	if w := do(t, h, "DELETE", "/ledger/movements/manual%3A1", "", nil); w.Code != http.StatusNoContent {
+		t.Fatalf("delete: %d %s", w.Code, w.Body)
+	}
+	for _, id := range []string{"manual:1", url.PathEscape(imported.ID)} {
+		if w := do(t, h, "DELETE", "/ledger/movements/"+id, "", nil); w.Code != http.StatusNotFound {
+			t.Errorf("delete %s: %d", id, w.Code)
+		}
+	}
+	if got := get("2026-02-01", "2026-02-28"); len(got) != 0 {
+		t.Errorf("after deleting: %+v", got)
 	}
 }

@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -157,7 +158,13 @@ func (c Classifier) Classify(movements []Movement) []Classification {
 		}
 	}
 
-	pairTransfers(movements, accounts, decided, func(i, j int, this, bank string) {
+	// What the user added by hand pairs with nothing: it would take the
+	// place of the bank's own movement on the other side.
+	taken := slices.Clone(decided)
+	for i, m := range movements {
+		taken[i] = taken[i] || m.Manual
+	}
+	pairTransfers(movements, accounts, taken, func(i, j int, this, bank string) {
 		if decide(i, this, ByTransfer) && decide(j, bank, ByTransfer) {
 			out[i].PairID, out[j].PairID = movements[j].ID, movements[i].ID
 		}
@@ -204,6 +211,14 @@ func (c Classifier) Classify(movements []Movement) []Classification {
 			flow = Income
 		}
 		out[i] = Classification{Flow: flow, By: ByDefault, Review: true}
+	}
+
+	// The user wrote what they added by hand: it asks for a look only when
+	// its statement came without it.
+	for i, m := range movements {
+		if m.Manual {
+			out[i].Review = m.Missing
+		}
 	}
 	return out
 }

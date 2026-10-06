@@ -14,8 +14,8 @@ cuentas. Es la referencia para la API, la app y cualquier importador nuevo.
 | Capa | Qué guarda | Quién la escribe |
 | --- | --- | --- |
 | Importación | Cada estado de cuenta tal como lo imprime el banco: `bank_accounts`, `bank_statements`, `bank_transactions` (cuentas de ahorro y corrientes), `cards`, `statements`, `transactions` (tarjetas), `loans`, `loan_histories`, `loan_movements` (préstamos) y `certificates`, `certificate_histories`, `certificate_movements` (certificados). Los volantes de pago van aparte, en `payslips` y `payslip_lines`: su dinero ya está en el libro. | Los importadores (`cmd/statements`, `POST /statements/import`). |
-| Libro | Las **cuentas** y los **movimientos** de todas las fuentes con la misma forma. Se arma al leer, no se copia. | `store.Accounts` y `store.Movements`. |
-| Clasificación | Categorías, tus reglas, tus correcciones y la configuración de nómina. El resultado se calcula al leer. | Tú, desde la app (`/ledger/*`). |
+| Libro | Las **cuentas** y los **movimientos** de todas las fuentes con la misma forma, más los que agregas a mano (`manual_movements`). Se arma al leer, no se copia. | `store.Accounts` y `store.Movements`. |
+| Clasificación | Categorías, tus reglas, tus correcciones, lo que marcas como revisado u oculto (`movement_marks`) y la configuración de nómina. El resultado se calcula al leer. | Tú, desde la app (`/ledger/*`). |
 
 Como la clasificación se calcula cada vez, cambiar una regla o la nómina
 reclasifica todo el historial al instante, y reimportar un estado no pierde
@@ -259,6 +259,41 @@ Desde la app puedes cambiar la categoría de un movimiento concreto
 (`PUT /ledger/classifications`). Gana sobre todo lo demás y sobrevive a
 reimportar el estado. Si el mismo caso se repite, conviene una regla.
 
+## Revisado y oculto
+
+`PUT /ledger/marks` marca movimientos como **revisados** (dejan de pedir
+revisión) u **ocultos** (no cuentan en ninguna pantalla; *Transacciones*
+los lista en *Ocultas*). Se guardan en `movement_marks` por el id del
+movimiento, como las correcciones, así que sobreviven a reimportar.
+
+## Movimientos agregados a mano
+
+Desde *Transacciones* puedes agregar un movimiento a una de tus cuentas
+(`POST /ledger/movements`): una compra antes de que llegue su estado, o algo
+que ningún estado muestra. Se guarda en `manual_movements`, con el id
+`manual:N` (que nunca se repite), y se clasifica como los demás (tus reglas,
+la nómina, su descripción), salvo que nunca se empareja como transferencia:
+le quitaría su pareja al movimiento del banco. La categoría que le pones es
+una corrección suya. Solo pide revisión en un caso (abajo).
+
+Cuando llega el estado que lo trae, el movimiento del banco toma su lugar
+(`settleManual`, al guardar cada estado):
+
+- Si los estados de su cuenta todavía no cubren una semana después de su
+  fecha, queda **pendiente**: cuenta como cualquier otro.
+- Al guardar un estado, cada pendiente busca en su cuenta un movimiento del
+  mismo monto a 7 días o menos (el más cercano, y uno para cada pendiente).
+  Ese movimiento lo reemplaza y se queda con su categoría, sus marcas, su
+  vínculo a un activo y sus notas.
+- Si los estados ya cubren una semana después de su fecha sin traerlo,
+  queda como **faltante** (`missing`): sigue contando y pide revisión, por
+  si el banco cobró otro monto (una propina) o fue en efectivo.
+- Uno que agregas para días que tus estados ya cubren se queda como está:
+  es lo que el estado no muestra.
+
+Solo se borran los agregados a mano (`DELETE /ledger/movements/{id}`), con
+su categoría, marcas y vínculo; los importados se ocultan.
+
 ## Inversiones y activos
 
 Pensado para el certificado y las acciones; aún no hay importador ni tablas de
@@ -443,7 +478,8 @@ del mes conocido más cercano. Con eso estima:
   los certificados y el valor de mercado de las acciones, en dólares
   convertidos con la tasa del BCRD.
 - **Transacciones:** todos los movimientos, con su flujo, categoría y la marca
-  de revisar.
+  de revisar; los ocultos, en *Ocultas*.
+- **Ocultos:** ninguna otra pantalla los suma ni los lista.
 
 ## Endpoints
 
@@ -459,6 +495,9 @@ los de estados de cuenta.
 | `GET /ledger/rules`, `PUT /ledger/rules` | Tus reglas; el `PUT` las reemplaza todas, en orden: `{"rules": [...]}`. |
 | `GET /ledger/payroll`, `PUT /ledger/payroll` | La configuración de nómina. |
 | `PUT /ledger/classifications` | Corrige un movimiento: `{"movementId", "categoryId"}`; con `categoryId: null` la quita. |
+| `POST /ledger/movements` | Agrega uno a mano: `{"accountId", "date", "description", "amount", "categoryId"?, "notes"?}`, en centavos de la moneda de la cuenta. Responde `{"id"}` (ver *Movimientos agregados a mano*). |
+| `DELETE /ledger/movements/{id}` | Borra uno agregado a mano, con su categoría, marcas y vínculo. |
+| `PUT /ledger/marks` | Marca movimientos: `{"movementIds", "reviewed"?, "hidden"?}`; lo que no viene se queda como estaba. |
 | `GET /ledger/assets` | Los activos con lo pagado, su valor y sus pagos (antes vincula lo que sus textos encuentren). |
 | `POST /ledger/assets`, `PUT /ledger/assets/{id}` | Crea o cambia uno: `{"kind", "name", "currency", "match", "property" \| "shares" \| "pension" \| "vehicle" \| "schedule"}`. |
 | `DELETE /ledger/assets/{id}` | Lo borra, con sus vínculos. |
@@ -479,4 +518,7 @@ Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 `asset`, `rule`, `payroll`, `transfer`, `bank`, `merchant` o `default`), `ruleId`, `review`,
 `pairId`, `assetId` (el activo al que paga) y, en los de un préstamo,
 `principal` (lo que movió su saldo: de un pago, lo que fue a capital; falta
-cuando el historial no lo dice).
+cuando el historial no lo dice). `review` ya cuenta lo que marcaste como
+revisado; `hidden` viene en los ocultos, `manual` en los agregados a mano
+(`missing` si su estado llegó sin ellos) y `notes` con lo que escribiste,
+también en el movimiento del estado que tomó su lugar.

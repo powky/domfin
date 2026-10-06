@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -441,9 +442,34 @@ func (s *Store) Accounts(ctx context.Context) ([]ledger.Account, error) {
 }
 
 // Movements lists the movements of every account posted from one date to
-// another, both included, oldest first.
+// another, both included, oldest first: the imported ones, then on each day
+// the ones the user added by hand that no statement brought yet.
 func (s *Store) Movements(ctx context.Context, from, to string) ([]ledger.Movement, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	movements, err := importedMovements(ctx, s.db, from, to)
+	if err != nil {
+		return nil, err
+	}
+	added, notes, err := manualMovements(ctx, s.db, from, to)
+	if err != nil {
+		return nil, err
+	}
+	for i := range movements {
+		movements[i].Notes = notes[movements[i].ID]
+	}
+	movements = append(movements, added...)
+	slices.SortStableFunc(movements, func(a, b ledger.Movement) int { return strings.Compare(a.Date, b.Date) })
+	return movements, nil
+}
+
+// querier runs queries in the database, or in a transaction.
+type querier interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+}
+
+// importedMovements lists the movements of the imported statements posted
+// from one date to another, both included, oldest first.
+func importedMovements(ctx context.Context, q querier, from, to string) ([]ledger.Movement, error) {
+	rows, err := q.QueryContext(ctx, `
 		SELECT c.institution, c.last4, t.currency, t.reference, st.cut_date, t.position, t.posted_on,
 			t.description, t.merchant, t.mcc, t.kind, t.amount, 'card', NULL
 		FROM transactions t

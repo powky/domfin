@@ -338,6 +338,38 @@ CREATE TABLE payslip_lines (
 	amount       INTEGER NOT NULL,
 	year_to_date INTEGER NOT NULL
 );
+`, `
+-- Movements the user adds by hand, in one of the ledger's accounts: a
+-- purchase before its statement arrives, or what no statement shows. Their
+-- movement ID is "manual:" and the row's id. amount is in cents and signed
+-- like the app (negative is money out). status says how it stands with the
+-- account's statements (see settleManual): "pending" until a statement
+-- covers its date, "matched" when the statement brought it (matched_id is
+-- the movement that took its place), "missing" when it came without it, and
+-- "kept" when it was added for days a statement already covered. An id is
+-- never used again, so nothing of a deleted one lands on another.
+CREATE TABLE manual_movements (
+	id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	account_id  TEXT NOT NULL,
+	posted_on   TEXT NOT NULL,
+	description TEXT NOT NULL,
+	amount      INTEGER NOT NULL,
+	currency    TEXT NOT NULL,
+	notes       TEXT NOT NULL,
+	status      TEXT NOT NULL,
+	matched_id  TEXT,
+	created_at  TEXT NOT NULL
+);
+
+-- What the user marked on a movement, by the ledger's movement ID: reviewed
+-- (it no longer asks for a look) and hidden (it stays out of lists and
+-- totals). A movement with neither has no row.
+CREATE TABLE movement_marks (
+	movement_id TEXT PRIMARY KEY,
+	reviewed    INTEGER NOT NULL,
+	hidden      INTEGER NOT NULL,
+	updated_at  TEXT NOT NULL
+);
 `}
 
 const dateLayout = "2006-01-02"
@@ -525,6 +557,10 @@ func (s *Store) SaveStatement(ctx context.Context, st statements.Statement, issu
 				return "", fmt.Errorf("save transaction %d: %w", i+1, err)
 			}
 		}
+	}
+	// What the user added by hand before this statement may be in it.
+	if err := settleManual(ctx, tx); err != nil {
+		return "", fmt.Errorf("settle movements added by hand: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return "", err

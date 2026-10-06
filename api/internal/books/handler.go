@@ -41,6 +41,9 @@ var santoDomingo = time.FixedZone("AST", -4*60*60)
 //	GET   /ledger/payroll              how the salary is told apart
 //	PUT   /ledger/payroll              changes it
 //	PUT   /ledger/classifications      files a movement under a category, or undoes it
+//	POST  /ledger/movements            adds a movement by hand
+//	DELETE /ledger/movements/{id}      removes one added by hand
+//	PUT   /ledger/marks                marks movements reviewed or hidden, or not
 //	GET   /ledger/assets               assets (a home bought off-plan, shares, a pension fund) and debts, with what was paid into them
 //	POST  /ledger/assets               adds one
 //	PUT   /ledger/assets/{id}          changes one
@@ -73,6 +76,9 @@ func Handler(s *store.Store, convert store.Converter, rateOn assets.RateOn) http
 	mux.HandleFunc("GET /ledger/payroll", b.servePayroll)
 	mux.HandleFunc("PUT /ledger/payroll", b.setPayroll)
 	mux.HandleFunc("PUT /ledger/classifications", b.classify)
+	mux.HandleFunc("POST /ledger/movements", b.addMovement)
+	mux.HandleFunc("DELETE /ledger/movements/{id}", b.deleteMovement)
+	mux.HandleFunc("PUT /ledger/marks", b.mark)
 	mux.HandleFunc("GET /ledger/assets", b.serveAssets)
 	mux.HandleFunc("POST /ledger/assets", b.addAsset)
 	mux.HandleFunc("PUT /ledger/assets/links", b.linkAssets)
@@ -138,6 +144,14 @@ type movementJSON struct {
 	// Principal is what a loan's movement moved its balance: of a payment,
 	// the capital (the rest was interest and charges). Absent otherwise.
 	Principal *int64 `json:"principal,omitempty"`
+	// Manual marks one the user added by hand, and Missing one of those
+	// that its statement came without. Notes is what the user wrote about
+	// it, also on the imported movement that took its place.
+	Manual  bool   `json:"manual,omitempty"`
+	Missing bool   `json:"missing,omitempty"`
+	Notes   string `json:"notes,omitempty"`
+	// Hidden ones stay out of lists and totals unless asked for.
+	Hidden bool `json:"hidden,omitempty"`
 }
 
 type movementsResponse struct {
@@ -167,6 +181,12 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	classes := classifier.Classify(movements)
+	marks, err := b.store.Marks(ctx)
+	if err != nil {
+		log.Printf("marcas: %v", err)
+		writeError(w, http.StatusInternalServerError, "ledger_failed")
+		return
+	}
 
 	body := movementsResponse{From: day(from), To: day(to), Accounts: []accountJSON{}, Movements: []movementJSON{}}
 	for _, a := range classifier.Accounts {
@@ -186,8 +206,9 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 			ID: m.ID, AccountID: m.AccountID, Date: m.Date, Description: m.Description, Merchant: m.Merchant,
 			MCC: m.MCC, Kind: string(m.Kind), Amount: m.Amount, Currency: m.Currency, Amounts: rates.value(ctx, m, c.Flow),
 			Flow:       string(c.Flow),
-			CategoryID: category, By: string(c.By), RuleID: c.RuleID, Review: c.Review, PairID: c.PairID, AssetID: c.AssetID,
-			Principal: m.Principal,
+			CategoryID: category, By: string(c.By), RuleID: c.RuleID, Review: c.Review && !marks[m.ID].Reviewed,
+			PairID: c.PairID, AssetID: c.AssetID, Principal: m.Principal,
+			Manual: m.Manual, Missing: m.Missing, Notes: m.Notes, Hidden: marks[m.ID].Hidden,
 		})
 	}
 	writeJSON(w, http.StatusOK, body)
@@ -471,6 +492,65 @@ func (b *books) classify(w http.ResponseWriter, r *http.Request) {
 }
 
 // ok answers a failed change and reports whether it went through.
+// addMovement adds a movement by hand, in one of the ledger's accounts and
+// its currency, and links it to an asset if one's texts match it.
+func (b *books) addMovement(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		AccountID   string `json:"accountId"`
+		Date        string `json:"date"`
+		Description string `json:"description"`
+		// Amount in cents: positive comes into the account, negative goes out.
+		Amount int64 `json:"amount"`
+		// Null leaves it to the rules, like an imported movement.
+		CategoryID *string `json:"categoryId"`
+		Notes      string  `json:"notes"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	m := store.Manual{AccountID: body.AccountID, Date: body.Date, Description: body.Description, Amount: body.Amount,
+		Notes: body.Notes}
+	if body.CategoryID != nil {
+		m.CategoryID = *body.CategoryID
+	}
+	id, err := b.store.AddManual(r.Context(), m)
+	if !b.ok(w, err) {
+		return
+	}
+	if err := b.store.SyncAssetLinks(r.Context(), b.convert); err != nil {
+		log.Printf("activos: %v", err)
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"id": id})
+}
+
+// deleteMovement removes a movement added by hand; imported ones can only
+// be hidden.
+func (b *books) deleteMovement(w http.ResponseWriter, r *http.Request) {
+	if b.ok(w, b.store.DeleteManual(r.Context(), r.PathValue("id"))) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// mark marks movements reviewed or hidden, or not; what the body leaves out
+// stays as it was.
+func (b *books) mark(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		MovementIDs []string `json:"movementIds"`
+		Reviewed    *bool    `json:"reviewed"`
+		Hidden      *bool    `json:"hidden"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	if len(body.MovementIDs) == 0 || body.Reviewed == nil && body.Hidden == nil {
+		writeError(w, http.StatusBadRequest, "bad_marks")
+		return
+	}
+	if b.ok(w, b.store.SetMarks(r.Context(), body.MovementIDs, body.Reviewed, body.Hidden)) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func (b *books) ok(w http.ResponseWriter, err error) bool {
 	switch {
 	case err == nil:

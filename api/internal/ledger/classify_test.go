@@ -474,3 +474,32 @@ func TestRuleMatches(t *testing.T) {
 		}
 	}
 }
+
+func TestAddedByHand(t *testing.T) {
+	byHand := func(m Movement, missing bool) Movement {
+		m.ID = "manual:" + m.Date
+		m.Manual, m.Missing = true, missing
+		return m
+	}
+	movements := []Movement{
+		// The bank's own debit pays the card, though the one typed by hand
+		// for the same amount is nearer.
+		move(payrollAccount, "2026-03-09", "PAGO TARJETA", -4_000_000),
+		byHand(move(payrollAccount, "2026-03-10", "Abono", -4_000_000), false),
+		cardMove("2026-03-10", Payment, "", 4_000_000),
+		// Cash spent that no statement shows, and one its statement came
+		// without: only that one asks for a look.
+		byHand(move(card, "2026-03-12", "Colmado", -50_000), false),
+		byHand(move(card, "2026-03-14", "Propina", -20_000), true),
+	}
+	got := check(t, classifier(), movements, []want{
+		{Transfer, CategoryCardPayment, ByTransfer, false},
+		{Expense, "", ByDefault, false},
+		{Transfer, CategoryCardPayment, ByTransfer, false},
+		{Expense, "", ByDefault, false},
+		{Expense, "", ByDefault, true},
+	})
+	if got[2].PairID != movements[0].ID || got[1].PairID != "" {
+		t.Errorf("pairs: %q, %q", got[2].PairID, got[1].PairID)
+	}
+}
