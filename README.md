@@ -35,9 +35,10 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 - **Presupuesto**: tus gastos fijos (alquiler, servicios, cuotas,
   suscripciones), que Domfin encuentra porque se repiten mes tras mes en tus
   estados, cuáles ya pagaste este mes y cuánto te queda para lo demás. Y tu
-  sueldo: con tus volantes de pago (los del Banco Popular), o el sueldo
-  bruto que pongas, lo que te descuentan cada mes de ISR, AFP y SFS, y cuánto
-  te entraría en diciembre de salario de Navidad y de bonificación.
+  sueldo: con tus volantes de pago (los del Banco Popular), o el sueldo y
+  los descuentos que pongas, lo que te descuentan cada mes de ISR, AFP y
+  SFS; tu salario de Navidad, y los otros pagos de tu trabajo (bonificación,
+  bonos) calculados como tú digas.
 - **Transacciones**: cada movimiento clasificado solo (por el código del
   comercio, la descripción del banco, tu nómina y tus reglas). Lo que falte
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
@@ -449,10 +450,12 @@ proponer otra cosa,
 - [x] Préstamos: cuánto te falta y cuándo terminas de pagar cada uno, con los
   intereses año por año, incluidos los que subsidia tu empleador.
 - [x] Tu sueldo desde tus volantes de pago del Banco Popular, sin duplicar lo
-  que ya trae tu cuenta: lo que te descuentan cada mes (ISR, AFP y SFS) y lo
+  que ya trae tu cuenta, o puesto a mano con lo que dice tu volante (o
+  calculado por ley): lo que te descuentan cada mes (ISR, AFP y SFS) y lo
   acumulado en el año.
-- [x] El salario de Navidad y la bonificación que te tocan por ley, con el
-  ISR de la bonificación, para saber cuánto te entra en diciembre.
+- [x] Tu salario de Navidad, y los otros pagos de tu trabajo como tú los
+  calculas (días de sueldo, como la bonificación de ley; sueldos; o un
+  monto), con su ISR.
 - [x] Respaldos cifrados en la carpeta de tu nube (iCloud Drive, Google
   Drive, Dropbox u OneDrive), con contraseña y clave de recuperación.
 - [x] La app de iOS y Android funciona sola, sin computadora: lleva adentro

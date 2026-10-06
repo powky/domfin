@@ -12,7 +12,9 @@ import { dotSeparator, formatCurrency, keepTogether } from '@/lib/format';
 
 import { saveSalarySettings } from '../api/salary';
 import { useSalaryView, type SalaryView } from '../api/useSalaryView';
-import { firstUnpaidMonth, monthsOf, yearPay, type MonthPay } from '../lib/salary';
+import { firstUnpaidMonth, monthsOf, type MonthBreakdown } from '../lib/salary';
+import { deductionsByLaw } from '../lib/tax';
+import type { SalaryEntry } from '../types';
 
 /** Pay stubs are in pesos, and so is the salary set by hand. */
 const money = (cents: number) => formatCurrency(cents / 100, 'DOP');
@@ -22,10 +24,12 @@ const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(
 
 const payKinds = ['salary', 'overtime', 'bonus', 'christmas', 'benefit', 'other'] as const;
 const deductionKinds = ['isr', 'afp', 'sfs', 'other'] as const;
+const lawKinds = ['isr', 'afp', 'sfs'] as const;
 
 /**
- * The gross salary in `month`, from the pay stubs or set by hand, and what
- * the stubs of the month paid and took. Without either, how to give it.
+ * The gross salary in `month`, from the pay stubs or set by hand, and the
+ * month's pay: what the stubs paid and took, or the salary set by hand with
+ * its deductions. Without either, how to give it.
  */
 export function SalaryCard({ month }: { month: string }) {
   const { t } = useTranslation();
@@ -70,45 +74,53 @@ export function SalaryCard({ month }: { month: string }) {
           </Text>
         </View>
       ) : null}
-      {breakdown ? <Breakdown pay={breakdown} all={view.pay} /> : null}
+      {breakdown ? <Breakdown breakdown={breakdown} view={view} /> : null}
     </Card>
   );
 }
 
-/** What a month's stubs paid and took, the net, and the year's ISR, AFP and SFS so far. */
-function Breakdown({ pay, all }: { pay: MonthPay; all: MonthPay[] }) {
+/** A month's pay, its net, and the year's ISR, AFP and SFS so far; what the law figured, with "≈". */
+function Breakdown({ breakdown, view }: { breakdown: MonthBreakdown; view: SalaryView }) {
   const { t } = useTranslation();
-  const year = Number(pay.month.slice(0, 4));
-  const { deductions } = yearPay(
-    all.filter((other) => other.month <= pay.month),
-    year,
-  );
+  const year = Number(breakdown.month.slice(0, 4));
+  const estimated = breakdown.estimated.length > 0;
+  const approx = (kind: string, text: string) => ((breakdown.estimated as string[]).includes(kind) ? `≈ ${text}` : text);
+  const { yearToDate } = view;
   return (
     <View style={styles.breakdown}>
       <Text variant="overline" tone="tertiary">
-        {t('salary.breakdown', { month: formatLongMonthYear(pay.month) })}
+        {breakdown.source === 'payslips'
+          ? t('salary.breakdown', { month: formatLongMonthYear(breakdown.month) })
+          : t('salary.manualBreakdown', { month: formatLongMonthYear(breakdown.month) })}
       </Text>
       {payKinds
-        .filter((kind) => pay.pay[kind] > 0)
+        .filter((kind) => breakdown.pay[kind] > 0)
         .map((kind) => (
-          <Row key={kind} label={t(`salary.pay.${kind}`)} value={money(pay.pay[kind])} />
+          <Row key={kind} label={t(`salary.pay.${kind}`)} value={money(breakdown.pay[kind])} />
         ))}
       {deductionKinds
-        .filter((kind) => pay.deductions[kind] > 0)
+        .filter((kind) => breakdown.deductions[kind] > 0)
         .map((kind) => (
-          <Row key={`-${kind}`} label={t(`salary.deductions.${kind}`)} value={`−${money(pay.deductions[kind])}`} />
+          <Row key={`-${kind}`} label={t(`salary.deductions.${kind}`)} value={approx(kind, `−${money(breakdown.deductions[kind])}`)} />
         ))}
       <View style={styles.total}>
-        <Row label={t('salary.net')} value={money(pay.net)} strong />
+        <Row label={t('salary.net')} value={estimated ? `≈ ${money(breakdown.net)}` : money(breakdown.net)} strong />
       </View>
-      <Text variant="caption" tone="tertiary">
-        {t('salary.yearToDate', {
-          year,
-          deductions: (['isr', 'afp', 'sfs'] as const)
-            .map((kind) => keepTogether(`${t(`salary.deductions.${kind}`)} ${money(deductions[kind])}`))
-            .join(dotSeparator),
-        })}
-      </Text>
+      {yearToDate ? (
+        <Text variant="caption" tone="tertiary">
+          {t(yearToDate.estimated ? 'salary.yearToDateEstimated' : 'salary.yearToDate', {
+            year,
+            deductions: lawKinds
+              .map((kind) => keepTogether(`${t(`salary.deductions.${kind}`)} ${money(yearToDate[kind])}`))
+              .join(dotSeparator),
+          })}
+        </Text>
+      ) : null}
+      {estimated ? (
+        <Text variant="caption" tone="tertiary">
+          {t('salary.byLaw')}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -125,28 +137,36 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
 }
 
 /**
- * A gross salary from a month on: it counts until a pay stub says
+ * A gross salary from a month on, with the deductions its stub says: the
+ * ones left empty are figured by law. It counts until a pay stub says
  * otherwise. One set for the same month is replaced, or taken out.
  */
 function SalaryForm({ view, month, onDone }: { view: SalaryView; month: string; onDone: () => void }) {
   const { t } = useTranslation();
   const { settings, current } = view;
-  const [amount, setAmount] = useState(current ? toInput(current.amount) : '');
   // A salary counts until a stub says otherwise: by default, from the first month no stub pays.
-  const [since, setSince] = useState(
-    current?.source === 'manual' ? current.since : (firstUnpaidMonth(view.pay) ?? month),
-  );
+  const [since, setSince] = useState(current?.source === 'manual' ? current.since : (firstUnpaidMonth(view.pay) ?? month));
+  const editing = settings.entries.find((entry) => entry.since === since);
+  const [amount, setAmount] = useState(current ? toInput(current.amount) : '');
+  const initial = (kind: (typeof deductionKinds)[number]) => (editing?.[kind] !== undefined ? toInput(editing[kind]) : '');
+  const [deductions, setDeductions] = useState(() => Object.fromEntries(deductionKinds.map((kind) => [kind, initial(kind)])));
   const [state, setState] = useState<'idle' | 'saving' | 'failed'>('idle');
   const cents = parseCents(amount);
+  const law = cents > 0 ? deductionsByLaw(cents) : undefined;
+  const given = Object.fromEntries(
+    deductionKinds.filter((kind) => deductions[kind].trim() !== '').map((kind) => [kind, parseCents(deductions[kind])]),
+  ) as Partial<Record<(typeof deductionKinds)[number], number>>;
+  const taken = Object.values(given).reduce((total, value) => total + value, 0);
+  const valid = cents > 0 && Object.values(given).every((value) => value >= 0) && taken <= cents;
+
   const year = Number(month.slice(0, 4));
   const options = [...monthsOf(year - 1), ...monthsOf(year), ...monthsOf(year + 1)].map((value) => ({
     value,
     label: capitalized(formatLongMonthYear(value)),
   }));
   const others = settings.entries.filter((entry) => entry.since !== since);
-  const existing = others.length < settings.entries.length;
 
-  const save = (entries: typeof settings.entries) => {
+  const save = (entries: SalaryEntry[]) => {
     setState('saving');
     saveSalarySettings({ ...settings, entries })
       .then(() => {
@@ -156,13 +176,13 @@ function SalaryForm({ view, month, onDone }: { view: SalaryView; month: string; 
       .catch(() => setState('failed'));
   };
   const submit = () => {
-    if (cents > 0) save([...others, { since, amount: cents, currency: 'DOP' }]);
+    if (valid) save([...others, { since, amount: cents, currency: 'DOP', ...given }]);
   };
 
   return (
-    <>
+    <View style={styles.form}>
       <View style={styles.fields}>
-        <Field label={t('salary.form.amount')} hint={t('salary.form.amountHint')} style={styles.amount}>
+        <Field label={t('salary.form.amount')} hint={t('salary.form.amountHint')} style={styles.wide}>
           <TextField
             value={amount}
             onChangeText={setAmount}
@@ -176,20 +196,36 @@ function SalaryForm({ view, month, onDone }: { view: SalaryView; month: string; 
           <Select options={options} value={since} onChange={setSince} accessibilityLabel={t('salary.form.since')} />
         </Field>
       </View>
+      <View style={styles.deductions}>
+        <Text variant="captionStrong" tone="secondary">
+          {t('salary.form.deductions')}
+        </Text>
+        <View style={styles.fields}>
+          {deductionKinds.map((kind) => (
+            <Field key={kind} label={t(`salary.deductions.${kind}`)} style={styles.deduction}>
+              <TextField
+                value={deductions[kind]}
+                onChangeText={(text) => setDeductions((before) => ({ ...before, [kind]: text }))}
+                placeholder={law && kind !== 'other' ? `≈ ${toInput(law[kind])}` : currencySymbols.DOP}
+                accessibilityLabel={t(`salary.deductions.${kind}`)}
+                keyboardType="decimal-pad"
+                onSubmitEditing={submit}
+              />
+            </Field>
+          ))}
+        </View>
+        <Text variant="caption" tone="tertiary">
+          {t('salary.form.deductionsHint')}
+        </Text>
+      </View>
+      {cents > 0 && taken > cents ? <Text tone="accent">{t('salary.form.tooMuch')}</Text> : null}
       {state === 'failed' ? <Text tone="accent">{t('salary.failed')}</Text> : null}
       <View style={styles.actions}>
-        {existing ? (
-          <Button label={t('salary.form.remove')} onPress={() => save(others)} disabled={state === 'saving'} />
-        ) : null}
+        {editing ? <Button label={t('salary.form.remove')} onPress={() => save(others)} disabled={state === 'saving'} /> : null}
         <Button label={t('salary.form.cancel')} onPress={onDone} />
-        <Button
-          variant="primary"
-          label={t('salary.form.save')}
-          onPress={submit}
-          disabled={!(cents > 0) || state === 'saving'}
-        />
+        <Button variant="primary" label={t('salary.form.save')} onPress={submit} disabled={!valid || state === 'saving'} />
       </View>
-    </>
+    </View>
   );
 }
 
@@ -217,15 +253,25 @@ const styles = StyleSheet.create((theme) => ({
     borderTopWidth: theme.layout.hairline,
     borderTopColor: theme.colors.border,
   },
+  form: {
+    gap: theme.space[4],
+  },
   fields: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     gap: theme.space[3],
   },
-  amount: {
+  wide: {
     flexGrow: 1,
     flexBasis: 220,
+  },
+  deductions: {
+    gap: theme.space[2],
+  },
+  deduction: {
+    flexGrow: 1,
+    flexBasis: 120,
   },
   actions: {
     flexDirection: 'row',

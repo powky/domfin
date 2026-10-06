@@ -2,8 +2,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import type { Extra } from '../types';
 import type { MonthSalary } from './salary';
-import { annualIsr, bonusDays, christmasSalary, legalBonus } from './yearEnd';
+import { annualIsr, deductionsByLaw } from './tax';
+import { bonusDays, christmasSalary, extraPayments } from './yearEnd';
 
 /** Six months at one salary and six at another, in cents. */
 const year = (first: number, second: number): MonthSalary[] =>
@@ -12,6 +14,8 @@ const year = (first: number, second: number): MonthSalary[] =>
     amount: i < 6 ? first : second,
     source: 'payslips',
   }));
+
+const extra = (fields: Partial<Extra>): Extra => ({ id: 'x', name: 'Bono', month: 12, kind: 'fixed', tax: 'none', ...fields });
 
 describe('christmasSalary', () => {
   it("is a twelfth of the year's salary", () => {
@@ -40,25 +44,68 @@ describe('annualIsr', () => {
   });
 });
 
-describe('legalBonus', () => {
-  it('is the average monthly salary over 23.83 days, times the days, less the ISR it adds', () => {
-    const bonus = legalBonus(year(10_000_000, 11_000_000), 60);
-    assert.equal(bonus.average, 10_500_000);
+describe('deductionsByLaw', () => {
+  it('takes the AFP and SFS from the salary and a twelfth of the yearly ISR, less the TSS', () => {
+    const law = deductionsByLaw(10_000_000);
+    assert.equal(law.afp, 287_000);
+    assert.equal(law.sfs, 304_000);
+    assert.equal(law.isr, Math.round(annualIsr(10_000_000 * 12 * (1 - 0.0591)) / 12));
+  });
+
+  it('takes no ISR from a salary under the exempt bracket', () => {
+    assert.equal(deductionsByLaw(3_000_000).isr, 0);
+  });
+});
+
+describe('extraPayments', () => {
+  const months = year(10_000_000, 11_000_000);
+
+  it("figures the law's bonus by seniority on the average salary, with the ISR it adds", () => {
+    const [bonus] = extraPayments([extra({ kind: 'days', seniority: true, base: 'average', tax: 'scale' })], months, {
+      year: 2026,
+      hiredOn: '2020-03-15',
+    });
+    assert.equal(bonus.status, 'ready');
+    if (bonus.status !== 'ready') return;
+    assert.equal(bonus.days, 60);
+    assert.equal(bonus.base, 10_500_000);
     assert.equal(bonus.gross, Math.round((10_500_000 / 23.83) * 60));
     // Well into the top bracket, all of it pays 25%.
     assert.ok(Math.abs(bonus.isr - bonus.gross * 0.25) <= 1);
     assert.equal(bonus.net, bonus.gross - bonus.isr);
   });
 
-  it('pays what its bracket says on a smaller salary', () => {
-    const bonus = legalBonus(year(4_000_000, 4_000_000), 45);
-    assert.equal(bonus.gross, Math.round((4_000_000 / 23.83) * 45));
-    assert.ok(Math.abs(bonus.isr - bonus.gross * 0.15) <= 1);
+  it('asks for the day the job started before it can count days by seniority', () => {
+    const [bonus] = extraPayments([extra({ kind: 'days', seniority: true, tax: 'scale' })], months, { year: 2026 });
+    assert.equal(bonus.status, 'needsHireDate');
   });
 
-  it('counts the other bonuses of the year toward its bracket', () => {
-    const alone = legalBonus(year(4_000_000, 4_000_000), 45);
-    const after = legalBonus(year(4_000_000, 4_000_000), 45, 50_000_000);
-    assert.ok(after.isr > alone.isr);
+  it("pays salaries on the month's, a flat rate of ISR, or a fixed amount with none", () => {
+    const [school, performance] = extraPayments(
+      [
+        extra({ id: 'b', month: 7, kind: 'salaries', value: 1.5, base: 'month', tax: 'rate', rate: 0.2 }),
+        extra({ id: 'a', month: 3, kind: 'fixed', amount: 2_000_000, tax: 'none' }),
+      ],
+      months,
+      { year: 2026 },
+    );
+    // In the order they're paid.
+    assert.deepEqual([school.extra.id, performance.extra.id], ['a', 'b']);
+    assert.ok(school.status === 'ready' && school.gross === 2_000_000 && school.isr === 0 && school.net === 2_000_000);
+    assert.ok(performance.status === 'ready');
+    if (performance.status !== 'ready') return;
+    assert.equal(performance.gross, 16_500_000);
+    assert.equal(performance.isr, 3_300_000);
+  });
+
+  it('counts what was paid before toward the bracket of what comes after', () => {
+    const small = year(3_000_000, 3_000_000);
+    const alone = extraPayments([extra({ kind: 'fixed', amount: 10_000_000, tax: 'scale' })], small, { year: 2026 })[0];
+    const after = extraPayments(
+      [extra({ id: 'first', month: 6, kind: 'fixed', amount: 30_000_000, tax: 'scale' }), extra({ kind: 'fixed', amount: 10_000_000, tax: 'scale' })],
+      small,
+      { year: 2026 },
+    )[1];
+    assert.ok(alone.status === 'ready' && after.status === 'ready' && after.isr > alone.isr);
   });
 });

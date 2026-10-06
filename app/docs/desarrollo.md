@@ -120,17 +120,21 @@ responde a quien manda el secreto que genera al arrancar
   cuota, y la paga toda otra persona. La página de la cuenta importa
   `LoanPlanSection` por su ruta, no por `@/features/loans`, que importa
   `@/features/accounts` y cerraría un ciclo.
-- *Tu sueldo* y *Salario de Navidad y bonificación* (`features/salary`, en
+- *Tu sueldo* y *Salario de Navidad y otros pagos* (`features/salary`, en
   Presupuesto) salen de los volantes de pago importados
   (`/ledger/payslips`) y de lo que el usuario dice de su sueldo
-  (`/ledger/salary`: sueldos a mano, fecha de ingreso, mes de la
-  bonificación). `lib/salary.ts` arma el sueldo bruto de cada mes: el de los
-  volantes en un mes que cubren entero (tantos pagos de sueldo como el mes
-  más completo), si no el puesto a mano desde su mes, si no el del mes
-  conocido más cercano. `lib/yearEnd.ts` estima el salario de Navidad (la
-  doceava parte del año) y la bonificación de ley (el promedio entre 23.83,
-  por 45 o 60 días) con el ISR que le agrega, con la escala de la DGII de
-  2026. Un volante no es un movimiento: su neto ya está en el libro.
+  (`/ledger/salary`: sueldos a mano con sus descuentos, fecha de ingreso y
+  los pagos extra que describe). `lib/salary.ts` arma el sueldo bruto de
+  cada mes: el de los volantes en un mes que cubren entero (tantos pagos de
+  sueldo como el mes más completo), si no el puesto a mano desde su mes, si
+  no el del mes conocido más cercano; un sueldo puesto a mano trae los
+  descuentos que el usuario dio y los demás por ley (`lib/tax.ts`).
+  `lib/yearEnd.ts` estima el salario de Navidad (la doceava parte del año) y
+  cada pago extra como lo describe el usuario: días de sueldo (entre 23.83,
+  45 o 60 por antigüedad), sueldos o un monto, sobre el promedio del año o
+  el sueldo de su mes, con el ISR por la escala de la DGII de 2026, un
+  porcentaje o ninguno. Un volante no es un movimiento: su neto ya está en
+  el libro.
 - *Configuración → Respaldos* (`features/backup`) activa los respaldos
   cifrados de domfin-api en una carpeta de nube (`/backup/*`), los corre y
   restaura uno, aquí o en otra computadora. Restaurar cambia todo lo que la

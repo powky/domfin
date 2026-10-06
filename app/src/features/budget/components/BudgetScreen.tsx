@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { formatLatestStatement } from '@/components/PeriodHeader';
 import { Screen } from '@/components/Screen';
 import { Button, Text } from '@/components/ui';
-import { SalaryCard, YearEndCard } from '@/features/salary';
+import { ExtrasCard, SalaryCard } from '@/features/salary';
 import { addMonths, formatDateValue } from '@/lib/dates';
 import { LATEST_MONTH, LEDGER_MONTHS } from '@/lib/period';
 
@@ -52,7 +52,7 @@ export function BudgetScreen() {
           <MonthPlanCard view={view} month={month} />
           <FixedCostsCard view={view} month={month} />
           <SalaryCard month={month} />
-          <YearEndCard month={month} />
+          <ExtrasCard month={month} />
           <SuggestionsCard view={view} />
         </>
       )}

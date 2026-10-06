@@ -1,11 +1,14 @@
 import { useMemo } from 'react';
 
 import {
+  breakdownFor,
   currentSalary,
   earliestMonth,
   payByMonth,
   salaryReader,
+  yearDeductions,
   type CurrentSalary,
+  type MonthBreakdown,
   type MonthPay,
   type MonthSalary,
 } from '../lib/salary';
@@ -21,8 +24,10 @@ export type SalaryView = {
   read: (month: string) => MonthSalary;
   /** The salary in the month shown, and since when; none when nothing is known. */
   current?: CurrentSalary;
-  /** The stubs of the month shown or, without any, of the latest month with stubs. */
-  breakdown?: MonthPay;
+  /** The pay of the month shown: a salary set by hand's, or the latest month the stubs pay whole. */
+  breakdown?: MonthBreakdown;
+  /** What the year took in ISR, AFP and SFS up to the breakdown's month; `estimated` when it's by law, not the stubs. */
+  yearToDate?: ReturnType<typeof yearDeductions>;
 };
 
 /** The salary as of `month` ('YYYY-MM'), from the pay stubs and what was set by hand. */
@@ -39,12 +44,14 @@ export function useSalaryView(month: string): SalaryView {
       : payslips.status === 'offline' || salary.status === 'offline'
         ? 'offline'
         : 'loading';
+  const breakdown = breakdownFor(month, pay, read);
   return {
     status,
     settings,
     pay,
     read,
     current: earliest ? currentSalary(read, month, earliest) : undefined,
-    breakdown: pay.find((other) => other.month === month) ?? pay.filter((other) => other.month <= month).at(-1),
+    breakdown,
+    yearToDate: breakdown ? yearDeductions(pay, read, breakdown.month) : undefined,
   };
 }

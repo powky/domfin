@@ -3,7 +3,17 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { Payslip, PayslipLine } from '../types';
-import { currentSalary, firstUnpaidMonth, payByMonth, salaryByMonth, salaryReader, yearPay, type MonthPay } from './salary';
+import {
+  breakdownFor,
+  currentSalary,
+  firstUnpaidMonth,
+  payByMonth,
+  salaryByMonth,
+  salaryReader,
+  yearDeductions,
+  yearPay,
+  type MonthPay,
+} from './salary';
 
 let next = 0;
 
@@ -126,5 +136,41 @@ describe('firstUnpaidMonth', () => {
     const pay = payByMonth([...month('2026-11', 10_000_000), ...month('2026-12', 10_000_000), stub('2027-01-12', [salary(5_000_000)])]);
     assert.equal(firstUnpaidMonth(pay), '2027-01');
     assert.equal(firstUnpaidMonth([]), undefined);
+  });
+});
+
+describe('breakdownFor', () => {
+  it("shows a salary set by hand with the deductions given, and the law's for the rest", () => {
+    const read = salaryReader([], [{ since: '2026-01', amount: 10_000_000, currency: 'DOP', isr: 1_000_000, other: 50_000 }]);
+    const breakdown = breakdownFor('2026-05', [], read);
+    assert.ok(breakdown);
+    assert.equal(breakdown.source, 'manual');
+    assert.deepEqual(breakdown.estimated, ['afp', 'sfs']);
+    assert.deepEqual(breakdown.deductions, { isr: 1_000_000, afp: 287_000, sfs: 304_000, other: 50_000 });
+    assert.equal(breakdown.net, 10_000_000 - 1_000_000 - 287_000 - 304_000 - 50_000);
+  });
+
+  it('shows the latest month the stubs pay whole, not one with half of it', () => {
+    const pay = payByMonth([...month('2026-08', 10_000_000), ...month('2026-09', 10_000_000), stub('2026-10-01', [salary(5_000_000)])]);
+    const breakdown = breakdownFor('2026-10', pay, salaryReader(pay, []));
+    assert.equal(breakdown?.month, '2026-09');
+    assert.equal(breakdown?.source, 'payslips');
+  });
+
+  it('shows a raise set by hand once the stubs end', () => {
+    const pay = payByMonth(month('2026-09', 10_000_000));
+    const read = salaryReader(pay, [{ since: '2026-11', amount: 12_000_000, currency: 'DOP' }]);
+    assert.equal(breakdownFor('2026-10', pay, read)?.source, 'payslips');
+    assert.equal(breakdownFor('2026-11', pay, read)?.pay.salary, 12_000_000);
+  });
+});
+
+describe('yearDeductions', () => {
+  it("adds up a salary set by hand's deductions month by month", () => {
+    const read = salaryReader([], [{ since: '2026-01', amount: 10_000_000, currency: 'DOP', isr: 1_000_000 }]);
+    const year = yearDeductions([], read, '2026-03');
+    assert.equal(year.isr, 3_000_000);
+    assert.equal(year.afp, 3 * 287_000);
+    assert.equal(year.estimated, true);
   });
 });

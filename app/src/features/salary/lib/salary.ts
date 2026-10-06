@@ -1,4 +1,5 @@
 import type { DeductionKind, PayKind, Payslip, SalaryEntry } from '../types';
+import { deductionsByLaw } from './tax';
 
 const payKinds = ['salary', 'overtime', 'bonus', 'christmas', 'benefit', 'other'] as const satisfies readonly PayKind[];
 const deductionKinds = ['isr', 'afp', 'sfs', 'other'] as const satisfies readonly DeductionKind[];
@@ -53,6 +54,8 @@ export type MonthSalary = {
   amount: number;
   source: 'payslips' | 'manual' | 'none';
   estimated?: boolean;
+  /** The salary set by hand it comes from, with its deductions. */
+  entry?: SalaryEntry;
 };
 
 /**
@@ -75,14 +78,18 @@ export function salaryReader(pay: MonthPay[], entries: SalaryEntry[], hiredOn?: 
 
     const entry = ordered.filter((other) => other.since <= month).at(-1);
     const previous = stubs.filter((other) => other.month < month).at(-1);
-    if (entry && (!previous || previous.month < entry.since)) return { month, amount: entry.amount, source: 'manual' };
+    if (entry && (!previous || previous.month < entry.since)) return { month, amount: entry.amount, source: 'manual', entry };
     if (previous) return { month, amount: previous.pay.salary, source: 'payslips', estimated: true };
 
     const later = [
       ...stubs.filter((other) => other.month > month).map((other) => ({ month: other.month, amount: other.pay.salary, source: 'payslips' as const })),
-      ...ordered.filter((other) => other.since > month).map((other) => ({ month: other.since, amount: other.amount, source: 'manual' as const })),
+      ...ordered
+        .filter((other) => other.since > month)
+        .map((other) => ({ month: other.since, amount: other.amount, source: 'manual' as const, entry: other })),
     ].sort((a, b) => a.month.localeCompare(b.month))[0];
-    return later ? { month, amount: later.amount, source: later.source, estimated: true } : { month, amount: 0, source: 'none' };
+    return later
+      ? { month, amount: later.amount, source: later.source, estimated: true, ...('entry' in later ? { entry: later.entry } : {}) }
+      : { month, amount: 0, source: 'none' };
   };
 }
 
@@ -135,6 +142,63 @@ export function yearPay(pay: MonthPay[], year: number): Pick<MonthPay, 'pay' | '
     for (const kind of payKinds) total.pay[kind] += month.pay[kind];
     for (const kind of deductionKinds) total.deductions[kind] += month.deductions[kind];
     total.net += month.net;
+  }
+  return total;
+}
+
+/** The latest month up to `month` its stubs pay whole, as many salary payments as the fullest month. */
+export function lastFullMonth(pay: MonthPay[], month: string): MonthPay | undefined {
+  const full = Math.max(0, ...pay.map((other) => other.salaryPayments));
+  return pay.filter((other) => full > 0 && other.salaryPayments >= full && other.month <= month).at(-1);
+}
+
+/**
+ * A month's pay: what its stubs paid and took, or, for a salary set by hand,
+ * its gross with the deductions the user gave and the rest by law
+ * (`estimated` lists those).
+ */
+export type MonthBreakdown = Pick<MonthPay, 'month' | 'pay' | 'deductions' | 'net'> & {
+  source: 'payslips' | 'manual';
+  estimated: DeductionKind[];
+};
+
+/**
+ * The pay to show for `month`: the one of a salary set by hand when that's
+ * where the month's salary comes from, else the latest month the stubs pay
+ * whole, up to it.
+ */
+export function breakdownFor(month: string, pay: MonthPay[], read: (month: string) => MonthSalary): MonthBreakdown | undefined {
+  const salary = read(month);
+  if (salary.source === 'manual' && salary.entry) return manualBreakdown(month, salary.entry);
+  const stubs = lastFullMonth(pay, month);
+  return stubs ? { ...stubs, source: 'payslips', estimated: [] } : undefined;
+}
+
+/** A salary set by hand as a month's pay: its deductions as given, the ISR, AFP and SFS by law when not. */
+export function manualBreakdown(month: string, entry: SalaryEntry): MonthBreakdown {
+  const law = deductionsByLaw(entry.amount);
+  const deductions = { isr: entry.isr ?? law.isr, afp: entry.afp ?? law.afp, sfs: entry.sfs ?? law.sfs, other: entry.other ?? 0 };
+  const estimated = (['isr', 'afp', 'sfs'] as const).filter((kind) => entry[kind] === undefined);
+  const pay = { ...zeros(payKinds), salary: entry.amount };
+  const taken = deductions.isr + deductions.afp + deductions.sfs + deductions.other;
+  return { month, pay, deductions, net: entry.amount - taken, source: 'manual', estimated };
+}
+
+/**
+ * What a year took in ISR, AFP and SFS up to `month`: the stubs' when the
+ * year has any, else the salary set by hand's, month by month.
+ */
+export function yearDeductions(pay: MonthPay[], read: (month: string) => MonthSalary, month: string) {
+  const year = Number(month.slice(0, 4));
+  if (pay.some((other) => other.month.startsWith(`${year}-`))) {
+    return { ...yearPay(pay.filter((other) => other.month <= month), year).deductions, estimated: false };
+  }
+  const total = { ...zeros(deductionKinds), estimated: true };
+  for (const key of monthsOf(year).filter((other) => other <= month)) {
+    const salary = read(key);
+    if (salary.source !== 'manual' || !salary.entry) continue;
+    const { deductions } = manualBreakdown(key, salary.entry);
+    for (const kind of deductionKinds) total[kind] += deductions[kind];
   }
   return total;
 }

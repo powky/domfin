@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 
 import { apiGet, apiSend } from '@/services/api/client';
 
-import type { Payslip, SalarySettings } from '../types';
+import type { Payslip, SalarySettings, SalarySettingsInput } from '../types';
 
 type Status = 'loading' | 'ready' | 'offline';
 
@@ -42,7 +42,7 @@ function shared<T>(path: string, empty: T, read: (body: unknown) => T) {
 }
 
 const payslips = shared<Payslip[]>('/ledger/payslips', [], (body) => (body as { payslips: Payslip[] }).payslips);
-const settings = shared<SalarySettings>('/ledger/salary', { entries: [] }, (body) => body as SalarySettings);
+const settings = shared<SalarySettings>('/ledger/salary', { entries: [], extras: [] }, (body) => body as SalarySettings);
 
 /** The imported pay stubs, oldest first. */
 export const usePayslips = payslips.use;
@@ -56,8 +56,8 @@ export const useSalarySettings = settings.use;
 /** Asks domfin-api for them again, e.g. after restoring a backup. */
 export const refreshSalarySettings = settings.refresh;
 
-/** Saves them all, as domfin-api keeps them. */
-export async function saveSalarySettings(next: SalarySettings): Promise<SalarySettings> {
+/** Saves them all, as domfin-api keeps them; the new extra payments come back with their IDs. */
+export async function saveSalarySettings(next: SalarySettingsInput): Promise<SalarySettings> {
   const saved = await apiSend<SalarySettings>('PUT', '/ledger/salary', next);
   settings.set({ status: 'ready', value: saved });
   return saved;
