@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -318,5 +319,66 @@ func TestUndetailedCash(t *testing.T) {
 	}
 	if got := get(); len(got) != 2 || !got[1].Hidden || got[0].ID != colmado.ID {
 		t.Errorf("after hiding the withdrawal: %+v", got)
+	}
+}
+
+func TestNames(t *testing.T) {
+	s := openStore(t)
+	cut := time.Date(2026, 1, 28, 0, 0, 0, 0, time.UTC)
+	purchase := func(day int, reference, description string, amount int64) statements.Transaction {
+		date := cut.AddDate(0, 0, -day)
+		return statements.Transaction{PostedOn: date, TransactedOn: date, Reference: reference, Description: description,
+			MCC: "4121", Amount: amount}
+	}
+	st := statements.Statement{
+		Institution: "popular", Product: "MC PRUEBA", Brand: "Mastercard", Last4: "1234", CutDate: cut, DueDate: cut.AddDate(0, 0, 25),
+		Sections: []statements.Section{{
+			Currency: "DOP", CreditLimit: 5_000_000,
+			Transactions: []statements.Transaction{
+				purchase(3, "10000000000000000000001", "UBER RIDES-*UBER RIDES  SAN FRANCISCO", 25_000),
+				purchase(2, "10000000000000000000002", "UBER *TRIP  SAN FRANCISCO", 31_000),
+				purchase(1, "10000000000000000000003", "SUPERMERCADO UNO  SANTO DOMINGO", 300_000),
+			},
+		}},
+	}
+	if _, err := s.SaveStatement(context.Background(), st, nil, store.Source{Name: "enero.pdf"}); err != nil {
+		t.Fatal(err)
+	}
+	h := Handler(s, testConvert, nil)
+	names := func() []string {
+		t.Helper()
+		var list movementsResponse
+		do(t, h, "GET", "/ledger/movements?from=2026-01-01&to=2026-01-31", "", &list)
+		var out []string
+		for _, m := range list.Movements {
+			out = append(out, m.Name+" · "+m.NameKey+" · "+m.MerchantID)
+		}
+		return out
+	}
+	want := []string{
+		"Supermercado Uno · name:supermercado uno · ",
+		"Uber · merchant:uber · uber",
+		"Uber · merchant:uber · uber",
+	}
+	if got := names(); !slices.Equal(got, want) {
+		t.Fatalf("names:\n%q\nwant\n%q", got, want)
+	}
+
+	// Renamed, every way the bank prints it takes the name.
+	if w := do(t, h, "PUT", "/ledger/names", `{"key": "merchant:uber", "name": " Uber del trabajo "}`, nil); w.Code != http.StatusNoContent {
+		t.Fatalf("rename: %d %s", w.Code, w.Body)
+	}
+	if got := names(); got[1] != "Uber del trabajo · merchant:uber · uber" || got[2] != got[1] {
+		t.Errorf("renamed: %q", got)
+	}
+	// An empty name gives it back Domfin's.
+	if w := do(t, h, "PUT", "/ledger/names", `{"key": "merchant:uber", "name": ""}`, nil); w.Code != http.StatusNoContent {
+		t.Fatalf("undo: %d %s", w.Code, w.Body)
+	}
+	if got := names(); !slices.Equal(got, want) {
+		t.Errorf("after undoing: %q", got)
+	}
+	if w := do(t, h, "PUT", "/ledger/names", `{"key": "", "name": "Algo"}`, nil); w.Code != http.StatusBadRequest {
+		t.Errorf("without a key: %d", w.Code)
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/powky/domfin/api/internal/assets"
 	"github.com/powky/domfin/api/internal/ledger"
 	"github.com/powky/domfin/api/internal/localonly"
+	"github.com/powky/domfin/api/internal/merchants"
 	"github.com/powky/domfin/api/internal/store"
 )
 
@@ -44,6 +45,7 @@ var santoDomingo = time.FixedZone("AST", -4*60*60)
 //	POST  /ledger/movements            adds a movement by hand
 //	DELETE /ledger/movements/{id}      removes one added by hand
 //	PUT   /ledger/marks                marks movements reviewed or hidden, or not
+//	PUT   /ledger/names                names a merchant, person or account, or gives it back its name
 //	GET   /ledger/assets               assets (a home bought off-plan, shares, a pension fund) and debts, with what was paid into them
 //	POST  /ledger/assets               adds one
 //	PUT   /ledger/assets/{id}          changes one
@@ -79,6 +81,7 @@ func Handler(s *store.Store, convert store.Converter, rateOn assets.RateOn) http
 	mux.HandleFunc("POST /ledger/movements", b.addMovement)
 	mux.HandleFunc("DELETE /ledger/movements/{id}", b.deleteMovement)
 	mux.HandleFunc("PUT /ledger/marks", b.mark)
+	mux.HandleFunc("PUT /ledger/names", b.rename)
 	mux.HandleFunc("GET /ledger/assets", b.serveAssets)
 	mux.HandleFunc("POST /ledger/assets", b.addAsset)
 	mux.HandleFunc("PUT /ledger/assets/links", b.linkAssets)
@@ -152,6 +155,15 @@ type movementJSON struct {
 	Notes   string `json:"notes,omitempty"`
 	// Hidden ones stay out of lists and totals unless asked for.
 	Hidden bool `json:"hidden,omitempty"`
+	// Name is who it's with, as screens show it (see internal/merchants):
+	// NameKey ties what the user renames at once, MerchantID is a known
+	// merchant's, and Operation and Ref say which of the bank's own
+	// operations it is, for screens in other languages.
+	Name       string `json:"name"`
+	NameKey    string `json:"nameKey,omitempty"`
+	MerchantID string `json:"merchantId,omitempty"`
+	Operation  string `json:"operation,omitempty"`
+	Ref        string `json:"ref,omitempty"`
 }
 
 type movementsResponse struct {
@@ -191,6 +203,12 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 	}
 	cash := classifier.UndetailedCash(movements, classes, func(m ledger.Movement) bool { return marks[m.ID].Hidden })
 	movements, classes = merged(movements, classes, cash, classifier.Classify(cash))
+	names, err := b.store.Names(ctx)
+	if err != nil {
+		log.Printf("nombres: %v", err)
+		writeError(w, http.StatusInternalServerError, "ledger_failed")
+		return
+	}
 
 	body := movementsResponse{From: day(from), To: day(to), Accounts: []accountJSON{}, Movements: []movementJSON{}}
 	for _, a := range classifier.Accounts {
@@ -206,6 +224,7 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 		if c.CategoryID != "" {
 			category = &c.CategoryID
 		}
+		name := merchants.Of(m, names)
 		body.Movements = append(body.Movements, movementJSON{
 			ID: m.ID, AccountID: m.AccountID, Date: m.Date, Description: m.Description, Merchant: m.Merchant,
 			MCC: m.MCC, Kind: string(m.Kind), Amount: m.Amount, Currency: m.Currency, Amounts: rates.value(ctx, m, c.Flow),
@@ -213,6 +232,7 @@ func (b *books) serveMovements(w http.ResponseWriter, r *http.Request) {
 			CategoryID: category, By: string(c.By), RuleID: c.RuleID, Review: c.Review && !marks[m.ID].Reviewed,
 			PairID: c.PairID, AssetID: c.AssetID, Principal: m.Principal,
 			Manual: m.Manual, Missing: m.Missing, Notes: m.Notes, Hidden: marks[m.ID].Hidden,
+			Name: name.Name, NameKey: name.Key, MerchantID: name.MerchantID, Operation: name.Operation, Ref: name.Ref,
 		})
 	}
 	writeJSON(w, http.StatusOK, body)
@@ -553,6 +573,22 @@ func (b *books) addMovement(w http.ResponseWriter, r *http.Request) {
 // be hidden.
 func (b *books) deleteMovement(w http.ResponseWriter, r *http.Request) {
 	if b.ok(w, b.store.DeleteManual(r.Context(), r.PathValue("id"))) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// rename names what a key stands for (a merchant, person or account, see
+// internal/merchants), for all its movements; an empty name gives it back
+// the one Domfin gives it.
+func (b *books) rename(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Key  string `json:"key"`
+		Name string `json:"name"`
+	}
+	if !readJSON(w, r, &body) {
+		return
+	}
+	if b.ok(w, b.store.SetName(r.Context(), body.Key, body.Name)) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

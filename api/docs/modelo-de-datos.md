@@ -64,6 +64,36 @@ préstamos y certificados, y la tarjeta Qik.
 (préstamos); `deposit`, `withdrawal`, `interest_earned`, `dividend` y
 `withholding` (inversiones).
 
+## Nombres
+
+Cada movimiento sale con un nombre para la pantalla (`name`), sacado de lo
+que imprimió el banco (`internal/merchants`):
+
+- **Un comercio conocido**, por su nombre (`merchantId`): las cadenas,
+  servicios y entidades de `internal/merchants/directory.go`, con todas las
+  formas en que los bancos los imprimen (`UBER RIDES-*UBER RIDES`,
+  `UBER*RIDES` y `UBER *TRIP` son Uber; `PAG CLARO 809…` es Claro).
+- **Una operación del banco**, en palabras (`operation`, para que la app la
+  traduzca): Nómina, Intereses, Retención de impuestos, Cajero automático,
+  Préstamo, Cuota, Depósito, Pago… Una tarjeta o una cuenta que el banco
+  nombra por su número va por sus últimos 4 dígitos (`ref`): `PAGOTC VIA
+  MB****1234` es *Tarjeta \*\*\*\*1234* y `Transf. via MB a 700123333`, *Cuenta
+  \*\*\*\*3333*.
+- **Una transferencia, por la persona**: `MB a 0123456789 ANA PEREZ`,
+  `TOKE A ANA PEREZ AB12CD3` o los dólares que te envían (`TRNFUSD…`) son de
+  Ana Perez.
+- **Lo demás, limpio**: sin el procesador de pagos delante (`PAYPAL *`,
+  `SQ *`), sin los números y códigos del final ni la forma legal (SRL, INC, C.
+  POR A.), con mayúscula inicial: `SUPERMERCADO UNO SRL` es *Supermercado
+  Uno*.
+
+Lo que agregas a mano conserva lo que escribiste, salvo que sea un comercio
+conocido. Puedes cambiar el nombre de cualquiera (`PUT /ledger/names`), y
+cambia para todos sus movimientos: los de un mismo comercio, tarjeta, cuenta,
+persona o nombre comparten su `nameKey` (`merchant:uber`, `op:card:1234`,
+`name:supermercado uno`). Tus nombres se guardan en `settings` (`names`). Lo
+que el banco imprimió se sigue buscando en *Transacciones*.
+
 ## Flujos: ingreso, gasto o transferencia
 
 | Flujo | Qué es | Cuenta en |
@@ -530,6 +560,7 @@ los de estados de cuenta.
 | `POST /ledger/movements` | Agrega uno a mano: `{"accountId", "date", "description", "amount", "categoryId"?, "notes"?}`, en centavos de la moneda de la cuenta. Responde `{"id"}` (ver *Movimientos agregados a mano*). |
 | `DELETE /ledger/movements/{id}` | Borra uno agregado a mano, con su categoría, marcas y vínculo. |
 | `PUT /ledger/marks` | Marca movimientos: `{"movementIds", "reviewed"?, "hidden"?}`; lo que no viene se queda como estaba. |
+| `PUT /ledger/names` | Le pone tu nombre a un comercio, tarjeta, cuenta o persona: `{"key", "name"}` (el `nameKey` de sus movimientos); con `name` vacío vuelve el de Domfin. |
 | `GET /ledger/assets` | Los activos con lo pagado, su valor y sus pagos (antes vincula lo que sus textos encuentren). |
 | `POST /ledger/assets`, `PUT /ledger/assets/{id}` | Crea o cambia uno: `{"kind", "name", "currency", "match", "property" \| "shares" \| "pension" \| "vehicle" \| "schedule"}`. |
 | `DELETE /ledger/assets/{id}` | Lo borra, con sus vínculos. |
@@ -553,4 +584,6 @@ Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 cuando el historial no lo dice). `review` ya cuenta lo que marcaste como
 revisado; `hidden` viene en los ocultos, `manual` en los agregados a mano
 (`missing` si su estado llegó sin ellos) y `notes` con lo que escribiste,
-también en el movimiento del estado que tomó su lugar.
+también en el movimiento del estado que tomó su lugar. `name` es su nombre
+para la pantalla, con `nameKey`, `merchantId`, `operation` y `ref` (ver
+*Nombres*).

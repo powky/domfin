@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"unicode/utf8"
 )
 
 // statementsPasswordKey keeps the password statement PDFs open with.
@@ -77,4 +79,37 @@ func (s *Store) SetSetting(ctx context.Context, key string, v any) error {
 func (s *Store) DeleteSetting(ctx context.Context, key string) error {
 	_, err := s.db.ExecContext(ctx, `DELETE FROM settings WHERE key = ?`, key)
 	return err
+}
+
+// namesKey is the setting with the user's names for merchants, people and
+// accounts (see internal/merchants).
+const namesKey = "names"
+
+// Names are the user's names for merchants, people and accounts, by the key
+// the ledger gives each (merchants.Name.Key).
+func (s *Store) Names(ctx context.Context) (map[string]string, error) {
+	names := map[string]string{}
+	if _, err := s.Setting(ctx, namesKey, &names); err != nil {
+		return nil, err
+	}
+	return names, nil
+}
+
+// SetName names what a key stands for; an empty name gives it back the one
+// Domfin gives it.
+func (s *Store) SetName(ctx context.Context, key, name string) error {
+	name = strings.TrimSpace(name)
+	if strings.TrimSpace(key) == "" || utf8.RuneCountInString(name) > maxDescription {
+		return fmt.Errorf("%w: a key and a name of up to %d characters", ErrInvalid, maxDescription)
+	}
+	names, err := s.Names(ctx)
+	if err != nil {
+		return err
+	}
+	if name == "" {
+		delete(names, key)
+	} else {
+		names[key] = name
+	}
+	return s.SetSetting(ctx, namesKey, names)
 }

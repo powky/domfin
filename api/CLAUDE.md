@@ -35,6 +35,7 @@ DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo   # base con datos inventados
 | `internal/ledger` | Modelo del libro y la clasificación (ingreso, gasto, transferencia). |
 | `internal/assets` | Activos que ningún estado muestra (inmueble en plano con su plan de pagos, acciones, fondo de pensiones, vehículo que se deprecia), deudas fuera de tus estados (por movimientos vinculados o por plan de cuotas) y su valor. |
 | `internal/books` | Endpoints `/ledger/*`. |
+| `internal/merchants` | El nombre de cada movimiento: comercios conocidos, operaciones del banco, transferencias y lo demás limpio. |
 | `internal/accounts` | `GET /accounts` con balances de fin de mes. |
 | `internal/localonly` | Guard para los endpoints con datos del banco. |
 | `internal/backup` | Respaldos cifrados con age en una carpeta de nube: su clave, los automáticos, restaurar y las carpetas que detecta (`/backup/*`). |

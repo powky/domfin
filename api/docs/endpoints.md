@@ -154,8 +154,8 @@ clasificados como ingreso, gasto o transferencia, lo que los clasifica
 activos que ningún estado muestra (un apartamento en plano, acciones), con
 los movimientos que les pagan, el presupuesto (tus gastos fijos), la tasa y
 la cuota de tus préstamos, tu sueldo (los volantes de pago y lo que dijiste
-de él), lo que agregas a mano, lo que marcas como revisado u oculto y tu
-efectivo (lo que sacas y en qué se fue). Como los
+de él), lo que agregas a mano, lo que marcas como revisado u oculto, tu
+efectivo (lo que sacas y en qué se fue) y el nombre de cada comercio. Como los
 de estados de cuenta, solo responden a esta computadora. El modelo, las reglas
 y cada endpoint están en [modelo-de-datos.md](modelo-de-datos.md).
 
