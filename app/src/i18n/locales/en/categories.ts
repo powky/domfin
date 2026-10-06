@@ -67,6 +67,7 @@ export const categoryNames: Readonly<Record<string, string>> = {
   'bank-fees': 'Fees and charges',
   withholding: 'Withholding (DGII)',
   taxes: 'Taxes and paperwork',
+  'undetailed-cash': 'Cash, not itemized',
 
   'card-payment': 'Card payment',
   'loan-payment': 'Loan payment',

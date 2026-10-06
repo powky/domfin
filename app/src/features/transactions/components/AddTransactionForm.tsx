@@ -46,13 +46,18 @@ export function AddTransactionForm({ accounts, categories, defaultDate, onSubmit
   const [merchant, setMerchant] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(defaultDate);
-  const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
+  // Cash first: what isn't in a statement yet is mostly spent in cash.
+  const ordered = useMemo(
+    () => [...accounts].sort((a, b) => Number(b.kind === 'cash') - Number(a.kind === 'cash')),
+    [accounts],
+  );
+  const [accountId, setAccountId] = useState(ordered[0]?.id ?? '');
   const [categoryId, setCategoryId] = useState(UNCATEGORIZED);
   const [notes, setNotes] = useState('');
 
   const accountOptions = useMemo(
-    () => accounts.map((account) => ({ value: account.id, label: account.name })),
-    [accounts],
+    () => ordered.map((account) => ({ value: account.id, label: account.name })),
+    [ordered],
   );
   const categoryOptions = useMemo(
     () => [

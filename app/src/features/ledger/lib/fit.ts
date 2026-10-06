@@ -43,6 +43,8 @@ export function fits(
     if (category.flow === 'transfer') return (incoming ? bankIn : bankOut).has(category.id);
     return category.flow === (incoming ? 'income' : 'expense');
   }
+  // Cash comes in from withdrawals on its own: by hand, it's what was earned or spent.
+  if (kind === 'cash') return category.flow === (incoming ? 'income' : 'expense');
   // Loans, certificates and assets: anything goes.
   return true;
 }

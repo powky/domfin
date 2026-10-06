@@ -42,9 +42,15 @@ export function groupColor(groupId: string): ChartColor {
   return spareColors[code % spareColors.length] ?? 'slateLight';
 }
 
-/** Who the money went to or came from: the card's merchant, or what the bank printed. */
-export const counterparty = (movement: Pick<LedgerMovement, 'merchant' | 'description'>) =>
-  movement.merchant || movement.description;
+/**
+ * Who the money went to or came from: the card's merchant, or what the bank
+ * printed; cash nobody said how it was spent, by its category's name in
+ * `language` (the app's by default).
+ */
+export const counterparty = (movement: Pick<LedgerMovement, 'merchant' | 'description' | 'kind'>, language?: string) =>
+  movement.kind === 'undetailed_cash'
+    ? categoryLabel('undetailed-cash', movement.description, language)
+    : movement.merchant || movement.description;
 
 export type LedgerNames = {
   /** Name of a category in the app language; "Uncategorized" for null. */

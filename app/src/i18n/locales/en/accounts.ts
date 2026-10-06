@@ -31,6 +31,8 @@ export const accounts = {
     live: {
       loan: 'Loan',
       certificate: 'Certificate of deposit',
+      /** Where cash spending is written down; `currency` is its symbol, like RD$. */
+      cash: 'Cash {{currency}}',
       loading: 'Loading your accounts…',
       offline: "Couldn't reach domfin-api. Is it running?",
       retry: 'Try again',

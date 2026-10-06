@@ -71,6 +71,12 @@ responde a quien manda el secreto que genera al arrancar
   Transacciones los lista en *Ocultas*. Una fila agregada a mano dice *A
   mano* (o *No está en su estado*, si su estado llegó sin ella) y solo esas
   se pueden borrar.
+- *Efectivo* (`kind: 'cash'`) es una cuenta más del libro, una por moneda,
+  sin saldo: no sale en Cuentas ni en Patrimonio neto. El formulario de
+  agregar empieza en ella. domfin-api calcula lo que quedó sin detallar de
+  cada retiro (`kind: 'undetailed_cash'`, categoría `undetailed-cash`), que
+  `counterparty` nombra en el idioma de la app; no se vincula a un activo
+  ni se borra, y Presupuesto nunca lo toma por un gasto fijo.
 - La clasificación se ajusta en la app y la guarda domfin-api: en
   *Transacciones*, la categoría de cada fila es un selector (o se
   seleccionan varios movimientos y *Categorizar*), con una corrección por

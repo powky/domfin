@@ -43,6 +43,10 @@ export type Transaction = {
   /** Added by hand: only these can be deleted. `missing` when the statement covering its date came without it. */
   manual?: boolean;
   missing?: boolean;
+  /** What's left of a withdrawal that the user didn't write down how they spent: Domfin works it out. */
+  undetailedCash?: boolean;
+  /** In Efectivo, where everything is written down by hand or worked out. */
+  cash?: boolean;
 };
 
 export type TransactionAccount = {

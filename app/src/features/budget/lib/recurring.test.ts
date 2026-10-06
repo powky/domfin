@@ -114,6 +114,12 @@ describe('findRecurring', () => {
         ...monthly('2026-01', 9, 8, 'FERRETERIA EL MARTILLO', (n) => -[50_000, 900_000, 120_000, 2_000_000, 75_000, 640_000, 30_000, 1_500_000, 220_000][n]),
         // Paying the card is a transfer, not a cost.
         ...monthly('2026-01', 9, 10, 'PAGO TARJETA 5678', -1_850_000, { flow: 'transfer', categoryId: 'card-payment' }),
+        // The same cash taken out every month, with nothing said of how it went.
+        ...monthly('2026-01', 9, 12, 'Efectivo sin detallar', -500_000, {
+          accountId: 'cash:cash::DOP',
+          kind: 'undetailed_cash',
+          categoryId: 'undetailed-cash',
+        }),
         // Money in.
         ...monthly('2026-01', 9, 15, 'CREDITO NOMINA', 5_850_000, { flow: 'income', categoryId: 'salary' }),
       ],

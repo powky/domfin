@@ -66,11 +66,12 @@ export const TransactionRow = memo(function TransactionRow({
     />
   );
   const reviewDot = transaction.needsReview ? <View style={styles.reviewDot} /> : null;
-  // What was added by hand says so, and why it asks for a look when its
-  // statement came without it: first, so a long account name is what's cut.
+  // What was added by hand says so (in Efectivo, everything is), and why it
+  // asks for a look when its statement came without it: first, so a long
+  // account name is what's cut.
   const origin = transaction.missing
     ? t('transactions.row.notInStatement')
-    : transaction.manual
+    : transaction.manual && !transaction.cash
       ? t('transactions.row.byHand')
       : null;
   const account = origin ? `${origin}${dotSeparator}${accountName}` : accountName;

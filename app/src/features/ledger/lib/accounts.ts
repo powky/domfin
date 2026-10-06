@@ -16,6 +16,7 @@ export function accountName(account: Named, all: readonly Named[], t: TFunction)
   if (account.id?.startsWith('asset:')) return account.name;
   if (account.kind === 'loan') return t('accounts.live.loan');
   if (account.kind === 'certificate') return t('accounts.live.certificate');
+  if (account.kind === 'cash') return t('accounts.live.cash', { currency: currencySymbols[account.currency] });
   // Accounts with the same number are one card billed in two currencies.
   const sameCard = all.filter(
     (other) =>

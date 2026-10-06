@@ -8,7 +8,8 @@ export type LedgerAccount = {
   /** Stable, like "popular:credit_card:1234:DOP". */
   id: string;
   institution: string;
-  kind: 'savings' | 'checking' | 'credit_card' | 'loan' | 'certificate' | 'brokerage';
+  /** `cash` is Efectivo, where cash spending is written down by hand: one in each currency of the accounts. */
+  kind: 'savings' | 'checking' | 'credit_card' | 'loan' | 'certificate' | 'brokerage' | 'cash';
   /** The product ("Contigo"); loans and certificates carry a generic one. */
   name: string;
   last4: string;
@@ -26,7 +27,11 @@ export type LedgerMovement = {
   /** A card purchase's merchant, without the city. */
   merchant?: string;
   mcc?: string;
-  /** What the bank says it is for the account (`purchase`, `payment`, `disbursement`…). */
+  /**
+   * What the bank says it is for the account (`purchase`, `payment`,
+   * `disbursement`…); `undetailed_cash` for what's left of a withdrawal that
+   * the user didn't write down how they spent (Efectivo sin detallar).
+   */
   kind?: string;
   /** Cents of the account's currency: positive comes into the account, negative goes out. */
   amount: number;
@@ -40,7 +45,7 @@ export type LedgerMovement = {
   flow: Flow;
   /** Null when nothing recognized it (Uncategorized). */
   categoryId: string | null;
-  /** What decided its category: `manual` for the user's correction, then `asset`, `rule`, `payroll`, `transfer`, `bank`, `merchant` or `default`. */
+  /** What decided its category: `manual` for the user's correction, then `asset`, `cash`, `rule`, `payroll`, `transfer`, `bank`, `merchant` or `default`. */
   by: string;
   /** Flagged for the user to check. */
   review: boolean;

@@ -31,7 +31,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   (ingresos, gastos por grupo, inversiones, lo que quedó en tus cuentas y lo
   que cubriste con préstamos), y una tabla con el porcentaje de tus
   ingresos.
-- **Gastos**: por grupo, por categoría y por comercio, mes a mes.
+- **Gastos**: por grupo, por categoría y por comercio, mes a mes. También
+  lo que sacas en efectivo: lo que anotas en tu cuenta de Efectivo va a su
+  categoría, y lo demás cuenta como *Efectivo sin detallar*.
 - **Presupuesto**: tus gastos fijos (alquiler, servicios, cuotas,
   suscripciones), que Domfin encuentra porque se repiten mes tras mes en tus
   estados, cuáles ya pagaste este mes y cuánto te queda para lo demás. Y tu
@@ -392,7 +394,6 @@ proponer otra cosa,
 
 - [ ] Nombres y logos de los comercios, en lugar de la descripción que
   imprime el banco.
-- [ ] Clasificar los retiros de efectivo según en qué se gastó ese dinero.
 - [ ] Proyectos: juntar gastos de distintas categorías en un mismo proyecto
   (una mudanza, una boda, un negocio propio) y ver cuánto lleva cada uno.
 
@@ -438,6 +439,8 @@ proponer otra cosa,
 - [x] Movimientos agregados a mano, que el del estado reemplaza cuando llega
   (con tu categoría y tus notas), y lo que marcas como revisado u ocultas,
   guardados en tu base.
+- [x] Efectivo: lo que sacas del cajero cuenta como gastado hasta que anotas
+  en qué se fue, y lo que anotas se descuenta del retiro.
 - [x] Salario, bonos, bonificaciones, ingresos adicionales y entregas sueltas
   (como un regalo), cada uno por su lado; lo que inviertes no cuenta como
   gasto.

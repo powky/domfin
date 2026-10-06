@@ -20,6 +20,7 @@ export const MIN_MONTHS = 3;
  * which you don't pay.
  */
 const NOT_FIXED = new Set([
+  'undetailed-cash',
   'groceries',
   'restaurants',
   'fast-food',

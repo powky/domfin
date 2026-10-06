@@ -43,10 +43,15 @@ function add(input: NewTransaction) {
   });
 }
 
-const fromLedger = (movement: LedgerMovement, assetNames: ReadonlyMap<string, string>): Transaction => ({
+const fromLedger = (
+  movement: LedgerMovement,
+  assetNames: ReadonlyMap<string, string>,
+  cashAccounts: ReadonlySet<string>,
+  language: string,
+): Transaction => ({
   id: movement.id,
   date: movement.date,
-  merchant: counterparty(movement),
+  merchant: counterparty(movement, language),
   amount: movement.amount / 100,
   currency: movement.currency,
   amounts:
@@ -65,6 +70,8 @@ const fromLedger = (movement: LedgerMovement, assetNames: ReadonlyMap<string, st
   corrected: movement.by === 'manual',
   manual: movement.manual,
   missing: movement.missing,
+  undetailedCash: movement.kind === 'undetailed_cash',
+  cash: cashAccounts.has(movement.accountId),
 });
 
 export function useTransactions(): { data: TransactionsData; isLoading: boolean } {
@@ -98,13 +105,12 @@ export function useTransactions(): { data: TransactionsData; isLoading: boolean 
   );
 
   // Newest first, the hidden ones among them for the Hidden filter.
-  const transactions = useMemo(
-    () =>
-      [...ledger.movements, ...ledger.hidden]
-        .map((movement) => fromLedger(movement, assetNames))
-        .sort((a, b) => b.date.localeCompare(a.date)),
-    [ledger.movements, ledger.hidden, assetNames],
-  );
+  const transactions = useMemo(() => {
+    const cash = new Set(ledger.accounts.filter((account) => account.kind === 'cash').map((account) => account.id));
+    return [...ledger.movements, ...ledger.hidden]
+      .map((movement) => fromLedger(movement, assetNames, cash, language))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [ledger.movements, ledger.hidden, ledger.accounts, assetNames, language]);
 
   const categoryChoices = useMemo(
     () => categoryOptions(ledger.categories, ledger.groups, names),

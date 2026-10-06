@@ -30,6 +30,7 @@ export const accounts = {
     live: {
       loan: 'Préstamo',
       certificate: 'Certificado financiero',
+      cash: 'Efectivo {{currency}}',
       loading: 'Cargando tus cuentas…',
       offline: 'No se pudo conectar con domfin-api. ¿Está corriendo?',
       retry: 'Reintentar',

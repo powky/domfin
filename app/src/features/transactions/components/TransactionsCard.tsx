@@ -261,10 +261,11 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
               }}
               assetChoices={data.assetChoices}
               onLink={(assetId) => {
-                const ids = selectedIdList();
+                // Cash nobody detailed is worked out, not a movement to link.
+                const ids = selected.filter((transaction) => !transaction.undetailedCash).map((transaction) => transaction.id);
                 clearSelection();
                 setFailed(null);
-                transactionActions.link(ids, assetId).catch(() => setFailed('link'));
+                if (ids.length > 0) transactionActions.link(ids, assetId).catch(() => setFailed('link'));
               }}
               onMarkReviewed={() => {
                 const ids = selectedIdList();
