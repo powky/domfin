@@ -20,6 +20,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/powky/domfin/api/internal/importer"
+	"github.com/powky/domfin/api/internal/statements"
 	"github.com/powky/domfin/api/internal/store"
 )
 
@@ -53,7 +54,7 @@ func main() {
 
 func usage(w io.Writer) {
 	fmt.Fprintln(w, `uso:
-  go run ./cmd/statements import [-dry-run] <pdf o carpeta>...   importa estados de cuenta y de tarjeta, e historiales de préstamo y de certificado, del Banco Popular
+  go run ./cmd/statements import [-dry-run] <pdf o carpeta>...   importa estados de cuenta y de tarjeta, historiales de préstamo y de certificado y volantes de pago, del Banco Popular
   go run ./cmd/statements status                                 muestra qué meses tiene cada cuenta`)
 }
 
@@ -132,6 +133,14 @@ func describe(r importer.Result) string {
 		importer.Unchanged: "ya estaba importado",
 		importer.Checked:   "revisado, sin guardar",
 	}[r.Status]
+	if p := r.Payslip; p != nil {
+		line := fmt.Sprintf("%s Volante de pago · %s · pagado el %s · bruto %s · neto %s · %s  (%s)", mark, p.Employer,
+			r.Date.Format("2006-01-02"), statements.FormatAmount(p.Income), statements.FormatAmount(p.Net), outcome, r.File)
+		for _, issue := range r.Issues {
+			line += "\n    " + issue
+		}
+		return line
+	}
 	var sections []string
 	for _, section := range r.Sections {
 		sections = append(sections, fmt.Sprintf("%s %d mov.", section.Currency, section.Transactions))

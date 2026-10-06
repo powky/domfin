@@ -97,3 +97,24 @@ func TestImportWithTheWrongPassword(t *testing.T) {
 		}
 	}
 }
+
+func TestImportPayStub(t *testing.T) {
+	folder := t.TempDir()
+	stub := testpdf.PopularPayslip(t, "28/01/2026", []testpdf.PayslipRow{
+		{"SUELDO", "90,000.00", "45,000.00", ""},
+		{"LEY 11-92", "10,000.00", "", "5,000.00"},
+	}, "45,000.00", "5,000.00", "40,000.00")
+	if err := os.WriteFile(filepath.Join(folder, "volante.pdf"), stub, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("DOMFIN_DATA_DIR", t.TempDir())
+
+	var out strings.Builder
+	if err := runImport([]string{folder}, &out); err != nil {
+		t.Fatalf("import: %v\n%s", err, out.String())
+	}
+	want := "✓ Volante de pago · BANCO POPULAR DOMINICANO · pagado el 2026-01-28 · bruto 45,000.00 · neto 40,000.00 · importado  (volante.pdf)"
+	if first, _, _ := strings.Cut(out.String(), "\n"); first != want {
+		t.Errorf("import output:\n%s\nwant first line:\n%s", out.String(), want)
+	}
+}
