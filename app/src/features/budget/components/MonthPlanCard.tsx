@@ -5,13 +5,13 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button, Card, ColorSwatch, StackedBar, Text, TextField } from '@/components/ui';
 import { useDisplayCurrency } from '@/features/currency';
+import { parseCents, toInput } from '@/lib/amount';
 import { currencySymbols } from '@/lib/currency';
 import { formatDateValue } from '@/lib/dates';
 import { formatCurrency } from '@/lib/format';
 
 import { setPlannedIncome } from '../api/budget';
 import type { BudgetView } from '../api/useBudgetView';
-import { parseCents, toInput } from '../lib/amount';
 
 /**
  * The month on one bar: the income, split into the fixed costs paid and to

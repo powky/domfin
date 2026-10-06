@@ -39,6 +39,9 @@ function TypeKpis({ detail }: { detail: AccountDetail }) {
   const { account, months, moneyOut } = detail;
 
   switch (account.type) {
+    // A loan's plan says when it ends instead (features/loans).
+    case 'loan':
+      return null;
     case 'credit-card': {
       const limit = account.creditLimit ?? 0;
       return (

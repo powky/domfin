@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { ChevronRight, HandCoins } from 'lucide-react-native';
+import { CalendarCheck, ChevronRight, HandCoins } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -7,8 +7,8 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Reveal } from '@/components/motion';
 import { Text, Touchable } from '@/components/ui';
 import { InstitutionAvatar, institutionLine } from '@/features/accounts';
-import { formatShortDate } from '@/lib/dates';
-import { formatCurrency } from '@/lib/format';
+import { formatMonthYear, formatShortDate } from '@/lib/dates';
+import { dotSeparator, formatCurrency } from '@/lib/format';
 
 import type { LoanSummary } from '../types';
 
@@ -75,8 +75,41 @@ function LoanLink({ loan }: { loan: LoanSummary }) {
           />
           <Fact label={t('loans.card.asOf')} value={formatShortDate(loan.asOf)} />
         </View>
+
+        <PlanLine loan={loan} />
       </Touchable>
     </Link>
+  );
+}
+
+/** When it ends and the interest left, or how to find out: what its rate and installment tell. */
+function PlanLine({ loan }: { loan: LoanSummary }) {
+  const { theme } = useUnistyles();
+  const { t } = useTranslation();
+  // Nothing while the plans load, nor for a loan already paid.
+  if (!loan.plan || loan.balance <= 0) return null;
+  const payoff = loan.plan.payoff;
+  if (payoff?.status === 'paid') return null;
+  const text =
+    payoff?.status === 'ends'
+      ? [
+          t('loans.card.endsIn', { month: formatMonthYear(payoff.last) }),
+          t('loans.card.interestLeft', { amount: formatCurrency(payoff.interest / 100, loan.currency) }),
+        ].join(dotSeparator)
+      : payoff?.status === 'never'
+        ? t('loans.card.never')
+        : t('loans.card.noPlan');
+  return (
+    <View style={styles.plan}>
+      <CalendarCheck
+        size={16}
+        strokeWidth={2}
+        color={payoff?.status === 'ends' ? theme.colors.text.secondary : theme.colors.text.tertiary}
+      />
+      <Text variant="caption" tone={payoff?.status === 'ends' ? 'secondary' : 'tertiary'} style={styles.planText}>
+        {text}
+      </Text>
+    </View>
   );
 }
 
@@ -159,5 +192,15 @@ const styles = StyleSheet.create((theme) => ({
   amountFact: {
     flexShrink: 1,
     gap: theme.space[0.5],
+  },
+  plan: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space[2],
+    marginTop: -theme.space[1],
+  },
+  planText: {
+    flex: 1,
+    minWidth: 0,
   },
 }));

@@ -40,7 +40,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
   próxima vez.
 - **Patrimonio neto**, **Cuentas** y **Préstamos**: tus saldos de fin de mes,
-  con su historia.
+  con su historia. Con la tasa y la cuota de un préstamo, Domfin te dice
+  cuándo terminas de pagarlo y cuánto se va en intereses, también si tu
+  empleador paga una parte.
 - **Posesiones**: lo que tienes y ningún estado muestra, como un apartamento
   comprado en plano (con su plan de pagos), acciones, tu fondo de pensiones
   (AFP) o tu vehículo. También las deudas fuera del banco.
@@ -364,8 +366,6 @@ proponer otra cosa,
 
 **Planificación**
 
-- [ ] Préstamos: cuánto te falta y cuándo terminas de pagar cada uno,
-  incluidos los que subsidia tu empleador.
 - [ ] Proyecciones: tu flujo de caja de los próximos meses con tu salario,
   tus beneficios laborales (bonificación, regalía pascual) y los planes de
   pago que ya tienes.
@@ -408,6 +408,8 @@ proponer otra cosa,
 - [x] Patrimonio neto, préstamos y posesiones: un inmueble en plano con su
   plan de pagos, acciones, tu fondo de pensiones y tu vehículo, que se
   deprecia.
+- [x] Préstamos: cuánto te falta y cuándo terminas de pagar cada uno, con los
+  intereses año por año, incluidos los que subsidia tu empleador.
 - [x] Respaldos cifrados en la carpeta de tu nube (iCloud Drive, Google
   Drive, Dropbox u OneDrive), con contraseña y clave de recuperación.
 - [x] Español e inglés; web, iOS y Android.

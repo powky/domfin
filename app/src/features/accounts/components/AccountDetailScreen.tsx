@@ -7,6 +7,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { PeriodControls, usePeriod } from '@/components/PeriodHeader';
 import { Screen } from '@/components/Screen';
 import { Button, Card, Text } from '@/components/ui';
+// Not the feature's index, which imports this one's back.
+import { LoanPlanSection } from '@/features/loans/components/LoanPlanSection';
 
 import { useAccount } from '../api/useAccounts';
 import { institutionLine } from '../lib/accountTypes';
@@ -55,6 +57,7 @@ export function AccountDetailScreen({ id }: { id: string }) {
       ) : (
         <>
           <AccountDetailKpis detail={detail} />
+          {account.type === 'loan' ? <LoanPlanSection accountId={account.id} currency={account.currency} /> : null}
           <BalanceHistoryCard account={account} months={detail.months} />
           <RecentTransactionsCard detail={detail} />
         </>
