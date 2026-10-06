@@ -167,7 +167,16 @@ type resultJSON struct {
 	Date     string        `json:"date,omitempty"`
 	From     string        `json:"from,omitempty"`
 	Sections []sectionJSON `json:"sections,omitempty"`
-	Issues   []string      `json:"issues,omitempty"`
+	// Set for pay stubs, with Date (the payroll's) instead of an account.
+	Payslip *payslipJSON `json:"payslip,omitempty"`
+	Issues  []string     `json:"issues,omitempty"`
+}
+
+type payslipJSON struct {
+	Employer   string `json:"employer"`
+	Income     int64  `json:"income"`
+	Deductions int64  `json:"deductions"`
+	Net        int64  `json:"net"`
 }
 
 type accountJSON struct {
@@ -205,6 +214,11 @@ type monthJSON struct {
 func toResultJSON(r Result) resultJSON {
 	out := resultJSON{File: r.File, Status: r.Status, Reason: r.Reason, Detail: r.Detail, Issues: r.Issues}
 	if !r.Imported() {
+		return out
+	}
+	if r.Payslip != nil {
+		out.Date = formatDate(r.Date)
+		out.Payslip = &payslipJSON{Employer: r.Payslip.Employer, Income: r.Payslip.Income, Deductions: r.Payslip.Deductions, Net: r.Payslip.Net}
 		return out
 	}
 	account := toAccountJSON(r.Account)

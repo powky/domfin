@@ -50,6 +50,9 @@ var santoDomingo = time.FixedZone("AST", -4*60*60)
 //	PUT   /ledger/budget               replaces it
 //	GET   /ledger/loans                each loan's rate, installment and what someone else pays of it
 //	PUT   /ledger/loans                replaces them
+//	GET   /ledger/payslips             the imported pay stubs, concept by concept
+//	GET   /ledger/salary               salaries set by hand, the day the job started and the bonus's month
+//	PUT   /ledger/salary               replaces them
 //
 // Like the statement endpoints, they only answer this computer and pages
 // served from localhost. convert expresses a movement in an asset's
@@ -79,6 +82,9 @@ func Handler(s *store.Store, convert store.Converter, rateOn assets.RateOn) http
 	mux.HandleFunc("PUT /ledger/budget", b.setBudget)
 	mux.HandleFunc("GET /ledger/loans", b.serveLoans)
 	mux.HandleFunc("PUT /ledger/loans", b.setLoans)
+	mux.HandleFunc("GET /ledger/payslips", b.servePayslips)
+	mux.HandleFunc("GET /ledger/salary", b.serveSalary)
+	mux.HandleFunc("PUT /ledger/salary", b.setSalary)
 	return localonly.Handler(b.withStore(mux))
 }
 

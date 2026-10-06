@@ -5,8 +5,9 @@ estados*) importan estados de cuenta en PDF a una base SQLite local. Leen
 los del Banco Popular (estados de tarjeta de crédito, que vienen con
 contraseña; historiales de préstamo y de certificado financiero, y estados
 de cuentas de ahorro y corrientes, que vienen como imágenes y se leen con
-OCR, ver [Cómo se leen las imágenes](#cómo-se-leen-las-imágenes)) y los de
-tarjeta de crédito de Qik. Los PDF que no reconocen se omiten.
+OCR, ver [Cómo se leen las imágenes](#cómo-se-leen-las-imágenes)), los de
+tarjeta de crédito de Qik y los volantes de pago de la nómina del Popular.
+Los PDF que no reconocen se omiten.
 
 ```bash
 go run ./cmd/statements import ~/estados/tarjeta                 # importa los PDF de una carpeta
@@ -163,3 +164,32 @@ alrededor de la línea con la fecha y las ubica por columna.
   (`RENOVACION DE CD 22-10-26`); esas dos quedan en `certificates`.
 - La impresión no trae referencias: cada movimiento se identifica por su
   fecha efectiva y su código (`2026-09-22/20`).
+
+## Volantes de pago del Banco Popular
+
+El volante que la nómina del Popular da a sus empleados (un reporte de
+Microsoft Reporting Services, con texto y sin contraseña): arriba el
+código, el nombre, el cargo, la empresa (`Empresa`), la cuenta y la fecha;
+después `Proceso de Nómina 28/01/2026` y una tabla con `Concepto`,
+`Acumulado` (lo del concepto en el año), `Ingreso` y `Deducciones`, el
+`Total` y el `Pago Neto`. Los montos van alineados a la derecha, así que
+cada uno se ubica por la columna en que cae.
+
+- Del volante solo se guarda la empresa, la fecha y el dinero: ni el nombre,
+  ni el código, ni la cédula, ni la cuenta.
+- No agrega movimientos: el pago ya está en el libro, como el `CREDITO
+  NOMINA` de la cuenta en que entró (a veces un día antes que la fecha del
+  volante). Lo que agrega es lo que ese crédito no dice: el sueldo bruto y
+  los descuentos.
+- Cada concepto tiene un tipo, por su nombre: `salary` (`SUELDO`,
+  `SALARIO`, `VACACIONES`), `overtime` (horas extra), `bonus`
+  (`BONIFICACION`, `BONO`, incentivos), `christmas` (salario de Navidad,
+  regalía), `benefit` (`FLOTILLA`, gasolina) u `other`; y entre las
+  deducciones, `isr` (`LEY 11-92`), `afp` (`APORTES AL PLAN LEY 87-01`),
+  `sfs` (`APORTES SEG. FAM. SALUD`) u `other` (seguros voluntarios,
+  cafetería, membresías).
+- Un volante es su empresa, su fecha y su primer concepto: el mismo día
+  pueden pagar el sueldo y un bono. Importarlo otra vez no cambia nada, y
+  uno corregido reemplaza al anterior.
+- Se revisa que los ingresos y las deducciones sumen sus totales, y que el
+  neto sea lo pagado menos lo descontado.

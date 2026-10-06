@@ -1,8 +1,8 @@
 // Package importer reads statement PDFs, works out what each one is (a
 // bank account or credit card statement, or a loan or certificate history,
-// from Banco Popular, or a Qik credit card statement), checks it and saves
-// it. The statements command and
-// the API share it.
+// from Banco Popular, a Qik credit card statement, or a pay stub like
+// Banco Popular's payroll prints), checks it and saves it. The statements
+// command and the API share it.
 package importer
 
 import (
@@ -67,12 +67,23 @@ type Result struct {
 	Detail string
 	// For statements: the account, the cut date (cards) or the date the
 	// history was generated (loans), the first movement of a loan history,
-	// the transactions per currency and what the checks found.
+	// the transactions per currency and what the checks found. A pay stub
+	// has its payroll date and what it paid instead of an account.
 	Account  store.Account
 	Date     time.Time
 	From     time.Time
 	Sections []Section
+	Payslip  *Payslip
 	Issues   []string
+}
+
+// Payslip sums up a pay stub: who paid, and what the payment was before and
+// after its deductions, in cents.
+type Payslip struct {
+	Employer   string
+	Income     int64
+	Deductions int64
+	Net        int64
 }
 
 // Section counts a statement's transactions in one currency.
@@ -94,6 +105,7 @@ type parsed struct {
 	loan   *statements.LoanHistory
 	bank   *statements.AccountStatement
 	cert   *statements.CertificateHistory
+	slip   *statements.Payslip
 }
 
 // ImportAll imports the files and returns one result per file: statements
@@ -104,7 +116,7 @@ func (im *Importer) ImportAll(ctx context.Context, files []File) []Result {
 	var read, others []parsed
 	for _, file := range files {
 		p := im.read(file, password)
-		if p.card == nil && p.loan == nil && p.bank == nil && p.cert == nil {
+		if p.card == nil && p.loan == nil && p.bank == nil && p.cert == nil && p.slip == nil {
 			others = append(others, p)
 		} else {
 			read = append(read, p)
@@ -244,6 +256,18 @@ func (im *Importer) read(file File, password string) parsed {
 		return fail(Failed, ReasonUnreadable, err)
 	}
 
+	slip, issues, err := statements.ParsePayslip(pages)
+	if err == nil {
+		p.slip = &slip
+		p.result.Date = slip.PaidOn
+		p.result.Payslip = &Payslip{Employer: slip.Employer, Income: slip.Income(), Deductions: slip.Deductions(), Net: slip.Net}
+		p.result.Issues = issues
+		return p
+	}
+	if !errors.Is(err, statements.ErrNotPayslip) {
+		return fail(Failed, ReasonUnreadable, err)
+	}
+
 	// Bank account statements come as page images, without text: read the
 	// grid of their monospaced font.
 	if hasText(pages) {
@@ -308,6 +332,8 @@ func (im *Importer) save(ctx context.Context, p parsed) Result {
 		outcome, err = im.Store.SaveLoanHistory(ctx, *p.loan, result.Issues, source)
 	case p.cert != nil:
 		outcome, err = im.Store.SaveCertificateHistory(ctx, *p.cert, result.Issues, source)
+	case p.slip != nil:
+		outcome, err = im.Store.SavePayslip(ctx, *p.slip, result.Issues, source)
 	default:
 		outcome, err = im.Store.SaveAccountStatement(ctx, *p.bank, result.Issues, source)
 	}

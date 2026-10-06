@@ -178,3 +178,37 @@ func TestStatementsOnlyAnswerThisComputer(t *testing.T) {
 		t.Errorf("preflight: status %d, headers %v", rec.Code, rec.Header())
 	}
 }
+
+func TestImportEndpointReadsPayStubs(t *testing.T) {
+	handler := newTestHandler(t)
+	stub := testpdf.PopularPayslip(t, "28/01/2026", []testpdf.PayslipRow{
+		{"SUELDO", "90,000.00", "45,000.00", ""},
+		{"LEY 11-92", "10,000.00", "", "5,000.00"},
+	}, "45,000.00", "5,000.00", "40,000.00")
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, upload(t, map[string][]byte{"volante.pdf": stub}))
+	body := decode[importResponse](t, rec)
+	if len(body.Results) != 1 {
+		t.Fatalf("results = %+v", body.Results)
+	}
+	got := body.Results[0]
+	want := payslipJSON{Employer: "BANCO POPULAR DOMINICANO", Income: 4_500_000, Deductions: 500_000, Net: 4_000_000}
+	if got.Status != Added || got.Date != "2026-01-28" || got.Account != nil || got.Payslip == nil || *got.Payslip != want || len(got.Issues) > 0 {
+		t.Errorf("stub result = %+v (payslip %+v)", got, got.Payslip)
+	}
+
+	// The same stub again changes nothing, and it never makes an account.
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, upload(t, map[string][]byte{"copia.pdf": stub}))
+	if again := decode[importResponse](t, rec); len(again.Results) != 1 || again.Results[0].Status != Unchanged {
+		t.Errorf("second upload = %+v", again)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/statements/coverage", nil)
+	req.RemoteAddr = "127.0.0.1:52000"
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if coverage := decode[coverageResponse](t, rec); len(coverage.Accounts) != 0 {
+		t.Errorf("coverage = %+v", coverage)
+	}
+}

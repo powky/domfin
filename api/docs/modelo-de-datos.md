@@ -13,7 +13,7 @@ cuentas. Es la referencia para la API, la app y cualquier importador nuevo.
 
 | Capa | Qué guarda | Quién la escribe |
 | --- | --- | --- |
-| Importación | Cada estado de cuenta tal como lo imprime el banco: `bank_accounts`, `bank_statements`, `bank_transactions` (cuentas de ahorro y corrientes), `cards`, `statements`, `transactions` (tarjetas), `loans`, `loan_histories`, `loan_movements` (préstamos) y `certificates`, `certificate_histories`, `certificate_movements` (certificados). | Los importadores (`cmd/statements`, `POST /statements/import`). |
+| Importación | Cada estado de cuenta tal como lo imprime el banco: `bank_accounts`, `bank_statements`, `bank_transactions` (cuentas de ahorro y corrientes), `cards`, `statements`, `transactions` (tarjetas), `loans`, `loan_histories`, `loan_movements` (préstamos) y `certificates`, `certificate_histories`, `certificate_movements` (certificados). Los volantes de pago van aparte, en `payslips` y `payslip_lines`: su dinero ya está en el libro. | Los importadores (`cmd/statements`, `POST /statements/import`). |
 | Libro | Las **cuentas** y los **movimientos** de todas las fuentes con la misma forma. Se arma al leer, no se copia. | `store.Accounts` y `store.Movements`. |
 | Clasificación | Categorías, tus reglas, tus correcciones y la configuración de nómina. El resultado se calcula al leer. | Tú, desde la app (`/ledger/*`). |
 
@@ -379,6 +379,34 @@ que ya se pagó de intereses sale de los movimientos: cada pago de un
 préstamo trae `principal`, lo que fue a capital, y el resto fueron
 intereses y cargos.
 
+## Sueldo: volantes, salario de Navidad y bonificación
+
+Los volantes de pago (ver *Volantes de pago del Banco Popular* en
+[estados-de-cuenta.md](estados-de-cuenta.md)) quedan en `payslips` (la
+empresa, la fecha de la nómina, el neto) y `payslip_lines` (cada concepto,
+su tipo, si es deducción, el monto y lo acumulado en el año). No son
+movimientos: el neto de cada uno es un `CREDITO NOMINA` que ya está en el
+libro.
+
+Lo que el usuario dice de su sueldo va en `settings` (`salary`):
+
+| Campo | Qué es |
+| --- | --- |
+| `entries` | Sueldos brutos puestos a mano: `{since: "2026-07", amount, currency}`, del más viejo al más nuevo. Cuentan desde su mes hasta que un volante diga otra cosa. |
+| `hiredOn` | El día en que empezó a trabajar ahí: la bonificación son 60 días de sueldo desde los tres años, y 45 antes. |
+| `bonusMonth` | El mes en que le pagan la bonificación, de 1 a 12; 0 si no se la pagan. Sin él, la app pregunta. |
+
+La app arma el sueldo bruto de cada mes con eso (`features/salary`): el de
+los volantes en un mes que cubren entero, si no el puesto a mano, si no el
+del mes conocido más cercano. Con eso estima:
+
+- **Salario de Navidad** (Código de Trabajo, art. 219): la doceava parte del
+  sueldo del año. No paga ISR hasta ese monto (art. 222) ni TSS.
+- **Bonificación** (art. 223), lo que da la ley: el sueldo promedio del año
+  entre 23.83, por 45 o 60 días. Su ISR es lo que agrega al ingreso del año
+  (el sueldo menos la TSS, más los otros bonos), con la escala de la DGII
+  de 2026.
+
 ## Cómo lo usan las pantallas
 
 - **Montos en otra moneda:** ingresos, gastos, inversiones y préstamos se
@@ -424,6 +452,9 @@ los de estados de cuenta.
 | `PUT /ledger/budget` | Lo reemplaza entero; a los gastos fijos nuevos les pone `id` a partir del nombre. Responde lo guardado. |
 | `GET /ledger/loans` | La tasa, la cuota y lo que paga otra persona de cada préstamo: `{"plans"}` (ver *Préstamos: cuándo terminas*). |
 | `PUT /ledger/loans` | Los reemplaza todos. Responde lo guardado. |
+| `GET /ledger/payslips` | Los volantes de pago importados, del más viejo al más nuevo: `{"payslips": [{"id", "employer", "paidOn", "net", "status", "issues"?, "lines": [{"concept", "kind", "deduction"?, "amount", "yearToDate"}]}]}`. |
+| `GET /ledger/salary` | Lo que dijiste de tu sueldo: `{"entries", "hiredOn"?, "bonusMonth"?}` (ver *Sueldo*). |
+| `PUT /ledger/salary` | Lo reemplaza; ordena los sueldos por mes. Responde lo guardado. |
 
 Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 `amounts` (su valor en pesos y dólares a la tasa de su fecha), `flow`,

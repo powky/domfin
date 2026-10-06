@@ -303,6 +303,41 @@ CREATE TABLE asset_links (
 UPDATE classifications SET category_id = 'extra-income' WHERE category_id = 'usd-income';
 UPDATE rules SET category_id = 'extra-income' WHERE category_id = 'usd-income';
 DELETE FROM categories WHERE id = 'usd-income';
+`, `
+-- Pay stubs (volantes de pago): what each payment paid and took, concept by
+-- concept. The payment itself is already in the ledger, as the credit in the
+-- account it was paid into, so a stub makes no movements: it tells the
+-- gross salary and the deductions. A stub is its employer, payroll date and
+-- first concept, since two can be paid the same day (a bonus and an
+-- allowance). net is what reached the account, in cents.
+CREATE TABLE payslips (
+	id             INTEGER PRIMARY KEY,
+	employer       TEXT NOT NULL,
+	paid_on        TEXT NOT NULL,
+	concept        TEXT NOT NULL,
+	net            INTEGER NOT NULL,
+	source_file    TEXT NOT NULL,
+	source_sha256  TEXT NOT NULL,
+	content_sha256 TEXT NOT NULL,
+	status         TEXT NOT NULL,
+	issues         TEXT NOT NULL,
+	imported_at    TEXT NOT NULL,
+	UNIQUE (employer, paid_on, concept)
+);
+
+-- Each concept of a stub: kind is what it is (statements.Pay* and
+-- Deduction*), amount what it paid or took (deduction) in cents and
+-- year_to_date its total in the year so far, as printed.
+CREATE TABLE payslip_lines (
+	id           INTEGER PRIMARY KEY,
+	payslip_id   INTEGER NOT NULL REFERENCES payslips (id) ON DELETE CASCADE,
+	position     INTEGER NOT NULL,
+	concept      TEXT NOT NULL,
+	kind         TEXT NOT NULL,
+	deduction    INTEGER NOT NULL,
+	amount       INTEGER NOT NULL,
+	year_to_date INTEGER NOT NULL
+);
 `}
 
 const dateLayout = "2006-01-02"

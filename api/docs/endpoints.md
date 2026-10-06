@@ -68,6 +68,9 @@ Recibe un formulario `multipart/form-data` con uno o más archivos en `files`
 - `date` es la fecha de corte de una tarjeta, o el día en que se generó el
   historial de un préstamo (`kind: "loan"`), que además trae `from`, su
   primer movimiento. `issues` lista, en español, lo que no cuadró.
+- Un volante de pago trae, en vez de `account`, `payslip`: `{"employer",
+  "income", "deductions", "net"}` en centavos, y `date` es la fecha de la
+  nómina. No agrega movimientos.
 
 ## `GET /statements/coverage`
 
@@ -143,8 +146,9 @@ El libro: las cuentas y movimientos de todos los estados importados, ya
 clasificados como ingreso, gasto o transferencia, lo que los clasifica
 (categorías, tus reglas y correcciones, y la configuración de nómina), los
 activos que ningún estado muestra (un apartamento en plano, acciones), con
-los movimientos que les pagan, el presupuesto (tus gastos fijos) y la tasa y
-la cuota de tus préstamos. Como los
+los movimientos que les pagan, el presupuesto (tus gastos fijos), la tasa y
+la cuota de tus préstamos, y tu sueldo (los volantes de pago y lo que dijiste
+de él). Como los
 de estados de cuenta, solo responden a esta computadora. El modelo, las reglas
 y cada endpoint están en [modelo-de-datos.md](modelo-de-datos.md).
 

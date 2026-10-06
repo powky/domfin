@@ -2,8 +2,8 @@
 // app can be tried (and shown) without anyone's bank data: a payroll account
 // and a dollar account, two credit cards, a personal loan, a certificate, a
 // home bought off-plan, shares, a pension fund and a car, from January of
-// last year to the last month closed (or this one, near its end). It never
-// touches an existing database.
+// last year to the last month closed (or this one, near its end), and this
+// year's pay stubs. It never touches an existing database.
 //
 //	DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo
 //	DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/api
@@ -74,6 +74,11 @@ func run(now time.Time) error {
 	}
 	for _, st := range d.accountStatements() {
 		if _, err := db.SaveAccountStatement(ctx, st, nil, src(st.Last4+"-"+st.Month())); err != nil {
+			return err
+		}
+	}
+	for _, slip := range d.payslips() {
+		if _, err := db.SavePayslip(ctx, slip, nil, src("volante-"+slip.PaidOn.Format("2006-01-02"))); err != nil {
 			return err
 		}
 	}
@@ -161,6 +166,41 @@ func (d *demo) salary() {
 			d.add(payrollLast4, day(m, 18), "CREDITO NOMINA", 11_700_000)
 		}
 	}
+}
+
+// payslips are this year's pay stubs, laid out like a Dominican payroll's:
+// each fortnight's salary with its deductions, and the March bonus with its
+// ISR. Their nets are the payroll credits, which are already in the ledger.
+func (d *demo) payslips() []statements.Payslip {
+	const employer = "EMPRESA DE PRUEBA"
+	year := d.months[len(d.months)-1].Year()
+	var slips []statements.Payslip
+	var salary, isr, afp, sfs, insurance, bonus int64
+	fortnight := func(paidOn time.Time) {
+		salary, isr, afp, sfs, insurance = salary+7_500_000, isr+1_156_750, afp+215_250, sfs+228_000, insurance+50_000
+		slips = append(slips, statements.Payslip{Employer: employer, PaidOn: paidOn, Net: 5_850_000, Lines: []statements.PayslipLine{
+			{Concept: "SUELDO", Kind: statements.PaySalary, Amount: 7_500_000, YearToDate: salary},
+			{Concept: "LEY 11-92", Kind: statements.DeductionISR, Deduction: true, Amount: 1_156_750, YearToDate: isr},
+			{Concept: "APORTES AL PLAN LEY 87-01", Kind: statements.DeductionAFP, Deduction: true, Amount: 215_250, YearToDate: afp},
+			{Concept: "APORTES SEG. FAM. SALUD", Kind: statements.DeductionSFS, Deduction: true, Amount: 228_000, YearToDate: sfs},
+			{Concept: "SEGURO COMPLEMENTARIO", Kind: statements.DeductionOther, Deduction: true, Amount: 50_000, YearToDate: insurance},
+		}})
+	}
+	for _, m := range d.months {
+		if m.Year() != year {
+			continue
+		}
+		fortnight(day(m, 15))
+		if m.Month() == time.March {
+			bonus, isr = bonus+24_666_667, isr+6_166_667
+			slips = append(slips, statements.Payslip{Employer: employer, PaidOn: day(m, 20), Net: 18_500_000, Lines: []statements.PayslipLine{
+				{Concept: "BONIFICACION ESPECIAL", Kind: statements.PayBonus, Amount: 24_666_667, YearToDate: bonus},
+				{Concept: "LEY 11-92", Kind: statements.DeductionISR, Deduction: true, Amount: 6_166_667, YearToDate: isr},
+			}})
+		}
+		fortnight(day(m, 30))
+	}
+	return slips
 }
 
 // bills are what leaves the payroll account every month on its own.

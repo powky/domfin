@@ -166,3 +166,46 @@ func PopularCertificate(t testing.TB) []byte {
 	}
 	return Build(t, "", texts)
 }
+
+// PayslipRow is a concept of a made-up pay stub as printed: its name, its
+// year's total, and what it paid or took this time ("" for an empty column).
+type PayslipRow [4]string
+
+// PopularPayslip is a made-up pay stub laid out like the ones Banco
+// Popular's payroll gives its employees (no password): the employer, a
+// payroll date like "28/01/2026", the rows, the totals and the net. The
+// amounts are right-aligned under their columns, as in the real ones.
+func PopularPayslip(t testing.TB, date string, rows []PayslipRow, income, deductions, net string) []byte {
+	t.Helper()
+	texts := []Text{
+		{X: 37, Y: 106, S: "Código"}, {X: 80, Y: 106, S: "00000"}, {X: 280, Y: 106, S: "Cargo"}, {X: 352, Y: 106, S: "PUESTO DE PRUEBA"},
+		{X: 280, Y: 132, S: "Dependencia"}, {X: 351, Y: 132, S: "AREA DE PRUEBA"},
+		{X: 36, Y: 137, S: "Nombre"}, {X: 80, Y: 137, S: "NOMBRE DE PRUEBA"},
+		{X: 280, Y: 147, S: "Empresa"}, {X: 351, Y: 147, S: "BANCO POPULAR DOMINICANO"},
+		{X: 36, Y: 155, S: "Fecha"}, {X: 68, Y: 155, S: "01 Jan 2026"},
+		{X: 36, Y: 175, S: "Cuenta Banco"}, {X: 108, Y: 175, S: "000000000"},
+		{X: 220, Y: 210, S: "Proceso de Nómina " + date},
+		{X: 37, Y: 232, S: "Concepto"}, {X: 295, Y: 232, S: "Acumulado"}, {X: 381, Y: 232, S: "Ingreso"}, {X: 448, Y: 232, S: "Deducciones"},
+	}
+	// Right-aligned at the edge, in 8 pt Courier (4.8 pt a character).
+	at := func(edge, y float64, s string) []Text {
+		if s == "" {
+			return nil
+		}
+		return []Text{{X: edge - 4.8*float64(len(s)), Y: y, S: s}}
+	}
+	y := 249.0
+	for _, row := range rows {
+		texts = append(texts, Text{X: 37, Y: y, S: row[0]})
+		texts = append(texts, at(345, y, row[1])...)
+		texts = append(texts, at(418, y, row[2])...)
+		texts = append(texts, at(500, y, row[3])...)
+		y += 21
+	}
+	texts = append(texts, Text{X: 318, Y: y, S: "Total"})
+	texts = append(texts, at(418, y, income)...)
+	texts = append(texts, at(500, y, deductions)...)
+	texts = append(texts, Text{X: 368, Y: y + 38, S: "Pago Neto"})
+	texts = append(texts, at(500, y+38, net)...)
+	return Build(t, "", texts)
+}

@@ -49,8 +49,11 @@ func TestDefaultCategoriesUpgrade(t *testing.T) {
 	}
 	ctx := context.Background()
 	// A database from before "Ingresos en dólares" was retired, with a
-	// correction and a rule under it and a category out of place.
+	// correction and a rule under it and a category out of place (and from
+	// before the pay stubs, which came later).
 	for _, q := range []string{
+		`DROP TABLE payslip_lines`,
+		`DROP TABLE payslips`,
 		`INSERT INTO categories (id, name, flow, group_id, system, position) VALUES ('usd-income', 'Ingresos en dólares', 'income', 'other-income', 1, 6)`,
 		`INSERT INTO classifications (movement_id, category_id, updated_at) VALUES ('m1', 'usd-income', '2026-07-01T00:00:00Z')`,
 		`INSERT INTO rules (position, name, conditions, category_id, review) VALUES (0, 'Dólares', '{"contains":["trnfusd"]}', 'usd-income', 0)`,

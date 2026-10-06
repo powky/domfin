@@ -79,7 +79,7 @@ go run ./cmd/statements status                    # qué meses tiene cada cuenta
 
 | Banco | Documentos |
 | --- | --- |
-| Banco Popular | Estados de tarjeta de crédito (PDF con contraseña), estados de cuentas de ahorro y corrientes (escaneados o impresos, se leen con un OCR propio), historiales de préstamo (incluido el Extracrédito) y de certificado financiero. |
+| Banco Popular | Estados de tarjeta de crédito (PDF con contraseña), estados de cuentas de ahorro y corrientes (escaneados o impresos, se leen con un OCR propio), historiales de préstamo (incluido el Extracrédito) y de certificado financiero, y los volantes de pago de su nómina (sin crear movimientos: el pago ya está en la cuenta). |
 | Qik | Estados de tarjeta de crédito. |
 
 Cada estado se verifica: que los balances cuadren, que no falten páginas y
