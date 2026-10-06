@@ -7,7 +7,7 @@
 <p align="center">
   Tus finanzas personales en República Dominicana, armadas con los estados de
   cuenta de tu banco: en pesos y en dólares, y sin que tu información salga de
-  tu computadora.
+  tu computadora o tu teléfono.
 </p>
 
 <p align="center">
@@ -56,7 +56,8 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 - **Respaldos cifrados**: una copia de tus datos en la carpeta de tu nube
   (iCloud Drive, Google Drive, Dropbox u OneDrive) cada día y después de cada
   importación, que solo abren tu contraseña o tu clave de recuperación.
-- En español y en inglés, en la web, iOS y Android.
+- En español y en inglés, en la web, iOS y Android. En el teléfono, la app
+  lleva adentro el motor de Domfin: no necesita computadora.
 
 ## Cómo se ve
 
@@ -73,6 +74,16 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   </tr>
   <tr>
     <td width="50%" valign="top">
+      <img src="docs/images/presupuesto.png" alt="Presupuesto: los gastos fijos del mes, el ingreso, lo que queda para lo demás y cada gasto fijo con sus pagos de los últimos meses">
+      <p align="center"><b>Presupuesto</b> con tus gastos fijos</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/prestamo.png" alt="Un préstamo: cuándo terminas de pagarlo, lo que falta, sus intereses y el desglose año por año">
+      <p align="center"><b>Préstamos</b>: cuándo terminas y cuánto en intereses</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
       <img src="docs/images/patrimonio-neto.png" alt="Patrimonio neto: activos, pasivos y su evolución mes a mes">
       <p align="center"><b>Patrimonio neto</b> mes a mes</p>
     </td>
@@ -84,11 +95,13 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 </table>
 
 <p align="center">
-  <img src="docs/images/telefono-gastos.png" alt="Gastos en el teléfono" width="240">
+  <img src="docs/images/telefono-gastos.png" alt="Gastos en el teléfono" width="200">
   &nbsp;
-  <img src="docs/images/telefono-transacciones.png" alt="Transacciones en el teléfono" width="240">
+  <img src="docs/images/telefono-transacciones.png" alt="Transacciones en el teléfono" width="200">
   &nbsp;
-  <img src="docs/images/telefono-posesiones.png" alt="Posesiones en el teléfono" width="240">
+  <img src="docs/images/telefono-presupuesto.png" alt="Presupuesto en el teléfono" width="200">
+  &nbsp;
+  <img src="docs/images/telefono-prestamo.png" alt="Cuándo terminas de pagar un préstamo, en el teléfono" width="200">
 </p>
 
 ## Qué bancos lee
@@ -100,14 +113,16 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 
 ¿Tu banco no está? Mira [cómo agregar uno](CONTRIBUTING.md#agregar-un-banco).
 
-## Tu información no sale de tu computadora
+## Tu información se queda en tus equipos
 
-- Domfin son dos programas que corren en tu computadora: domfin-api
-  ([`api/`](api)), que lee y guarda tus estados, y la app ([`app/`](app)).
-  No hay cuentas que crear, ni servidor en la nube, ni conexión con tu
-  banco: tú le das los PDF.
+- En la computadora, Domfin son dos programas: domfin-api ([`api/`](api)),
+  que lee y guarda tus estados, y la app ([`app/`](app)), que abres en el
+  navegador. En el teléfono, la app lleva adentro el mismo motor y tus datos
+  se quedan en el teléfono. No hay cuentas que crear, ni servidor en la
+  nube, ni conexión con tu banco: tú le das los PDF.
 - domfin-api solo le da tus datos a esta misma computadora, nunca a otros
-  equipos de tu red.
+  equipos de tu red. En el teléfono, el motor solo le responde a la app de
+  Domfin: las demás apps no pueden leerlo.
 - La contraseña de tus PDF se guarda en la base local, que solo tu usuario
   puede leer. Domfin nunca la muestra.
 - Tus respaldos salen de tu computadora ya cifrados: el servicio de tu nube
@@ -212,6 +227,10 @@ Tu base no se toca, y la de ejemplo se borra al salir.
    suyas.
 5. **Posesiones**: agrega tu casa, tus acciones, tu AFP o tu vehículo, si
    aplica.
+6. **Presupuesto**: agrega como gastos fijos los pagos que se repiten
+   (Domfin te los sugiere) y mira cuánto te queda cada mes para lo demás.
+7. **Préstamos**: ponle a cada uno su tasa y su cuota para saber cuándo
+   terminas de pagarlo y cuánto se va en intereses.
 
 Cada mes, descarga tus estados nuevos e impórtalos.
 
@@ -289,19 +308,26 @@ sin el `DOMFIN_DATA_DIR=` del principio.
 
 ### En el teléfono
 
-La app también corre en iOS y Android, con un
+La app de iOS y Android lleva adentro el motor de Domfin, el mismo código de
+domfin-api: lee tus PDF, los guarda y los clasifica en el teléfono, sin
+computadora y sin internet (salvo para la tasa del dólar y el aviso de
+versiones). En el teléfono, comparte tus estados con Domfin desde el
+correo, Archivos o WhatsApp, y se importan solos.
+
+Por ahora se instala compilándola, con un
 [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-de Expo (Expo Go no sirve: usa módulos nativos). Desde `app/`:
+de Expo (Expo Go no sirve: usa módulos nativos). Necesitas Go
+(`./domfin setup` lo instala), y Xcode para iOS o Android Studio con el NDK
+(en *SDK Manager*) para Android. Desde `app/`:
 
 ```bash
-npx expo run:ios       # simulador de iOS, en macOS con Xcode
-npx expo run:android   # emulador de Android, con Android Studio
+npx expo run:ios       # simulador de iOS, en macOS; con --device, tu iPhone
+npx expo run:android   # emulador de Android o tu teléfono, conectado
 ```
 
-Por privacidad, domfin-api solo le da tus datos a la computadora donde
-corre: funciona en el simulador o el emulador de esa computadora, pero no
-en un teléfono de verdad. En el emulador de Android, apunta la app a la
-computadora con `EXPO_PUBLIC_API_URL=http://10.0.2.2:8080`.
+Para tu iPhone, Xcode la firma con tu cuenta de Apple. Los datos del
+teléfono son aparte de los de tu computadora: todavía no se sincronizan
+(está en la [hoja de ruta](#hoja-de-ruta)).
 
 ### Configuración avanzada
 
@@ -309,7 +335,7 @@ Para los puertos, mira [Los puertos](#los-puertos).
 
 | Variable | Para qué | Por defecto |
 | --- | --- | --- |
-| `EXPO_PUBLIC_API_URL` | Dónde está domfin-api, si la arrancas a mano en otro puerto u otra computadora. | `http://localhost:8080` |
+| `EXPO_PUBLIC_API_URL` | Dónde está domfin-api para la web, si la arrancas a mano en otro puerto u otra computadora. La app del teléfono no la usa: lleva su propio motor. | `http://localhost:8080` |
 
 Ponla en un archivo `.env` en `app/` (copia `app/.env.example`). Las
 opciones de domfin-api están en [su README](api/README.md#configuración).
@@ -376,6 +402,15 @@ proponer otra cosa,
 - [ ] Año contra año: tus ingresos, gastos y ahorro frente a los del año
   anterior, con lo que subió y lo que bajó.
 
+**En el teléfono y en la computadora**
+
+- [ ] Domfin en la App Store y en Google Play, sin tener que compilarlo.
+- [ ] Respaldos desde el teléfono, en iCloud Drive o en la carpeta de tu nube
+  que elijas, y restaurar en el teléfono un respaldo de tu computadora.
+- [ ] Los mismos datos en el teléfono y en la computadora, sincronizados y
+  cifrados.
+- [ ] Una app de escritorio que no necesite terminal ni domfin-api aparte.
+
 **Plataforma**
 
 - [ ] Más bancos dominicanos; hoy lee el Popular y Qik. Si tienes estados de
@@ -412,6 +447,8 @@ proponer otra cosa,
   intereses año por año, incluidos los que subsidia tu empleador.
 - [x] Respaldos cifrados en la carpeta de tu nube (iCloud Drive, Google
   Drive, Dropbox u OneDrive), con contraseña y clave de recuperación.
+- [x] La app de iOS y Android funciona sola, sin computadora: lleva adentro
+  el motor de Domfin y tus datos se quedan en el teléfono.
 - [x] Español e inglés; web, iOS y Android.
 - [x] Modo claro y oscuro, o el de tu dispositivo.
 
@@ -420,7 +457,7 @@ proponer otra cosa,
 | Carpeta | Qué es |
 | --- | --- |
 | [`api/`](api) | domfin-api, en Go: lee los PDF, los guarda en SQLite, clasifica cada movimiento y trae la tasa del Banco Central. Sus documentos: [endpoints](api/docs/endpoints.md), [estados de cuenta](api/docs/estados-de-cuenta.md) y [el libro y la clasificación](api/docs/modelo-de-datos.md). |
-| [`app/`](app) | La app, en Expo (React Native): web, iOS y Android. Por dentro: [docs/desarrollo.md](app/docs/desarrollo.md). |
+| [`app/`](app) | La app, en Expo (React Native): web, iOS y Android. En iOS y Android lleva adentro el código de domfin-api ([`app/modules/domfin-engine`](app/modules/domfin-engine)). Por dentro: [docs/desarrollo.md](app/docs/desarrollo.md). |
 
 Para proponer cambios, mira [CONTRIBUTING.md](CONTRIBUTING.md); para
 reportar un problema de seguridad, [SECURITY.md](SECURITY.md).
