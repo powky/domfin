@@ -156,12 +156,19 @@ ImageMagick:
 | `assets/android-icon-foreground.png` | La capa de adelante del ícono adaptativo | La D blanca en 108 dp, de los que se ven los 72 del medio; queda dentro de la zona segura de 66. El fondo es el `backgroundColor` naranja de `app.json`. |
 | `assets/android-icon-monochrome.png` | El ícono temático de Android 13 | La misma D: Android la pinta con los colores del tema. |
 | `assets/splash-icon.png` | La pantalla de carga (`expo-splash-screen`) | El logo, con sus esquinas dentro del círculo de los dos tercios del medio (Android 12 recorta a ese círculo), sobre el fondo de la app (`#F7F6F3`, y `#121110` con el modo oscuro del dispositivo), a 200 de ancho. |
-| `assets/favicon.png` | La pestaña del navegador | El logo, 48 px. |
+| `public/favicon.ico` | La pestaña del navegador | El logo en 32 y 48 px, y en 16 dibujado sobre su propia cuadrícula: la D más grande y su asta de dos píxeles enteros, porque el logo reducido se ve borroso. |
+| `public/apple-touch-icon.png` | La web en la pantalla de inicio del iPhone o en el Dock de la Mac | 180 px, naranja de borde a borde, como el ícono de iOS. |
+| `public/icon-192.png`, `icon-512.png` y `icon-maskable.png` | La web instalada desde Chrome (`public/manifest.json`) | El logo con sus esquinas redondeadas; el `maskable`, naranja de borde a borde, con la D dentro del círculo que se ve en cualquier forma. |
+
+`public/index.html` los enlaza, junto con el manifiesto y la descripción de la
+página. Fuera de la app, `docs/images/social-preview.png` (1280×640) es la
+vista previa del repositorio cuando se comparte su enlace: se sube a mano en
+GitHub, en *Settings → General → Social preview*.
 
 La pantalla de carga sigue hasta que el layout raíz tiene las fuentes, el
 idioma, la moneda y la preferencia de montos; después `_layout.tsx` la
 esconde. Los íconos y la pantalla de carga cambian con un development build
-nuevo; el favicon, al recargar la web.
+nuevo; los de la web, al recargarla.
 
 ## Arquitectura
 
