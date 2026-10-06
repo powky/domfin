@@ -1,7 +1,7 @@
 // Command statements imports bank statement PDFs into the local database
 // and reports which months each account has.
 //
-//	go run ./cmd/statements import [-dry-run] <pdf or folder>...
+//	go run ./cmd/statements import [-dry-run] <pdf, zip or folder>...
 //	go run ./cmd/statements status
 package main
 
@@ -54,8 +54,8 @@ func main() {
 
 func usage(w io.Writer) {
 	fmt.Fprintln(w, `uso:
-  go run ./cmd/statements import [-dry-run] <pdf o carpeta>...   importa estados de cuenta y de tarjeta, historiales de préstamo y de certificado y volantes de pago, del Banco Popular
-  go run ./cmd/statements status                                 muestra qué meses tiene cada cuenta`)
+  go run ./cmd/statements import [-dry-run] <pdf, zip o carpeta>...   importa estados de cuenta y de tarjeta, historiales de préstamo y de certificado y volantes de pago, del Banco Popular
+  go run ./cmd/statements status                                      muestra qué meses tiene cada cuenta`)
 }
 
 func runImport(args []string, out io.Writer) error {
@@ -111,6 +111,9 @@ func runImport(args []string, out io.Writer) error {
 func describe(r importer.Result) string {
 	switch r.Status {
 	case importer.Skipped:
+		if r.Reason == importer.ReasonEmptyArchive {
+			return fmt.Sprintf("– %s: omitido, el .zip no trae PDF", r.File)
+		}
 		return fmt.Sprintf("– %s: omitido, no es un estado que Domfin sepa leer", r.File)
 	case importer.Failed:
 		switch r.Reason {
@@ -118,6 +121,8 @@ func describe(r importer.Result) string {
 			return fmt.Sprintf("✗ %s: tiene contraseña; guárdala en Configuración de la app o ponla en %s", r.File, passwordVar)
 		case importer.ReasonWrongPassword:
 			return fmt.Sprintf("✗ %s: la contraseña no lo abre", r.File)
+		case importer.ReasonEncryptedArchive:
+			return fmt.Sprintf("✗ %s: el .zip tiene contraseña; descomprímelo y pasa la carpeta", r.File)
 		default:
 			return fmt.Sprintf("✗ %s: %s", r.File, r.Detail)
 		}
@@ -245,7 +250,7 @@ func pdfFiles(args []string) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if !entry.IsDir() && strings.EqualFold(filepath.Ext(path), ".pdf") {
+			if ext := strings.ToLower(filepath.Ext(path)); !entry.IsDir() && (ext == ".pdf" || ext == ".zip") {
 				files = append(files, path)
 			}
 			return nil

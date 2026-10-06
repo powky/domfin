@@ -13,12 +13,13 @@ import (
 	"github.com/powky/domfin/api/internal/store"
 )
 
-// Uploads are read in memory, never written to a temporary file.
-const maxUpload = 32 << 20
+// Uploads are read in memory, never written to a temporary file. A zip with
+// a year of statements fits.
+const maxUpload = 128 << 20
 
 // Handler serves the statement endpoints:
 //
-//	POST   /statements/import    multipart form with one or more PDFs in "files"
+//	POST   /statements/import    multipart form with one or more PDFs or zips of them in "files"
 //	GET    /statements/coverage  each account's months and whether they check out
 //	GET    /statements/password  whether a password for the PDFs is saved (never the password)
 //	PUT    /statements/password  saves it: {"password"}

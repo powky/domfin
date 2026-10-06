@@ -44,7 +44,8 @@ Central de la República Dominicana, en pesos por dólar:
 
 Importa estados de cuenta en PDF (ver [estados-de-cuenta.md](estados-de-cuenta.md)).
 Recibe un formulario `multipart/form-data` con uno o más archivos en `files`
-(hasta 32 MB en total) y responde qué pasó con cada uno:
+(hasta 128 MB en total), PDF o .zip con PDF en sus carpetas, y responde qué
+pasó con cada PDF:
 
 ```json
 {
@@ -65,6 +66,11 @@ Recibe un formulario `multipart/form-data` con uno o más archivos en `files`
   corte con otro contenido), `unchanged` (ya estaba), `skipped` (no es un
   estado que sepa leer) o `failed`, con `reason` `missing_password`,
   `wrong_password`, `unreadable` o `not_saved` y el error en `detail`.
+- Cada PDF de un .zip trae como `file` su ruta adentro
+  (`estados.zip/tarjeta/enero.pdf`), también los de un .zip dentro de otro;
+  lo que no es PDF no aparece. El .zip mismo solo tiene resultado cuando no
+  da ninguno: `skipped` con `reason` `empty_archive` (no trae PDF), o
+  `failed` con `encrypted_archive` (tiene contraseña) o `unreadable`.
 - `date` es la fecha de corte de una tarjeta, o el día en que se generó el
   historial de un préstamo (`kind: "loan"`), que además trae `from`, su
   primer movimiento. `issues` lista, en español, lo que no cuadró.

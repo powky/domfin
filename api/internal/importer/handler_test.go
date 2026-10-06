@@ -212,3 +212,21 @@ func TestImportEndpointReadsPayStubs(t *testing.T) {
 		t.Errorf("coverage = %+v", coverage)
 	}
 }
+
+func TestImportEndpointOpensZips(t *testing.T) {
+	handler := newTestHandler(t)
+	archive := zipOf(t,
+		entry{name: "estados/tarjeta.pdf", data: testpdf.PopularCard(t, testPassword)},
+		entry{name: "estados/prestamo.pdf", data: testpdf.PopularLoan(t)},
+	)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, upload(t, map[string][]byte{"estados.zip": archive}))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	body := decode[importResponse](t, rec)
+	if len(body.Results) != 2 || body.Results[0].File != "estados.zip/estados/tarjeta.pdf" || body.Results[0].Status != Added ||
+		body.Results[1].File != "estados.zip/estados/prestamo.pdf" || body.Results[1].Account == nil || body.Results[1].Account.Kind != store.Loan {
+		t.Errorf("results = %+v", body.Results)
+	}
+}

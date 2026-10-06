@@ -1,8 +1,9 @@
 // Package importer reads statement PDFs, works out what each one is (a
 // bank account or credit card statement, or a loan or certificate history,
 // from Banco Popular, a Qik credit card statement, or a pay stub like
-// Banco Popular's payroll prints), checks it and saves it. The statements
-// command and the API share it.
+// Banco Popular's payroll prints), checks it and saves it. A zip brings the
+// PDFs in its folders, each read on its own. The statements command and the
+// API share it.
 package importer
 
 import (
@@ -108,11 +109,12 @@ type parsed struct {
 	slip   *statements.Payslip
 }
 
-// ImportAll imports the files and returns one result per file: statements
-// first, account by account and oldest first, then the files it skipped or
-// couldn't read.
+// ImportAll imports the files and returns one result per file, or per PDF
+// in a zip: statements first, account by account and oldest first, then the
+// files it skipped or couldn't read.
 func (im *Importer) ImportAll(ctx context.Context, files []File) []Result {
 	password := im.password(ctx)
+	files, archives := expand(files)
 	var read, others []parsed
 	for _, file := range files {
 		p := im.read(file, password)
@@ -143,7 +145,7 @@ func (im *Importer) ImportAll(ctx context.Context, files []File) []Result {
 	for _, p := range others {
 		results = append(results, p.result)
 	}
-	return results
+	return append(results, archives...)
 }
 
 func kindOrder(kind string) int {

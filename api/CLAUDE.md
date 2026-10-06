@@ -23,14 +23,14 @@ DOMFIN_DATA_DIR=/tmp/domfin-demo go run ./cmd/demo   # base con datos inventados
 | Paquete | Qué hace |
 | --- | --- |
 | `cmd/api` | Arma el servidor: rutas públicas con CORS abierto y rutas con datos del banco detrás de `localonly`. |
-| `cmd/statements` | CLI para importar PDF y ver la cobertura por mes. |
+| `cmd/statements` | CLI para importar PDF (sueltos, en carpetas o en .zip) y ver la cobertura por mes. |
 | `cmd/glyphs` | Encuentra caracteres nuevos para `internal/gridocr/popular.atlas`. |
 | `cmd/demo` | Llena una base nueva con datos inventados: para probar la app sin datos reales y para las capturas del README. |
 | `internal/rates` | Tasa USD/DOP del BCRD con caché diaria y la serie histórica. |
 | `internal/pdftext` | Texto de un PDF como líneas de celdas (descifra con pdfcpu). |
 | `internal/gridocr` | OCR de cuadrícula para los estados escaneados. |
 | `internal/statements` | Parsers de cada formato del Banco Popular y sus verificaciones. |
-| `internal/importer` | Reconoce el PDF, lo importa y sirve `/statements/*`. |
+| `internal/importer` | Abre los .zip, reconoce cada PDF, lo importa y sirve `/statements/*`. |
 | `internal/store` | SQLite: tablas de importación, libro, balances y migraciones. |
 | `internal/ledger` | Modelo del libro y la clasificación (ingreso, gasto, transferencia). |
 | `internal/assets` | Activos que ningún estado muestra (inmueble en plano con su plan de pagos, acciones, fondo de pensiones, vehículo que se deprecia), deudas fuera de tus estados (por movimientos vinculados o por plan de cuotas) y su valor. |

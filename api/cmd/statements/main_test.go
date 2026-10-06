@@ -1,6 +1,8 @@
 package main
 
 import (
+	"archive/zip"
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,5 +118,29 @@ func TestImportPayStub(t *testing.T) {
 	want := "✓ Volante de pago · BANCO POPULAR DOMINICANO · pagado el 2026-01-28 · bruto 45,000.00 · neto 40,000.00 · importado  (volante.pdf)"
 	if first, _, _ := strings.Cut(out.String(), "\n"); first != want {
 		t.Errorf("import output:\n%s\nwant first line:\n%s", out.String(), want)
+	}
+}
+
+func TestImportAZipInAFolder(t *testing.T) {
+	folder := t.TempDir()
+	var archive bytes.Buffer
+	w := zip.NewWriter(&archive)
+	f, err := w.Create("prestamo/historial.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write(testpdf.PopularLoan(t))
+	w.Close()
+	if err := os.WriteFile(filepath.Join(folder, "estados.zip"), archive.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("DOMFIN_DATA_DIR", t.TempDir())
+
+	var out strings.Builder
+	if err := runImport([]string{folder}, &out); err != nil {
+		t.Fatalf("import: %v\n%s", err, out.String())
+	}
+	if !strings.HasPrefix(out.String(), "✓ Préstamo ****1234 · historial al 2026-09-30, desde 2026-01-10 · DOP 2 mov. · importado  (estados.zip/prestamo/historial.pdf)") {
+		t.Errorf("import output:\n%s", out.String())
 	}
 }

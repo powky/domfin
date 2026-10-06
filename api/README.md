@@ -70,7 +70,7 @@ carpeta desde donde arrancas la API (copia `.env.example`).
 La app importa desde *Importar estados*; también se puede desde aquí:
 
 ```bash
-go run ./cmd/statements import ~/estados          # PDF sueltos o carpetas
+go run ./cmd/statements import ~/estados          # PDF sueltos, carpetas o .zip
 go run ./cmd/statements import -dry-run ~/estados # revisa sin guardar
 go run ./cmd/statements status                    # qué meses tiene cada cuenta
 ```

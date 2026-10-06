@@ -11,6 +11,7 @@ Los PDF que no reconocen se omiten.
 
 ```bash
 go run ./cmd/statements import ~/estados/tarjeta                 # importa los PDF de una carpeta
+go run ./cmd/statements import ~/Downloads/estados.zip           # o los de un .zip, en sus carpetas
 go run ./cmd/statements import -dry-run ~/estados                # revisa sin guardar
 go run ./cmd/statements status                                   # qué meses tiene cada cuenta
 ```
@@ -21,6 +22,13 @@ la app (o con `STATEMENTS_PDF_PASSWORD`).
 - La base vive en `$DOMFIN_DATA_DIR/domfin.db` (por defecto
   `~/Library/Application Support/domfin-api/domfin.db` en macOS), fuera del
   repo y solo legible por tu usuario. Los PDF no se copian.
+- Un .zip se abre en memoria y cada PDF de sus carpetas se importa como si
+  viniera suelto, con su ruta dentro del .zip como nombre; también los de los
+  .zip que traiga adentro, hasta tres niveles. Lo demás se ignora: lo que no
+  es PDF, los archivos ocultos y las copias que macOS agrega en `__MACOSX`.
+  Un .zip con contraseña no se abre (hay que descomprimirlo antes) y, para
+  que uno roto o malicioso no llene la memoria, se rechaza el que trae más
+  de 10,000 archivos, un PDF de más de 64 MB o más de 512 MB descomprimido.
 - Cada cuenta, tarjeta o préstamo se identifica por el banco y sus últimos 4
   dígitos, y cada estado por la cuenta o tarjeta y su fecha de corte.
   Importar dos veces el mismo estado, o dos descargas del mismo PDF, no
