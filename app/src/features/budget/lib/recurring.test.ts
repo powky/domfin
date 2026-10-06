@@ -54,7 +54,8 @@ describe('payeeOf', () => {
     assert.equal(payeeOf({ description: '0000123 4567' }), '');
   });
 
-  it('names a payee as the bank wrote it', () => {
+  it("names a payee as domfin-api does, or as the bank wrote it", () => {
+    assert.equal(nameOf({ description: 'PAG EDESUR 0000123456 000123', name: 'Edesur' }), 'Edesur');
     assert.equal(nameOf({ description: 'MB a 0000000123 INMOBILIARIA DEL ESTE' }), 'MB a INMOBILIARIA DEL ESTE');
     assert.equal(nameOf({ merchant: 'APPLE.COM/BILL', description: 'APPLE.COM/BILL  CUPERTINO' }), 'APPLE.COM/BILL');
   });

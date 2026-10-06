@@ -47,6 +47,10 @@ export type Transaction = {
   undetailedCash?: boolean;
   /** In Efectivo, where everything is written down by hand or worked out. */
   cash?: boolean;
+  /** What the bank printed, which the search also finds. */
+  description?: string;
+  /** Renaming it renames every movement of its merchant, person or account. */
+  nameKey?: string;
 };
 
 export type TransactionAccount = {

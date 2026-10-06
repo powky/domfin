@@ -119,6 +119,20 @@ Si cambias algo que describe un documento (`api/docs/`,
    blanco, el símbolo ocupando cerca del 80 % del círculo) y su entrada, con
    el id que le da la API, en `app/src/features/accounts/lib/institutions.ts`.
 
+## Agregar un comercio
+
+Domfin reconoce los comercios de `api/internal/merchants/directory.go`
+(cadenas, servicios, el gobierno): les pone su nombre y junta todas las
+formas en que los bancos los imprimen. Una entrada lleva un
+`ID` (minúsculas con guiones), el `Name` y las palabras (`Words`) con que los
+bancos lo escriben, en minúsculas y sin acentos ni signos: `"uber eats"`
+encuentra `UBER EATS-W*UBER EATS-` y `UBER*EATS`. Si el nombre es tan común
+que puede aparecer en otros, va en `First`: solo cuenta al principio. Antes
+de uno más general va el más específico (*Uber Eats* antes que *Uber*), y
+`TestDirectory` revisa que cada palabra encuentre a su comercio. Solo
+comercios públicos: nunca personas ni negocios sacados de tus estados que te
+identifiquen.
+
 ## Commits y pull requests
 
 - [Conventional Commits](https://www.conventionalcommits.org/), en inglés:

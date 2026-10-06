@@ -85,6 +85,10 @@ export const transactions = {
         '¿Borras las {{formatted}} transacciones que agregaste a mano?',
       ),
       ...plural('deleteYes', 'Sí, borrarla', 'Sí, borrarlas'),
+      rename: 'Cambiar nombre',
+      renameLabel: 'Nombre para todos los movimientos de este comercio',
+      renamePlaceholder: 'Vacío vuelve al nombre de Domfin',
+      renameSave: 'Guardar',
     },
     list: {
       empty: 'No se encontraron transacciones',

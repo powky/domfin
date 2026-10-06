@@ -68,8 +68,13 @@ export function payeeOf(movement: Pick<LedgerMovement, 'merchant' | 'description
   return words(movement.merchant || movement.description).join(' ');
 }
 
-/** A name to show for a payee: as the bank wrote it, without the numbers ("MB a INMOBILIARIA DEL ESTE"). */
-export function nameOf(movement: Pick<LedgerMovement, 'merchant' | 'description'>) {
+/**
+ * A name to show for a payee: domfin-api's ("Edesur", "Inmobiliaria del
+ * Este"), or as the bank wrote it, without the numbers ("MB a INMOBILIARIA
+ * DEL ESTE").
+ */
+export function nameOf(movement: Pick<LedgerMovement, 'merchant' | 'description' | 'name'>) {
+  if (movement.name) return movement.name;
   const text = (movement.merchant || movement.description)
     .split(/\s+/)
     .filter((word) => word !== '' && !/\d/.test(word))

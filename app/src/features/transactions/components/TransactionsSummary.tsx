@@ -1,10 +1,10 @@
-import { Check, Eye, EyeOff, Link2, Tag, Trash2, X } from 'lucide-react-native';
+import { Check, Eye, EyeOff, Link2, Pencil, Tag, Trash2, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Button, Select, Text } from '@/components/ui';
+import { Button, Select, Text, TextField } from '@/components/ui';
 import { dotSeparator, formatCurrency, formatNumber, keepTogether } from '@/lib/format';
 import { usePhoneLayout } from '@/theme';
 
@@ -84,6 +84,10 @@ export type SelectionBarProps = {
   onToggleHidden: () => void;
   /** Deletes the selection, when it's all added by hand; it asks first. */
   onDelete?: () => void;
+  /** Renames the merchant, person or account of the selection, when it's all one; empty gives back Domfin's name. */
+  onRename?: (name: string) => void;
+  /** Its name now, to start from. */
+  currentName?: string;
   onClear: () => void;
 };
 
@@ -109,12 +113,17 @@ export function SelectionBar({
   onMarkReviewed,
   onToggleHidden,
   onDelete,
+  onRename,
+  currentName,
   onClear,
 }: SelectionBarProps) {
   const { t } = useTranslation();
   const phone = usePhoneLayout();
   // How many were selected when Delete asked: selecting others asks again.
   const [confirming, setConfirming] = useState<number | null>(null);
+  // The name being written, and for how many: selecting others starts over.
+  const [renaming, setRenaming] = useState<{ count: number; name: string } | null>(null);
+  const rename = t('transactions.selection.rename');
   const markReviewed = t('transactions.selection.markReviewed', { count: selectedCount });
   const hide = hidden ? t('transactions.selection.unhide') : t('transactions.selection.hide');
   const remove = t('transactions.selection.delete');
@@ -168,6 +177,15 @@ export function SelectionBar({
         onPress={onToggleHidden}
         accessibilityLabel={hide}
       />
+      {onRename ? (
+        <Button
+          icon={Pencil}
+          iconOnly={phone}
+          label={phone ? undefined : rename}
+          onPress={() => setRenaming({ count: selectedCount, name: currentName ?? '' })}
+          accessibilityLabel={rename}
+        />
+      ) : null}
       {onDelete ? (
         <Button
           icon={Trash2}
@@ -180,6 +198,30 @@ export function SelectionBar({
     </>
   );
   const clear = <Button icon={X} iconOnly onPress={onClear} accessibilityLabel={t('transactions.selection.clear')} />;
+
+  if (onRename && renaming?.count === selectedCount) {
+    const save = () => {
+      setRenaming(null);
+      onRename(renaming.name);
+    };
+    return (
+      <View style={phone ? styles.phoneSelection : styles.selection}>
+        <TextField
+          value={renaming.name}
+          onChangeText={(name) => setRenaming({ ...renaming, name })}
+          placeholder={t('transactions.selection.renamePlaceholder')}
+          accessibilityLabel={t('transactions.selection.renameLabel')}
+          autoFocus
+          onSubmitEditing={save}
+          containerStyle={styles.renameField}
+        />
+        <View style={styles.actions}>
+          <Button variant="primary" label={t('transactions.selection.renameSave')} onPress={save} />
+          <View style={phone ? styles.clear : undefined}>{clear}</View>
+        </View>
+      </View>
+    );
+  }
 
   if (onDelete && confirming === selectedCount) {
     const question = (
@@ -273,5 +315,9 @@ const styles = StyleSheet.create((theme) => ({
   // The way out, at the far end of the row.
   clear: {
     marginLeft: 'auto',
+  },
+  renameField: {
+    flexGrow: 1,
+    minWidth: 200,
   },
 }));

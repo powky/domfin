@@ -45,7 +45,7 @@ function textFor(transaction: Transaction, labels: SearchLabels) {
   if (text === undefined) {
     const categories = categoryIdsOf(transaction).map((id) => labels.categories.get(id) ?? '');
     if (isUncategorized(transaction)) categories.push(labels.uncategorized);
-    text = normalize([transaction.merchant, transaction.notes ?? '', ...categories].join(' '));
+    text = normalize([transaction.merchant, transaction.description ?? '', transaction.notes ?? '', ...categories].join(' '));
     cache.set(transaction, text);
   }
   return text;
@@ -64,7 +64,7 @@ const prepareQuery = (query: string): PreparedQuery | null => {
   return text ? { text, amount: amountQuery(text) } : null;
 };
 
-/** Merchant, notes and category names, or the amount when the query looks like one. */
+/** Merchant (and what the bank printed), notes and category names, or the amount when the query looks like one. */
 function matchesQuery(transaction: Transaction, query: PreparedQuery, labels: SearchLabels) {
   if (query.amount && Math.abs(transaction.amount).toFixed(2).includes(query.amount)) return true;
   return textFor(transaction, labels).includes(query.text);

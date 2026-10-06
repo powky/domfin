@@ -88,6 +88,11 @@ export const transactions = {
       deleteConfirm_other: 'Delete the {{formatted}} transactions you added by hand?',
       deleteYes_one: 'Yes, delete it',
       deleteYes_other: 'Yes, delete them',
+      /** For every transaction of the merchant, person or account selected. */
+      rename: 'Rename',
+      renameLabel: 'Name for every transaction of this merchant',
+      renamePlaceholder: "Empty goes back to Domfin's name",
+      renameSave: 'Save',
     },
     list: {
       empty: 'No transactions found',

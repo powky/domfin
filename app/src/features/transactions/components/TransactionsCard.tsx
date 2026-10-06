@@ -170,6 +170,11 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
   const selectAll = () => select(new Set(filtered.map((transaction) => transaction.id)));
   const clearSelection = () => select(NO_SELECTION);
   const selectedIdList = () => selected.map((transaction) => transaction.id);
+  // Renaming needs one merchant, person or account in the whole selection.
+  const renameKey =
+    selected.length > 0 && selected.every((transaction) => transaction.nameKey === selected[0].nameKey)
+      ? selected[0].nameKey
+      : undefined;
 
   const setFilter = <K extends keyof DropdownFilters>(key: K, value: DropdownFilters[K]) =>
     setDropdowns((current) => ({ ...current, [key]: value }));
@@ -279,6 +284,16 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
                 setFailed(null);
                 transactionActions.setHidden(ids, status !== 'hidden').catch(() => setFailed('save'));
               }}
+              onRename={
+                renameKey
+                  ? (name) => {
+                      clearSelection();
+                      setFailed(null);
+                      transactionActions.rename(renameKey, name).catch(() => setFailed('save'));
+                    }
+                  : undefined
+              }
+              currentName={selected[0]?.merchant}
               onDelete={
                 selected.every((transaction) => transaction.manual)
                   ? () => {

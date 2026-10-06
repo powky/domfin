@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { categoryLabel, groupLabel } from '@/i18n';
+import { categoryLabel, groupLabel, operationLabel } from '@/i18n';
 import type { ChartColor } from '@/theme';
 
 import type { LedgerCategory, LedgerGroup, LedgerMovement, LedgerState } from '../types';
@@ -43,14 +43,19 @@ export function groupColor(groupId: string): ChartColor {
 }
 
 /**
- * Who the money went to or came from: the card's merchant, or what the bank
- * printed; cash nobody said how it was spent, by its category's name in
- * `language` (the app's by default).
+ * Who the money went to or came from, as domfin-api names it (or the card's
+ * merchant, or what the bank printed), in `language` (the app's by default):
+ * the bank's own operations and the cash nobody said how it was spent are
+ * translated.
  */
-export const counterparty = (movement: Pick<LedgerMovement, 'merchant' | 'description' | 'kind'>, language?: string) =>
-  movement.kind === 'undetailed_cash'
-    ? categoryLabel('undetailed-cash', movement.description, language)
-    : movement.merchant || movement.description;
+export const counterparty = (
+  movement: Pick<LedgerMovement, 'merchant' | 'description' | 'kind' | 'name' | 'operation' | 'ref'>,
+  language?: string,
+) => {
+  if (movement.kind === 'undetailed_cash') return categoryLabel('undetailed-cash', movement.description, language);
+  const name = movement.name || movement.merchant || movement.description;
+  return movement.operation ? operationLabel(movement.operation, movement.ref, name, language) : name;
+};
 
 export type LedgerNames = {
   /** Name of a category in the app language; "Uncategorized" for null. */

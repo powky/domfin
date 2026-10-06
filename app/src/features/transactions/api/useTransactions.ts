@@ -10,6 +10,7 @@ import {
   deleteMovements,
   linkToAsset,
   markMovements,
+  renameMerchant,
   setCategory,
   useAssets,
   useLedger,
@@ -72,6 +73,8 @@ const fromLedger = (
   missing: movement.missing,
   undetailedCash: movement.kind === 'undetailed_cash',
   cash: cashAccounts.has(movement.accountId),
+  description: movement.merchant || movement.description,
+  nameKey: movement.nameKey,
 });
 
 export function useTransactions(): { data: TransactionsData; isLoading: boolean } {
@@ -134,4 +137,6 @@ export const transactionActions = {
   setHidden: (ids: readonly string[], hidden: boolean) => markMovements(ids, { hidden }),
   /** Only for the ones added by hand. */
   remove: deleteMovements,
+  /** Names a merchant, person or account (a transaction's `nameKey`) everywhere; empty gives back Domfin's. */
+  rename: renameMerchant,
 };

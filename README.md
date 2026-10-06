@@ -42,7 +42,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
   SFS; tu salario de Navidad, y los otros pagos de tu trabajo (bonificación,
   bonos) calculados como tú digas.
 - **Transacciones**: cada movimiento clasificado solo (por el código del
-  comercio, la descripción del banco, tu nómina y tus reglas). Lo que falte
+  comercio, la descripción del banco, tu nómina y tus reglas), con nombres
+  claros: *Uber* en vez de `UBER RIDES-*UBER RIDES`, *Claro* en vez de `PAG
+  CLARO 809…`, la persona de una transferencia. Los puedes cambiar. Lo que falte
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
   próxima vez. Lo que todavía no trae un estado lo agregas a mano: cuando
   llega el estado, su movimiento toma el lugar del tuyo, sin duplicarse.
@@ -392,8 +394,8 @@ proponer otra cosa,
 
 **Movimientos más claros**
 
-- [ ] Nombres y logos de los comercios, en lugar de la descripción que
-  imprime el banco.
+- [ ] Logos de los comercios, incluidos en la app (sin pedírselos a
+  internet).
 - [ ] Proyectos: juntar gastos de distintas categorías en un mismo proyecto
   (una mudanza, una boda, un negocio propio) y ver cuánto lleva cada uno.
 
@@ -436,6 +438,8 @@ proponer otra cosa,
   iOS y Android, varios a la vez y de cuentas distintas.
 - [x] Clasificación automática de cada movimiento: por el código del
   comercio, la descripción del banco, tu nómina y tus reglas.
+- [x] Nombres de los comercios en lugar de la descripción del banco, iguales
+  aunque cada banco los imprima distinto, y que puedes cambiar.
 - [x] Movimientos agregados a mano, que el del estado reemplaza cuando llega
   (con tu categoría y tus notas), y lo que marcas como revisado u ocultas,
   guardados en tu base.

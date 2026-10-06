@@ -81,3 +81,26 @@ export const categoryNames: Readonly<Record<string, string>> = {
   'own-transfer': 'Between my accounts',
   'currency-exchange': 'Currency exchange',
 };
+
+/**
+ * The bank's own operations, by domfin-api's id (`operation` in the ledger):
+ * Spanish comes from domfin-api. A card or an account adds its last digits.
+ */
+export const operationNames: Readonly<Record<string, string>> = {
+  payroll: 'Payroll',
+  interest: 'Interest',
+  withholding: 'Tax withheld',
+  atm: 'ATM',
+  'cash-advance': 'Cash advance',
+  loan: 'Loan',
+  installment: 'Installment',
+  payment: 'Payment',
+  deposit: 'Deposit',
+  withdrawal: 'Withdrawal',
+  cashback: 'Cashback',
+  correction: 'Bank correction',
+  returned: 'Returned',
+  'dollars-in': 'Wire in dollars',
+  card: 'Card',
+  account: 'Account',
+};

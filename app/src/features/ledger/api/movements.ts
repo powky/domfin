@@ -36,6 +36,18 @@ export async function deleteMovements(ids: readonly string[]): Promise<void> {
   }
 }
 
+/**
+ * Names a merchant, person or account (a movement's `nameKey`) for all its
+ * movements; an empty name gives it back the one Domfin gives it.
+ */
+export async function renameMerchant(key: string, name: string): Promise<void> {
+  try {
+    await apiSend('PUT', '/ledger/names', { key, name });
+  } finally {
+    await refreshLedger();
+  }
+}
+
 /** Marks movements reviewed, or hidden or not: on this device right away, and in domfin-api. */
 export async function markMovements(
   ids: readonly string[],

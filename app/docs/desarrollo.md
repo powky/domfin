@@ -71,6 +71,12 @@ responde a quien manda el secreto que genera al arrancar
   Transacciones los lista en *Ocultas*. Una fila agregada a mano dice *A
   mano* (o *No está en su estado*, si su estado llegó sin ella) y solo esas
   se pueden borrar.
+- El nombre de cada fila sale de domfin-api (`name`, ver *Nombres* en
+  `api/docs/modelo-de-datos.md`): `counterparty` (`features/ledger`) lo usa,
+  y traduce las operaciones del banco (`operation`, con `operationLabel` de
+  `src/i18n`). Lo que el banco imprimió se sigue buscando (`description`), y
+  *Cambiar nombre* en la selección (`PUT /ledger/names`) cambia todos los
+  movimientos de su `nameKey`.
 - *Efectivo* (`kind: 'cash'`) es una cuenta más del libro, una por moneda,
   sin saldo: no sale en Cuentas ni en Patrimonio neto. El formulario de
   agregar empieza en ella. domfin-api calcula lo que quedó sin detallar de

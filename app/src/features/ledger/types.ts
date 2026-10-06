@@ -69,6 +69,17 @@ export type LedgerMovement = {
   notes?: string;
   /** Left out of lists and totals unless asked for. */
   hidden?: boolean;
+  /**
+   * Who it's with, as domfin-api names it: a known merchant (`merchantId`),
+   * a person or account, one of the bank's own operations (`operation`,
+   * with the last digits of a card or account in `ref`), or what the bank
+   * printed, cleaned up. Renaming `nameKey` renames all its movements.
+   */
+  name?: string;
+  nameKey?: string;
+  merchantId?: string;
+  operation?: string;
+  ref?: string;
 };
 
 export type LedgerGroup = { id: string; name: string; flow: Flow };
