@@ -54,6 +54,16 @@ export type LedgerMovement = {
   principal?: number;
   /** The asset it pays into (a home bought off-plan, shares), by its ID. */
   assetId?: string;
+  /**
+   * Added by hand (see `addMovement`): it stays until the statement that
+   * brings it arrives, and `missing` when that statement came without it.
+   */
+  manual?: boolean;
+  missing?: boolean;
+  /** What the user wrote about it, also on the imported movement that took the place of one added by hand. */
+  notes?: string;
+  /** Left out of lists and totals unless asked for. */
+  hidden?: boolean;
 };
 
 export type LedgerGroup = { id: string; name: string; flow: Flow };
@@ -72,8 +82,10 @@ export type LedgerState = {
   /** `offline` when domfin-api didn't answer; the last ledger it sent is kept. */
   status: 'loading' | 'ready' | 'offline';
   accounts: LedgerAccount[];
-  /** Every movement of `LEDGER_MONTHS`, newest first. */
+  /** Every movement of `LEDGER_MONTHS` but the hidden ones, newest first. */
   movements: LedgerMovement[];
+  /** The hidden ones, newest first: screens leave them out, Transactions lists them when asked. */
+  hidden: LedgerMovement[];
   groups: LedgerGroup[];
   categories: LedgerCategory[];
 };

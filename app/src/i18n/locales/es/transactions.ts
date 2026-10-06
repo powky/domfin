@@ -52,6 +52,7 @@ export const transactions = {
       notesPlaceholder: 'Notas (opcional)',
       cancel: 'Cancelar',
       submit: 'Agregar',
+      failed: 'No se pudo agregar. ¿Está corriendo domfin-api?',
     },
     summary: {
       ...plural('count', '{{formatted}} transacción', '{{formatted}} transacciones'),
@@ -76,6 +77,14 @@ export const transactions = {
       categorize: 'Categorizar',
       automatic: 'Automática (como la clasifica Domfin)',
       categorizeFailed: 'No se pudo guardar la categoría. ¿Está corriendo domfin-api?',
+      saveFailed: 'No se pudo guardar el cambio. ¿Está corriendo domfin-api?',
+      delete: 'Borrar',
+      ...plural(
+        'deleteConfirm',
+        '¿Borras la transacción que agregaste a mano?',
+        '¿Borras las {{formatted}} transacciones que agregaste a mano?',
+      ),
+      ...plural('deleteYes', 'Sí, borrarla', 'Sí, borrarlas'),
     },
     list: {
       empty: 'No se encontraron transacciones',
@@ -95,6 +104,8 @@ export const transactions = {
       changeCategory: 'Cambiar la categoría de {{merchant}}',
       select: 'Seleccionar {{merchant}}, {{amount}}',
       selectNeedsReview: 'Seleccionar {{merchant}}, {{amount}}, por revisar',
+      byHand: 'A mano',
+      notInStatement: 'No está en su estado',
     },
   },
 } satisfies Translation<typeof en>;

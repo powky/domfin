@@ -15,7 +15,7 @@ function monthEnd(month: string) {
 
 const TO = monthEnd(LEDGER_MONTHS[LEDGER_MONTHS.length - 1]);
 
-let state: LedgerState = { status: 'loading', accounts: [], movements: [], groups: [], categories: [] };
+let state: LedgerState = { status: 'loading', accounts: [], movements: [], hidden: [], groups: [], categories: [] };
 let request: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -32,6 +32,22 @@ function set(next: LedgerState) {
   listeners.forEach((listener) => listener());
 }
 
+/** Keeps the hidden movements apart: every screen leaves them out. */
+function split(movements: readonly LedgerMovement[]) {
+  return { movements: movements.filter((m) => !m.hidden), hidden: movements.filter((m) => m.hidden) };
+}
+
+/**
+ * Changes movements on this device right away, before domfin-api answers
+ * (the ledger is asked for again after), so the lists don't wait for it.
+ */
+export function patchMovements(ids: ReadonlySet<string>, patch: Partial<Pick<LedgerMovement, 'review' | 'hidden'>>) {
+  const all = [...state.movements, ...state.hidden]
+    .map((movement) => (ids.has(movement.id) ? { ...movement, ...patch } : movement))
+    .sort((a, b) => b.date.localeCompare(a.date));
+  set({ ...state, ...split(all) });
+}
+
 /** Asks domfin-api for the ledger again, e.g. after importing statements. */
 export function refreshLedger(): Promise<void> {
   request ??= Promise.all([
@@ -39,7 +55,7 @@ export function refreshLedger(): Promise<void> {
     apiGet<{ groups: LedgerGroup[]; categories: LedgerCategory[] }>('/ledger/categories'),
   ])
     .then(([{ accounts, movements }, { groups, categories }]) =>
-      set({ status: 'ready', accounts, movements, groups, categories }),
+      set({ status: 'ready', accounts, ...split(movements), groups, categories }),
     )
     .catch(() => set({ ...state, status: 'offline' }))
     .finally(() => {
@@ -50,7 +66,8 @@ export function refreshLedger(): Promise<void> {
 
 /**
  * Every account and classified movement of the months screens show, from
- * domfin-api's ledger, fetched once and shared by every screen.
+ * domfin-api's ledger, fetched once and shared by every screen. Hidden
+ * movements come apart, in `hidden`.
  */
 export function useLedger(): LedgerState {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);

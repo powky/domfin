@@ -50,6 +50,7 @@ export const transactions = {
       notesPlaceholder: 'Notes (optional)',
       cancel: 'Cancel',
       submit: 'Add',
+      failed: "Couldn't add it. Is domfin-api running?",
     },
     summary: {
       count_one: '{{formatted}} transaction',
@@ -80,6 +81,13 @@ export const transactions = {
       /** Undoes the corrections: the rules and the bank decide again. */
       automatic: 'Automatic (as Domfin classifies it)',
       categorizeFailed: "Couldn't save the category. Is domfin-api running?",
+      saveFailed: "Couldn't save the change. Is domfin-api running?",
+      /** Only for transactions added by hand. */
+      delete: 'Delete',
+      deleteConfirm_one: 'Delete the transaction you added by hand?',
+      deleteConfirm_other: 'Delete the {{formatted}} transactions you added by hand?',
+      deleteYes_one: 'Yes, delete it',
+      deleteYes_other: 'Yes, delete them',
     },
     list: {
       empty: 'No transactions found',
@@ -101,6 +109,10 @@ export const transactions = {
       changeCategory: 'Change the category of {{merchant}}',
       select: 'Select {{merchant}}, {{amount}}',
       selectNeedsReview: 'Select {{merchant}}, {{amount}}, needs review',
+      /** Next to the account of a transaction added by hand. */
+      byHand: 'Manual',
+      /** …and of one whose statement came without it. */
+      notInStatement: 'Not in its statement',
     },
   },
 } as const;

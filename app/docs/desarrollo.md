@@ -63,8 +63,14 @@ responde a quien manda el secreto que genera al arrancar
 - *Transacciones*, *Gastos*, *Flujo de caja* y el detalle de cada cuenta salen
   del libro (`features/ledger`: `GET /ledger/movements` y
   `/ledger/categories`), que se pide una vez para todos los meses y se
-  refresca al importar. Marcar como revisada, ocultar o agregar una
-  transacción a mano solo dura la sesión: la API aún no los guarda.
+  refresca al importar. Lo que se marca como revisado u oculto y lo que se
+  agrega a mano también va a domfin-api (`features/ledger/api/movements.ts`:
+  `PUT /ledger/marks`, `POST` y `DELETE /ledger/movements`). Las marcas se
+  ven al instante, antes de la respuesta. Los ocultos llegan aparte
+  (`hidden` en el estado del libro), así que ninguna pantalla los suma, y
+  Transacciones los lista en *Ocultas*. Una fila agregada a mano dice *A
+  mano* (o *No está en su estado*, si su estado llegó sin ella) y solo esas
+  se pueden borrar.
 - La clasificación se ajusta en la app y la guarda domfin-api: en
   *Transacciones*, la categoría de cada fila es un selector (o se
   seleccionan varios movimientos y *Categorizar*), con una corrección por

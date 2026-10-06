@@ -40,6 +40,9 @@ export type Transaction = {
   assetName?: string;
   /** Filed by the user's correction, which "automatic" undoes. */
   corrected?: boolean;
+  /** Added by hand: only these can be deleted. `missing` when the statement covering its date came without it. */
+  manual?: boolean;
+  missing?: boolean;
 };
 
 export type TransactionAccount = {

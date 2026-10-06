@@ -1,4 +1,5 @@
-import { Check, Eye, EyeOff, Link2, Tag, X } from 'lucide-react-native';
+import { Check, Eye, EyeOff, Link2, Tag, Trash2, X } from 'lucide-react-native';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -81,6 +82,8 @@ export type SelectionBarProps = {
   onLink: (assetId: string | null) => void;
   onMarkReviewed: () => void;
   onToggleHidden: () => void;
+  /** Deletes the selection, when it's all added by hand; it asks first. */
+  onDelete?: () => void;
   onClear: () => void;
 };
 
@@ -105,12 +108,16 @@ export function SelectionBar({
   onLink,
   onMarkReviewed,
   onToggleHidden,
+  onDelete,
   onClear,
 }: SelectionBarProps) {
   const { t } = useTranslation();
   const phone = usePhoneLayout();
+  // How many were selected when Delete asked: selecting others asks again.
+  const [confirming, setConfirming] = useState<number | null>(null);
   const markReviewed = t('transactions.selection.markReviewed', { count: selectedCount });
   const hide = hidden ? t('transactions.selection.unhide') : t('transactions.selection.hide');
+  const remove = t('transactions.selection.delete');
 
   const count = (
     <View style={styles.selectionText}>
@@ -161,9 +168,45 @@ export function SelectionBar({
         onPress={onToggleHidden}
         accessibilityLabel={hide}
       />
+      {onDelete ? (
+        <Button
+          icon={Trash2}
+          iconOnly={phone}
+          label={phone ? undefined : remove}
+          onPress={() => setConfirming(selectedCount)}
+          accessibilityLabel={remove}
+        />
+      ) : null}
     </>
   );
   const clear = <Button icon={X} iconOnly onPress={onClear} accessibilityLabel={t('transactions.selection.clear')} />;
+
+  if (onDelete && confirming === selectedCount) {
+    const question = (
+      <Text variant="bodyStrong">
+        {t('transactions.selection.deleteConfirm', { count: selectedCount, formatted: formatNumber(selectedCount) })}
+      </Text>
+    );
+    const confirm = (
+      <Button
+        icon={Trash2}
+        label={t('transactions.selection.deleteYes', { count: selectedCount })}
+        onPress={() => {
+          setConfirming(null);
+          onDelete();
+        }}
+      />
+    );
+    return (
+      <View style={phone ? styles.phoneSelection : styles.selection}>
+        {question}
+        <View style={styles.actions}>
+          {confirm}
+          <View style={phone ? styles.clear : undefined}>{clear}</View>
+        </View>
+      </View>
+    );
+  }
 
   if (phone) {
     return (

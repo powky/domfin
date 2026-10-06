@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Checkbox, Text, checkboxSize } from '@/components/ui';
-import { formatSignedCurrency } from '@/lib/format';
+import { dotSeparator, formatSignedCurrency } from '@/lib/format';
 
 import { formatDay } from '../lib/format';
 import type { Transaction, TransactionDay } from '../types';
@@ -66,6 +66,14 @@ export const TransactionRow = memo(function TransactionRow({
     />
   );
   const reviewDot = transaction.needsReview ? <View style={styles.reviewDot} /> : null;
+  // What was added by hand says so, and why it asks for a look when its
+  // statement came without it: first, so a long account name is what's cut.
+  const origin = transaction.missing
+    ? t('transactions.row.notInStatement')
+    : transaction.manual
+      ? t('transactions.row.byHand')
+      : null;
+  const account = origin ? `${origin}${dotSeparator}${accountName}` : accountName;
 
   if (phone) {
     return (
@@ -100,7 +108,7 @@ export const TransactionRow = memo(function TransactionRow({
           <View style={styles.line}>
             <View style={styles.categoryCell}>{category}</View>
             <Text variant="caption" tone="secondary" numberOfLines={1} align="right" style={styles.phoneAccount}>
-              {accountName}
+              {account}
             </Text>
           </View>
         </View>
@@ -122,7 +130,7 @@ export const TransactionRow = memo(function TransactionRow({
         <View style={styles.categoryColumn}>{category}</View>
         <View style={styles.accountColumn}>
           <Text numberOfLines={1} style={styles.account}>
-            {accountName}
+            {account}
           </Text>
         </View>
         <View style={styles.amountColumn}>

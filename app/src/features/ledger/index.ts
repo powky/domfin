@@ -1,4 +1,5 @@
 export { refreshLedger, useLedger } from './api/ledger';
+export { addMovement, deleteMovements, markMovements, type NewMovement } from './api/movements';
 export {
   deleteAsset,
   linkToAsset,

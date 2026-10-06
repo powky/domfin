@@ -15,11 +15,15 @@ export const phone = {
     },
   },
   transactions: {
+    add: {
+      failed: 'No se pudo agregar. Vuelve a intentarlo.',
+    },
     rule: {
       failed: 'No se pudo crear la regla. Vuelve a intentarlo.',
     },
     selection: {
       categorizeFailed: 'No se pudo guardar la categoría. Vuelve a intentarlo.',
+      saveFailed: 'No se pudo guardar el cambio. Vuelve a intentarlo.',
     },
   },
   accounts: {

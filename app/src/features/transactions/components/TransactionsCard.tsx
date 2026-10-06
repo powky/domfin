@@ -25,6 +25,14 @@ const today = () => {
 };
 const NO_SELECTION: ReadonlySet<string> = new Set();
 
+/** What couldn't be saved, by the text that says so. */
+const FAILURES = {
+  categorize: 'transactions.selection.categorizeFailed',
+  link: 'assets.link.failed',
+  save: 'transactions.selection.saveFailed',
+  add: 'transactions.add.failed',
+} as const;
+
 type DropdownFilters = Pick<TransactionFilters, 'kind' | 'accountId' | 'categoryId' | 'tag'>;
 
 const NO_DROPDOWN_FILTERS: DropdownFilters = {
@@ -57,7 +65,7 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
   const [dropdowns, setDropdowns] = useState(NO_DROPDOWN_FILTERS);
   const [dropdownsOpen, setDropdownsOpen] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [failed, setFailed] = useState<'categorize' | 'link' | null>(null);
+  const [failed, setFailed] = useState<keyof typeof FAILURES | null>(null);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [ruleResult, setRuleResult] = useState<{ status: 'created' | 'failed'; rule: Suggestion } | null>(null);
   const rules = useRules();
@@ -213,10 +221,13 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
             <AddTransactionForm
               accounts={data.accounts}
               categories={data.categories}
-              defaultDate={data.latestStatement ?? today()}
+              defaultDate={today()}
               onSubmit={(transaction) => {
-                transactionActions.add(transaction);
-                setAdding(false);
+                setFailed(null);
+                transactionActions
+                  .add(transaction)
+                  .then(() => setAdding(false))
+                  .catch(() => setFailed('add'));
               }}
               onCancel={() => setAdding(false)}
             />
@@ -256,13 +267,27 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
                 transactionActions.link(ids, assetId).catch(() => setFailed('link'));
               }}
               onMarkReviewed={() => {
-                transactionActions.markReviewed(selectedIdList());
+                const ids = selectedIdList();
                 clearSelection();
+                setFailed(null);
+                transactionActions.markReviewed(ids).catch(() => setFailed('save'));
               }}
               onToggleHidden={() => {
-                transactionActions.setHidden(selectedIdList(), status !== 'hidden');
+                const ids = selectedIdList();
                 clearSelection();
+                setFailed(null);
+                transactionActions.setHidden(ids, status !== 'hidden').catch(() => setFailed('save'));
               }}
+              onDelete={
+                selected.every((transaction) => transaction.manual)
+                  ? () => {
+                      const ids = selectedIdList();
+                      clearSelection();
+                      setFailed(null);
+                      transactionActions.remove(ids).catch(() => setFailed('save'));
+                    }
+                  : undefined
+              }
               onClear={clearSelection}
             />
           ) : (
@@ -270,7 +295,7 @@ export function TransactionsCard({ data, range }: TransactionsCardProps) {
           )}
           {failed ? (
             <Text tone="accent" style={styles.error}>
-              {failed === 'link' ? t('assets.link.failed') : t('transactions.selection.categorizeFailed')}
+              {t(FAILURES[failed])}
             </Text>
           ) : null}
           {suggestion ? (

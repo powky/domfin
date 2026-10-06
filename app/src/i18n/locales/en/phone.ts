@@ -21,11 +21,15 @@ export const phone = {
     },
   },
   transactions: {
+    add: {
+      failed: "Couldn't add it. Try again.",
+    },
     rule: {
       failed: "Couldn't create the rule. Try again.",
     },
     selection: {
       categorizeFailed: "Couldn't save the category. Try again.",
+      saveFailed: "Couldn't save the change. Try again.",
     },
   },
   accounts: {

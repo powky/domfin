@@ -42,7 +42,9 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 - **Transacciones**: cada movimiento clasificado solo (por el código del
   comercio, la descripción del banco, tu nómina y tus reglas). Lo que falte
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
-  próxima vez.
+  próxima vez. Lo que todavía no trae un estado lo agregas a mano: cuando
+  llega el estado, su movimiento toma el lugar del tuyo, sin duplicarse.
+  Lo que ocultas deja de contar en todas las pantallas.
 - **Patrimonio neto**, **Cuentas** y **Préstamos**: tus saldos de fin de mes,
   con su historia. Con la tasa y la cuota de un préstamo, Domfin te dice
   cuándo terminas de pagarlo y cuánto se va en intereses, también si tu
@@ -393,8 +395,6 @@ proponer otra cosa,
 - [ ] Clasificar los retiros de efectivo según en qué se gastó ese dinero.
 - [ ] Proyectos: juntar gastos de distintas categorías en un mismo proyecto
   (una mudanza, una boda, un negocio propio) y ver cuánto lleva cada uno.
-- [ ] Guardar lo que marcas como revisado, lo que ocultas y lo que agregas a
-  mano. Hoy dura mientras la app está abierta.
 
 **Planificación**
 
@@ -435,6 +435,9 @@ proponer otra cosa,
   iOS y Android, varios a la vez y de cuentas distintas.
 - [x] Clasificación automática de cada movimiento: por el código del
   comercio, la descripción del banco, tu nómina y tus reglas.
+- [x] Movimientos agregados a mano, que el del estado reemplaza cuando llega
+  (con tu categoría y tus notas), y lo que marcas como revisado u ocultas,
+  guardados en tu base.
 - [x] Salario, bonos, bonificaciones, ingresos adicionales y entregas sueltas
   (como un regalo), cada uno por su lado; lo que inviertes no cuenta como
   gasto.
