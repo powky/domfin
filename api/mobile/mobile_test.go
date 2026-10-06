@@ -15,6 +15,17 @@ import (
 	"github.com/powky/domfin/api/internal/testpdf"
 )
 
+// TestMain gives the tests a TMPDIR when the system sets none (Linux, CI).
+// Without one, Start points it into the first test's data folder, which is
+// gone once that test ends, and every later t.TempDir() fails. ownTemp has
+// a test of its own.
+func TestMain(m *testing.M) {
+	if os.Getenv("TMPDIR") == "" {
+		os.Setenv("TMPDIR", os.TempDir())
+	}
+	os.Exit(m.Run())
+}
+
 // samples are made-up Popular statements: a card, a scanned savings account
 // (it goes through the OCR), a loan and a certificate.
 func samples(t *testing.T) map[string][]byte {
