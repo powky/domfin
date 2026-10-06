@@ -32,6 +32,9 @@ documentación de la versión instalada
   ni los edites; configura en `app.json` y con config plugins. Si algo los
   genera, bórralos y revierte los cambios de `app.json` o `package.json`
   antes del commit.
+- `modules/domfin-engine` compila el motor en Go (`../api/mobile`) con
+  gomobile durante el build nativo: hace falta Go y, en Android, el NDK
+  (Android Studio → SDK Manager → NDK).
 - Unistyles, `expo-document-picker` y `expo-splash-screen` traen código
   nativo: no funcionan en Expo Go, y un development build anterior a una
   dependencia nativa nueva hay que volver a compilarlo.
@@ -41,7 +44,9 @@ documentación de la versión instalada
 ## Datos
 
 No hay mocks: las pantallas leen de domfin-api con los hooks de
-`features/<feature>/api`, que usan `services/api/client.ts`.
+`features/<feature>/api`, que usan `services/api/client.ts`. En iOS y
+Android, `client.ts` le habla al motor que la app lleva adentro
+(`modules/domfin-engine`), que responde lo mismo.
 
 | Pantalla | Fuente |
 | --- | --- |

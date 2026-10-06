@@ -1,15 +1,17 @@
-# El motor de Domfin dentro de la app (prueba)
+# El motor de Domfin dentro de la app
 
-Prueba de concepto para quitar la API como pieza aparte: las apps de iOS y
-Android llevan adentro el mismo código de domfin-api (`api/mobile`,
-compilado con gomobile) y le hablan por un puerto de 127.0.0.1 del propio
-teléfono, sin computadora. No hay código duplicado: el Go es uno solo, en
+Para que el teléfono no necesite una computadora, las apps de iOS y Android
+llevan adentro el mismo código de domfin-api (`api/mobile`, compilado con
+gomobile) y le hablan por un puerto de 127.0.0.1 del propio teléfono. Ahí
+llegan también las demás apps del teléfono, así que el motor solo le
+responde a quien manda el secreto que genera en cada arranque (`Token`). No hay código duplicado: el Go es uno solo, en
 `api/`, y lo que sale de compilarlo (`ios/DomfinEngine.xcframework`,
 `android/libs` y `android/src/main/jniLibs`) no va en git.
 
 ## Probarlo
 
-Desde `app/`:
+Necesitas Go (`./domfin setup` lo instala si falta) y, para Android, el NDK
+(Android Studio → SDK Manager → NDK). Desde `app/`:
 
 1. `npx expo run:ios` o `npx expo run:android`. El build compila también el
    motor (`build.sh`, desde el pod `ExpoDomfinEngine` en iOS y desde
@@ -28,9 +30,8 @@ Desde `app/`:
    (`motor de Domfin: …`); el registro del dispositivo, lo mismo visto desde
    Go (`GoLog` en Android, `org.golang.mobile` en iOS).
 
-En esta rama, las apps de iOS y Android usan siempre su propio motor, con una
-base nueva en el teléfono, y no el domfin-api de la computadora. La web no
-cambia.
+Las apps de iOS y Android usan siempre su propio motor, con su base en el
+teléfono, y no el domfin-api de la computadora. La web sigue con domfin-api.
 
 ## Lo que se vio (4 de octubre de 2026)
 
@@ -102,5 +103,5 @@ Falta para no depender de la API:
   release lo permiten solo para `localhost`
   (`android/src/release/res/xml/domfin_engine_network.xml`).
 
-Si se sigue, falta además llamar al motor sin abrir un puerto (sin red de
-por medio, ni secreto que pasar) y compilarlo en CI.
+Más adelante: llamar al motor sin abrir un puerto (sin red de por medio, ni
+secreto que pasar) y compilarlo en CI.

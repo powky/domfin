@@ -8,8 +8,8 @@ Domfin, ver el [README principal](../../README.md); para proponer cambios,
 ```bash
 npm install
 npm run web          # web, en http://localhost:8081
-npx expo run:ios     # development build (Unistyles usa módulos nativos: Expo Go no sirve)
-npx expo run:android
+npx expo run:ios     # development build (Unistyles usa módulos nativos: Expo Go no sirve); compila también el motor
+npx expo run:android # además del SDK, necesita el NDK para el motor
 npm run typecheck && npm run lint
 npm run contrast     # el contraste de los colores, en el tema claro y el oscuro
 npm test             # las pruebas de lo que no tiene pantalla
@@ -19,6 +19,14 @@ npm test             # las pruebas de lo que no tiene pantalla
 
 No hay datos de ejemplo: todo sale de los estados de cuenta importados en
 domfin-api. Sin estados, las pantallas lo dicen y llevan a importarlos.
+
+En la web, domfin-api corre en la computadora (`EXPO_PUBLIC_API_URL`). En iOS
+y Android, la app lleva adentro el mismo código: `modules/domfin-engine`
+compila `api/mobile` con gomobile y `services/api/client.ts` lo arranca y le
+habla por 127.0.0.1 (ver su [README](../modules/domfin-engine/README.md)).
+Cualquier app del teléfono llega a ese puerto, así que el motor solo le
+responde a quien manda el secreto que genera al arrancar
+(`Authorization: Bearer …`). Su base vive en el teléfono.
 
 - *Importar estados* (`/imports`) sube los PDF del banco a domfin-api
   (`POST /statements/import`), que los abre con la contraseña guardada en

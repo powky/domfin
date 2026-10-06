@@ -2,16 +2,19 @@
 
 Finanzas personales para República Dominicana: cuentas, tarjetas, préstamos
 y certificados, en pesos y dólares, leídos de los estados de cuenta en PDF.
-Todo corre en la computadora de quien lo usa.
+Todo corre en la computadora o el teléfono de quien lo usa.
 
 | Carpeta | Qué es | Léelo antes de tocarla |
 | --- | --- | --- |
 | `api/` | domfin-api, en Go: lee los PDF, los guarda en SQLite, clasifica los movimientos y trae la tasa del BCRD. | `api/CLAUDE.md`, `api/docs/` |
 | `app/` | La app, en Expo (web, iOS y Android). | `app/AGENTS.md`, `app/docs/desarrollo.md` |
 
-La app habla con la API por HTTP (`EXPO_PUBLIC_API_URL`, por defecto
-`http://localhost:8080`). Los endpoints con datos del banco solo responden a
-la misma computadora.
+En la web, la app habla con domfin-api por HTTP (`EXPO_PUBLIC_API_URL`, por
+defecto `http://localhost:8080`), y los endpoints con datos del banco solo
+responden a la misma computadora. En iOS y Android la app lleva adentro el
+mismo código (`api/mobile`, compilado con gomobile por
+`app/modules/domfin-engine`) y le habla por 127.0.0.1, con un secreto nuevo
+en cada arranque: compilar la app nativa necesita Go y, en Android, el NDK.
 
 ## Comandos
 

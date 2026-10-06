@@ -55,6 +55,11 @@ base, usa otra carpeta:
 `DOMFIN_DATA_DIR=/tmp/domfin-prueba go run ./cmd/api`, o
 `go run ./cmd/statements import -dry-run <carpeta>`.
 
+Para compilar la app de iOS o Android (`npx expo run:ios` o
+`npx expo run:android`, desde `app/`) necesitas además Xcode o Android
+Studio con el NDK: el build compila el motor en Go que la app lleva adentro
+([`app/modules/domfin-engine`](app/modules/domfin-engine)).
+
 El lanzador tiene dos versiones que hacen lo mismo: `domfin`, en bash (3.2,
 el que trae macOS), para macOS y Linux, y `scripts/domfin.ps1`, en Windows
 PowerShell 5.1, que corre `domfin.cmd`. Un cambio va en las dos; el
@@ -81,8 +86,8 @@ workflow *Instalador* las prueba en los tres sistemas.
 
 ### En la app (`app/`)
 
-- Los datos salen siempre de domfin-api, con los hooks de
-  `features/<feature>/api`. Nada de datos de ejemplo: si una pantalla
+- Los datos salen siempre de domfin-api (en iOS y Android, del mismo código
+  dentro de la app), con los hooks de `features/<feature>/api`. Nada de datos de ejemplo: si una pantalla
   necesita algo que la API no da, se agrega a la API.
 - Las rutas de `src/app/` solo componen; la lógica vive en `src/features/`.
 - Ningún texto visible escrito en un componente: va en

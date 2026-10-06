@@ -19,7 +19,10 @@ Con [Go 1.26](https://go.dev/dl/) o más nuevo:
 go run ./cmd/api
 ```
 
-Queda escuchando en `http://localhost:8080`. Para tener un ejecutable:
+Queda escuchando en `http://localhost:8080`. La app de iOS y Android lleva
+adentro este mismo código (`mobile`, ver
+[app/modules/domfin-engine](../app/modules/domfin-engine)). Para tener un
+ejecutable:
 
 ```bash
 go build -o domfin-api ./cmd/api
