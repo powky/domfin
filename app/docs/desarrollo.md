@@ -152,10 +152,10 @@ ImageMagick:
 
 | Archivo | Para qué | Cómo es |
 | --- | --- | --- |
-| `assets/icon.png` | iOS, y Android antes de los íconos adaptativos | 1024 px, naranja de borde a borde (el sistema redondea las esquinas) y la vela del tamaño que tiene en el logo. Sin transparencia, como pide Apple. |
-| `assets/android-icon-foreground.png` | La capa de adelante del ícono adaptativo | La vela blanca en 108 dp, de los que se ven los 72 del medio; queda dentro de la zona segura de 66. El fondo es el `backgroundColor` naranja de `app.json`. |
-| `assets/android-icon-monochrome.png` | El ícono temático de Android 13 | La misma vela: Android la pinta con los colores del tema. |
-| `assets/splash-icon.png` | La pantalla de carga (`expo-splash-screen`) | El logo en los dos tercios del medio (Android 12 recorta a ese círculo), sobre el fondo de la app (`#F7F6F3`, y `#121110` con el modo oscuro del dispositivo), a 200 de ancho. |
+| `assets/icon.png` | iOS, y Android antes de los íconos adaptativos | 1024 px, naranja de borde a borde (el sistema redondea las esquinas) y la D del tamaño que tiene en el logo. Sin transparencia, como pide Apple. |
+| `assets/android-icon-foreground.png` | La capa de adelante del ícono adaptativo | La D blanca en 108 dp, de los que se ven los 72 del medio; queda dentro de la zona segura de 66. El fondo es el `backgroundColor` naranja de `app.json`. |
+| `assets/android-icon-monochrome.png` | El ícono temático de Android 13 | La misma D: Android la pinta con los colores del tema. |
+| `assets/splash-icon.png` | La pantalla de carga (`expo-splash-screen`) | El logo, con sus esquinas dentro del círculo de los dos tercios del medio (Android 12 recorta a ese círculo), sobre el fondo de la app (`#F7F6F3`, y `#121110` con el modo oscuro del dispositivo), a 200 de ancho. |
 | `assets/favicon.png` | La pestaña del navegador | El logo, 48 px. |
 
 La pantalla de carga sigue hasta que el layout raíz tiene las fuentes, el

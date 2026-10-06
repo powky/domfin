@@ -97,8 +97,8 @@ const lightColors = {
     dark: { background: palette.neutral[800], foreground: palette.white, border: palette.neutral[800] },
   },
 
-  /** The logo: an orange circle with a white sail in every theme, like the app's icon. */
-  brand: { mark: palette.orange[500], sail: palette.white },
+  /** The logo: an orange square with a white D in every theme, like the app's icon. */
+  brand: { mark: palette.orange[500], letter: palette.white },
 };
 
 /** The light theme's tokens, each one free to take any color: what every theme fills in. */
