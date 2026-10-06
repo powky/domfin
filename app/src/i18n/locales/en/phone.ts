@@ -55,6 +55,9 @@ export const phone = {
     offline: "Couldn't load your data. Close the app and open it again.",
     saveFailed: "Couldn't save. Try again.",
   },
+  salary: {
+    failed: "Couldn't save. Try again.",
+  },
   assets: {
     form: {
       failed: "Couldn't save. Try again.",

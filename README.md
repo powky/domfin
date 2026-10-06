@@ -34,7 +34,10 @@ para [probar Domfin](#con-datos-de-ejemplo) sin tus estados.</sub>
 - **Gastos**: por grupo, por categoría y por comercio, mes a mes.
 - **Presupuesto**: tus gastos fijos (alquiler, servicios, cuotas,
   suscripciones), que Domfin encuentra porque se repiten mes tras mes en tus
-  estados, cuáles ya pagaste este mes y cuánto te queda para lo demás.
+  estados, cuáles ya pagaste este mes y cuánto te queda para lo demás. Y tu
+  sueldo: con tus volantes de pago (los del Banco Popular), o el sueldo
+  bruto que pongas, lo que te descuentan cada mes de ISR, AFP y SFS, y cuánto
+  te entraría en diciembre de salario de Navidad y de bonificación.
 - **Transacciones**: cada movimiento clasificado solo (por el código del
   comercio, la descripción del banco, tu nómina y tus reglas). Lo que falte
   lo cambias desde la fila, y Domfin te ofrece crear la regla para la
@@ -207,7 +210,8 @@ Para ver Domfin antes de darle tus estados:
 
 Arranca con una base aparte, llena de datos inventados (los de las
 capturas): una cuenta de nómina, una en dólares, dos tarjetas, un préstamo,
-un certificado y algunas posesiones, desde enero del año pasado. Usa sus
+un certificado y algunas posesiones, desde enero del año pasado, y los
+volantes de pago de este año. Usa sus
 propios puertos, el 8090 y el 8091, así que puede correr junto a tu Domfin.
 Tu base no se toca, y la de ejemplo se borra al salir.
 
@@ -389,11 +393,6 @@ proponer otra cosa,
 - [ ] Guardar lo que marcas como revisado, lo que ocultas y lo que agregas a
   mano. Hoy dura mientras la app está abierta.
 
-**Salario**
-
-- [ ] Desglose de la nómina: lo que te descuentan cada mes (ISR, AFP y SFS)
-  y lo acumulado en el año.
-
 **Planificación**
 
 - [ ] Proyecciones: tu flujo de caja de los próximos meses con tu salario,
@@ -449,6 +448,11 @@ proponer otra cosa,
   deprecia.
 - [x] Préstamos: cuánto te falta y cuándo terminas de pagar cada uno, con los
   intereses año por año, incluidos los que subsidia tu empleador.
+- [x] Tu sueldo desde tus volantes de pago del Banco Popular, sin duplicar lo
+  que ya trae tu cuenta: lo que te descuentan cada mes (ISR, AFP y SFS) y lo
+  acumulado en el año.
+- [x] El salario de Navidad y la bonificación que te tocan por ley, con el
+  ISR de la bonificación, para saber cuánto te entra en diciembre.
 - [x] Respaldos cifrados en la carpeta de tu nube (iCloud Drive, Google
   Drive, Dropbox u OneDrive), con contraseña y clave de recuperación.
 - [x] La app de iOS y Android funciona sola, sin computadora: lleva adentro

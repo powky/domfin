@@ -4,6 +4,7 @@ import { refreshLiveAccounts } from '@/features/accounts';
 import { refreshBudget } from '@/features/budget';
 import { refreshAssets, refreshLedger } from '@/features/ledger';
 import { refreshLoanPlans } from '@/features/loans';
+import { refreshPayslips, refreshSalarySettings } from '@/features/salary';
 
 /** The last restore in this session: when its backup was made and where the data before it was kept. */
 export type Restored = { epoch: number; backupAt?: string; safetyCopy?: string };
@@ -34,5 +35,13 @@ export function useRestored() {
 export async function markRestored(backupAt: string, safetyCopy: string) {
   restored = { epoch: restored.epoch + 1, backupAt, safetyCopy };
   listeners.forEach((listener) => listener());
-  await Promise.all([refreshLedger(), refreshAssets(), refreshLiveAccounts(), refreshBudget(), refreshLoanPlans()]);
+  await Promise.all([
+    refreshLedger(),
+    refreshAssets(),
+    refreshLiveAccounts(),
+    refreshBudget(),
+    refreshLoanPlans(),
+    refreshPayslips(),
+    refreshSalarySettings(),
+  ]);
 }

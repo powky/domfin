@@ -49,6 +49,9 @@ export const phone = {
     offline: 'No se pudieron cargar tus datos. Cierra la app y vuelve a abrirla.',
     saveFailed: 'No se pudo guardar. Vuelve a intentarlo.',
   },
+  salary: {
+    failed: 'No se pudo guardar. Vuelve a intentarlo.',
+  },
   assets: {
     form: {
       failed: 'No se pudo guardar. Vuelve a intentarlo.',

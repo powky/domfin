@@ -58,6 +58,7 @@ Android, `client.ts` le habla al motor que la app lleva adentro
 | Posesiones e inversiones (casa en plano, acciones, fondo de pensiones, vehículo) y deudas fuera de tus estados | `/ledger/assets` (`features/ledger`, `useAssets`); salen también en `GET /accounts` como `asset:<id>` |
 | Presupuesto | `/ledger/budget` (`features/budget`) |
 | Cuándo termina cada préstamo | `/ledger/loans` (`features/loans`, `useLoanPlans`) |
+| Tu sueldo, salario de Navidad y bonificación (en Presupuesto) | `GET /ledger/payslips` (los volantes importados) y `/ledger/salary` (`features/salary`) |
 
 El modelo del libro (ids, signos, flujos, categorías) está en
 `../api/docs/modelo-de-datos.md`. Lo que el banco no da no se inventa: los

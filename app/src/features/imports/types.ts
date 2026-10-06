@@ -39,9 +39,13 @@ export type ImportResult = {
   /** A history's first movement. */
   from?: string;
   sections?: StatementSection[];
+  /** For a pay stub, instead of an account: who paid and the payment before and after deductions, in cents of pesos; `date` is the payroll's. */
+  payslip?: PayslipSummary;
   /** What didn't add up, in Spanish as domfin-api writes it. */
   issues?: string[];
 };
+
+export type PayslipSummary = { employer: string; income: number; deductions: number; net: number };
 
 export type MonthStatus = 'ok' | 'review' | 'missing';
 

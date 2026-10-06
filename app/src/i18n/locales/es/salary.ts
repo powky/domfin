@@ -1,0 +1,63 @@
+import type { salary as en } from '../en/salary';
+import type { Translation } from '../types';
+
+export const salary = {
+  salary: {
+    title: 'Tu sueldo',
+    gross: 'bruto al mes',
+    since: 'Desde {{month}}',
+    from: {
+      payslips: 'de tus volantes',
+      manual: 'lo pusiste tú',
+    },
+    intro: 'Importa tus volantes de pago o pon tu sueldo bruto: con él Domfin estima tu salario de Navidad y tu bonificación.',
+    set: 'Poner mi sueldo',
+    change: 'Cambiar',
+    breakdown: 'Tus volantes de {{month}}',
+    pay: {
+      salary: 'Sueldo',
+      overtime: 'Horas extra',
+      bonus: 'Bonos',
+      christmas: 'Salario de Navidad',
+      benefit: 'Beneficios',
+      other: 'Otros ingresos',
+    },
+    deductions: {
+      isr: 'ISR',
+      afp: 'AFP',
+      sfs: 'SFS',
+      other: 'Otros descuentos',
+    },
+    net: 'Neto',
+    yearToDate: 'En {{year}}: {{deductions}}',
+    failed: 'No se pudo guardar. ¿Está corriendo domfin-api?',
+    form: {
+      amount: 'Sueldo bruto al mes',
+      amountHint: 'Antes de descuentos, como dice tu volante. Cuenta desde el mes que elijas, hasta que un volante diga otra cosa.',
+      since: 'Desde',
+      save: 'Guardar',
+      cancel: 'Cancelar',
+      remove: 'Quitarlo',
+    },
+    yearEnd: {
+      title: 'Salario de Navidad y bonificación',
+      christmas: 'Salario de Navidad',
+      christmasDetail: 'En diciembre · la doceava parte de tu sueldo de {{year}} ({{total}}). No lleva descuentos.',
+      bonus: 'Bonificación',
+      bonusDetail: 'En {{month}} · {{days}} días de tu sueldo promedio ({{average}} ÷ 23.83 × {{days}} = {{gross}}), menos {{isr}} de ISR.',
+      bonusPrompt: 'Para estimar tu bonificación, di desde cuándo trabajas ahí y en qué mes te la pagan.',
+      total: 'En diciembre te entrarían {{amount}}, además de tu sueldo.',
+      estimate: 'Es un estimado: los meses sin volante cuentan con tu sueldo de ahora, y el ISR sigue la escala de la DGII de 2026.',
+      configure: 'Configurar la bonificación',
+      change: 'Cambiar la bonificación',
+      hiredOn: 'Fecha de ingreso',
+      hiredOnHint: 'Desde los tres años, la bonificación son 60 días de sueldo; antes, 45.',
+      hiredOnPlaceholder: 'AAAA-MM-DD',
+      bonusMonth: 'Mes en que te la pagan',
+      noBonus: 'No me la pagan',
+      invalid: 'Revisa la fecha (AAAA-MM-DD).',
+      save: 'Guardar',
+      cancel: 'Cancelar',
+    },
+  },
+} satisfies Translation<typeof en>;

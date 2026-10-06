@@ -28,7 +28,7 @@ export const imports = {
         "Pick one or more PDFs. Domfin recognizes each statement, checks that it adds up and saves it; statements you already imported aren't duplicated.",
       /** Only on iOS and Android, where other apps can share files with Domfin. */
       share: 'You can also share them with Domfin from another app (your email, Files or WhatsApp): they import on their own, several at a time.',
-      supported: 'For now it reads Banco Popular account and credit card statements, and loan and certificate histories.',
+      supported: 'For now it reads Banco Popular account and credit card statements, loan and certificate histories, and pay stubs.',
       choose: 'Choose PDFs',
       progress: 'Importing {{current}} of {{total}}',
       waiting: 'Waiting',
@@ -42,6 +42,14 @@ export const imports = {
       added: 'Imported',
       replaced: 'Replaced the one imported before',
       unchanged: 'Already imported',
+    },
+    /** A pay stub: its money is already in the ledger, as the payroll credit. */
+    payslip: {
+      title: 'Pay stub · {{employer}}',
+      paidOn: 'Paid on {{date}}',
+      gross: 'Gross {{amount}}',
+      net: 'net {{amount}}',
+      note: 'It adds no transactions: the payment is already in your account. Your gross salary shows in Budget.',
     },
     cutDate: 'Cut on {{date}}',
     historyRange: 'Movements from {{from}} to {{to}}',

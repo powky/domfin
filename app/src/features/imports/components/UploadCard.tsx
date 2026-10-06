@@ -16,6 +16,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Spin } from '@/components/motion';
 import { Button, Card, ProgressBar, Text } from '@/components/ui';
 import { formatDate } from '@/lib/dates';
+import { formatCurrency, keepTogether } from '@/lib/format';
 
 import type { ImportQueue } from '../api/importQueue';
 import { accountLabel, sectionLabels } from '../lib/labels';
@@ -137,6 +138,7 @@ function ResultRow({ result, divided }: { result: ImportResult; divided: boolean
   let color: string = theme.colors.positive;
   let title = result.file;
   let details: string[] = [];
+  let note: string | undefined;
   if (result.status === 'skipped') {
     Icon = CircleMinus;
     color = theme.colors.text.tertiary;
@@ -145,6 +147,20 @@ function ResultRow({ result, divided }: { result: ImportResult; divided: boolean
     Icon = CircleX;
     color = theme.colors.negative;
     details = [t(`imports.reasons.${result.reason ?? 'unreadable'}`, { detail: result.detail ?? '' })];
+  } else if (result.payslip && result.date) {
+    if (issues.length > 0) {
+      Icon = TriangleAlert;
+      color = theme.colors.accent.default;
+    }
+    const money = (cents: number) => formatCurrency(cents / 100, 'DOP');
+    title = t('imports.payslip.title', { employer: result.payslip.employer });
+    details = [
+      t(`imports.status.${result.status}`),
+      t('imports.payslip.paidOn', { date: formatDate(result.date) }),
+      t('imports.payslip.gross', { amount: money(result.payslip.income) }),
+      t('imports.payslip.net', { amount: money(result.payslip.net) }),
+    ].map(keepTogether);
+    note = t('imports.payslip.note');
   } else if (result.account && result.date) {
     if (issues.length > 0) {
       Icon = TriangleAlert;
@@ -168,6 +184,11 @@ function ResultRow({ result, divided }: { result: ImportResult; divided: boolean
         <Text variant="caption" tone="secondary">
           {details.join(' · ')}
         </Text>
+        {note ? (
+          <Text variant="caption" tone="tertiary">
+            {note}
+          </Text>
+        ) : null}
         {title !== result.file ? (
           <Text variant="caption" tone="tertiary" numberOfLines={1}>
             {result.file}

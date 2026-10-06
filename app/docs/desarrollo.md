@@ -120,11 +120,22 @@ responde a quien manda el secreto que genera al arrancar
   cuota, y la paga toda otra persona. La página de la cuenta importa
   `LoanPlanSection` por su ruta, no por `@/features/loans`, que importa
   `@/features/accounts` y cerraría un ciclo.
+- *Tu sueldo* y *Salario de Navidad y bonificación* (`features/salary`, en
+  Presupuesto) salen de los volantes de pago importados
+  (`/ledger/payslips`) y de lo que el usuario dice de su sueldo
+  (`/ledger/salary`: sueldos a mano, fecha de ingreso, mes de la
+  bonificación). `lib/salary.ts` arma el sueldo bruto de cada mes: el de los
+  volantes en un mes que cubren entero (tantos pagos de sueldo como el mes
+  más completo), si no el puesto a mano desde su mes, si no el del mes
+  conocido más cercano. `lib/yearEnd.ts` estima el salario de Navidad (la
+  doceava parte del año) y la bonificación de ley (el promedio entre 23.83,
+  por 45 o 60 días) con el ISR que le agrega, con la escala de la DGII de
+  2026. Un volante no es un movimiento: su neto ya está en el libro.
 - *Configuración → Respaldos* (`features/backup`) activa los respaldos
   cifrados de domfin-api en una carpeta de nube (`/backup/*`), los corre y
   restaura uno, aquí o en otra computadora. Restaurar cambia todo lo que la
-  API tiene: la app vuelve a pedir el libro, los activos, las cuentas y el
-  presupuesto, y las
+  API tiene: la app vuelve a pedir el libro, los activos, las cuentas, el
+  presupuesto, los préstamos y el sueldo, y las
   tarjetas de Configuración se montan de nuevo (`useRestored`). La clave de
   recuperación se muestra una vez; en la web se puede copiar, y en el
   teléfono se selecciona.

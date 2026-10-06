@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { formatLatestStatement } from '@/components/PeriodHeader';
 import { Screen } from '@/components/Screen';
 import { Button, Text } from '@/components/ui';
+import { SalaryCard, YearEndCard } from '@/features/salary';
 import { addMonths, formatDateValue } from '@/lib/dates';
 import { LATEST_MONTH, LEDGER_MONTHS } from '@/lib/period';
 
@@ -23,7 +24,8 @@ const MONTHS = [...LEDGER_MONTHS, addMonths(LEDGER_MONTHS[LATEST_MONTH], 1)];
 
 /**
  * The monthly budget: what you pay every month no matter what, found in your
- * statements, and the month planned around it.
+ * statements, and the month planned around it; the salary, and what the
+ * year's end brings besides it.
  */
 export function BudgetScreen() {
   const { t } = useTranslation();
@@ -49,6 +51,8 @@ export function BudgetScreen() {
           <BudgetKpis view={view} month={month} />
           <MonthPlanCard view={view} month={month} />
           <FixedCostsCard view={view} month={month} />
+          <SalaryCard month={month} />
+          <YearEndCard month={month} />
           <SuggestionsCard view={view} />
         </>
       )}

@@ -12,6 +12,7 @@ import { imports } from './imports';
 import { loans } from './loans';
 import { netWorth } from './netWorth';
 import { possessions } from './possessions';
+import { salary } from './salary';
 import { settings } from './settings';
 import { spending } from './spending';
 import { transactions } from './transactions';
@@ -25,6 +26,7 @@ export const es = {
   ...cashFlow,
   ...spending,
   ...budget,
+  ...salary,
   ...transactions,
   ...netWorth,
   ...accounts,

@@ -29,7 +29,7 @@ export const imports = {
       description:
         'Elige uno o varios PDF. Domfin reconoce cada estado, revisa que cuadre y lo guarda; los que ya importaste no se duplican.',
       share: 'También puedes compartirlos con Domfin desde otra app (el correo, Archivos o WhatsApp): se importan solos, varios a la vez.',
-      supported: 'Por ahora lee los estados de cuenta y de tarjeta de crédito, y los historiales de préstamo y de certificado, del Banco Popular.',
+      supported: 'Por ahora lee los estados de cuenta y de tarjeta de crédito, los historiales de préstamo y de certificado, y los volantes de pago del Banco Popular.',
       choose: 'Elegir PDF',
       progress: 'Importando {{current}} de {{total}}',
       waiting: 'En espera',
@@ -42,6 +42,13 @@ export const imports = {
       added: 'Importado',
       replaced: 'Reemplazó al que se había importado',
       unchanged: 'Ya estaba importado',
+    },
+    payslip: {
+      title: 'Volante de pago · {{employer}}',
+      paidOn: 'Pagado el {{date}}',
+      gross: 'Bruto {{amount}}',
+      net: 'neto {{amount}}',
+      note: 'No agrega movimientos: el pago ya está en tu cuenta. Tu sueldo bruto sale en Presupuesto.',
     },
     cutDate: 'Corte del {{date}}',
     historyRange: 'Movimientos del {{from}} al {{to}}',

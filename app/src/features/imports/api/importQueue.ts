@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { refreshLiveAccounts } from '@/features/accounts';
 import { refreshAssets, refreshLedger } from '@/features/ledger';
+import { refreshPayslips } from '@/features/salary';
 import { apiPostForm } from '@/services/api/client';
 
 import { importErrorOf } from '../lib/errors';
@@ -93,5 +94,5 @@ async function run() {
   }
   update({ running: false });
   // New statements bring accounts, balances, movements and payments to what you own.
-  if (saved) void Promise.all([refreshLiveAccounts(), refreshLedger(), refreshAssets()]);
+  if (saved) void Promise.all([refreshLiveAccounts(), refreshLedger(), refreshAssets(), refreshPayslips()]);
 }
