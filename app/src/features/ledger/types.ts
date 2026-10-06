@@ -46,6 +46,12 @@ export type LedgerMovement = {
   review: boolean;
   /** The other side of a transfer between two of the user's accounts. */
   pairId?: string;
+  /**
+   * A loan's movement: how much it moved the balance. Of a payment, what went
+   * to capital (the rest was interest and charges); missing when the bank's
+   * history doesn't tell, and for other accounts.
+   */
+  principal?: number;
   /** The asset it pays into (a home bought off-plan, shares), by its ID. */
   assetId?: string;
 };

@@ -6,9 +6,9 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, SegmentedControl, Select, Text, TextField } from '@/components/ui';
 import { Field, categoryOptions, useLedger, useLedgerNames } from '@/features/ledger';
+import { parseCents, toInput } from '@/lib/amount';
 import { currencySymbols, type Currency } from '@/lib/currency';
 
-import { parseCents, toInput } from '../lib/amount';
 import type { FixedCost, FixedCostInput } from '../types';
 
 const currencies = ['DOP', 'USD'] as const satisfies readonly Currency[];

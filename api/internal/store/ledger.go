@@ -445,27 +445,27 @@ func (s *Store) Accounts(ctx context.Context) ([]ledger.Account, error) {
 func (s *Store) Movements(ctx context.Context, from, to string) ([]ledger.Movement, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT c.institution, c.last4, t.currency, t.reference, st.cut_date, t.position, t.posted_on,
-			t.description, t.merchant, t.mcc, t.kind, t.amount, 'card'
+			t.description, t.merchant, t.mcc, t.kind, t.amount, 'card', NULL
 		FROM transactions t
 		JOIN cards c ON c.id = t.card_id
 		JOIN statements st ON st.id = t.statement_id
 		WHERE t.posted_on BETWEEN ? AND ?
 		UNION ALL
 		SELECT l.institution, l.last4, l.currency, m.reference, '', m.position, m.posted_on,
-			m.description, '', '', m.kind, m.amount, 'loan'
+			m.description, '', '', m.kind, m.amount, 'loan', m.principal
 		FROM loan_movements m
 		JOIN loans l ON l.id = m.loan_id
 		WHERE m.posted_on BETWEEN ? AND ?
 		UNION ALL
 		SELECT a.institution, a.last4, a.currency, '', st.cut_date, t.position, t.posted_on,
-			t.description, '', '', '', t.amount, a.kind
+			t.description, '', '', '', t.amount, a.kind, NULL
 		FROM bank_transactions t
 		JOIN bank_accounts a ON a.id = t.account_id
 		JOIN bank_statements st ON st.id = t.statement_id
 		WHERE t.posted_on BETWEEN ? AND ?
 		UNION ALL
 		SELECT c.institution, c.last4, c.currency, m.reference, '', m.position, m.posted_on,
-			m.description, '', '', m.kind, m.amount, 'certificate'
+			m.description, '', '', m.kind, m.amount, 'certificate', NULL
 		FROM certificate_movements m
 		JOIN certificates c ON c.id = m.certificate_id
 		WHERE m.posted_on BETWEEN ? AND ?
@@ -481,10 +481,14 @@ func (s *Store) Movements(ctx context.Context, from, to string) ([]ledger.Moveme
 			institution, last4, reference, cut, kind string
 			position                                 int
 			source                                   string
+			principal                                sql.NullInt64
 		)
 		if err := rows.Scan(&institution, &last4, &m.Currency, &reference, &cut, &position, &m.Date,
-			&m.Description, &m.Merchant, &m.MCC, &kind, &m.Amount, &source); err != nil {
+			&m.Description, &m.Merchant, &m.MCC, &kind, &m.Amount, &source, &principal); err != nil {
 			return nil, err
+		}
+		if principal.Valid {
+			m.Principal = &principal.Int64
 		}
 		accountKind := ledger.CreditCard
 		switch source {

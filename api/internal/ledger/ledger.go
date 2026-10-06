@@ -101,6 +101,10 @@ type Movement struct {
 	// account, negative goes out.
 	Amount   int64
 	Currency string
+	// Principal is, for a loan's movement, how much it moved the balance:
+	// of a payment, what went to capital (the rest was interest and
+	// charges). Nil for other accounts, and when the history can't tell.
+	Principal *int64
 }
 
 var accents = strings.NewReplacer("á", "a", "é", "e", "í", "i", "ó", "o", "ú", "u", "ü", "u", "ñ", "n")

@@ -7,6 +7,8 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button, Card, StatCard, Text } from '@/components/ui';
 import { accountName, schedule, useAssets, useLedger, type Asset, type ScheduleItem } from '@/features/ledger';
+// Not the feature's index, which imports this one's back.
+import { LoanPlanSection } from '@/features/loans/components/LoanPlanSection';
 import { formatDate, formatShortDate, today } from '@/lib/dates';
 import { dotSeparator, formatCurrency, formatPercent, formatSignedCurrency, keepTogether } from '@/lib/format';
 
@@ -43,11 +45,11 @@ export function AssetDetail({ accountId }: { accountId: string }) {
       {asset.kind === 'property' ? (
         <PropertyKpis asset={asset} />
       ) : asset.kind === 'debt' ? (
-        asset.schedule ? (
-          <ScheduleKpis asset={asset} />
-        ) : (
-          <DebtKpis asset={asset} />
-        )
+        <>
+          {/* One with a schedule ends with it: its plan says when, and its rate and installment. */}
+          {asset.schedule ? null : <DebtKpis asset={asset} />}
+          <LoanPlanSection accountId={`asset:${asset.id}`} currency={asset.currency} />
+        </>
       ) : asset.kind === 'vehicle' ? (
         <VehicleKpis asset={asset} />
       ) : asset.kind === 'pension' ? (
@@ -189,28 +191,6 @@ function VehicleKpis({ asset }: { asset: Asset }) {
 }
 
 /** A loan someone else pays: what's owed by its installments, each one, and its rate. */
-function ScheduleKpis({ asset }: { asset: Asset }) {
-  const { t } = useTranslation();
-  const schedule = asset.schedule;
-  const money = (cents: number) => formatCurrency(cents / 100, asset.currency);
-  if (!schedule) return null;
-  return (
-    <View style={styles.grid}>
-      <StatCard label={t('assets.detail.owed')} value={money(asset.value)} caption={t('assets.detail.owedBySchedule')} />
-      <StatCard
-        label={t('assets.detail.installment')}
-        value={money(asset.installment ?? 0)}
-        caption={t('assets.detail.installmentsLeft', { count: asset.remaining ?? 0 })}
-      />
-      <StatCard
-        label={t('assets.detail.rate')}
-        value={formatPercent(schedule.rate)}
-        caption={t('assets.detail.lastInstallment', { date: formatDate(schedule.last) })}
-      />
-    </View>
-  );
-}
-
 /** A fund is worth its latest statement; how much it grew since the first one you entered. */
 function PensionKpis({ asset }: { asset: Asset }) {
   const { t } = useTranslation();

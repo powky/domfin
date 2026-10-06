@@ -129,13 +129,6 @@ export const assets = {
       depreciation: 'Loses a year',
       /** `amount` comes formatted. */
       lost: 'Lost {{amount}} so far',
-      owedBySchedule: 'By its installments',
-      installment: 'Installment',
-      installmentsLeft_one: 'Capital and interest · {{count}} left',
-      installmentsLeft_other: 'Capital and interest · {{count}} left',
-      rate: 'Rate',
-      /** `date` comes formatted. */
-      lastInstallment: 'Last installment {{date}}',
       noDebtMovements:
         'Nothing linked yet. Link the loan and your payments from Transactions, or add a text that finds them.',
       noPayments: 'No payments linked yet. Link them from Transactions, or add a text that finds them.',

@@ -51,10 +51,13 @@ No hay mocks: las pantallas leen de domfin-api con los hooks de
 | Tasa de cambio (Configuración, sidebar) | `GET /rates/usd-dop` |
 | Respaldos (Configuración) | `/backup/*` (`features/backup`) |
 | Posesiones e inversiones (casa en plano, acciones, fondo de pensiones, vehículo) y deudas fuera de tus estados | `/ledger/assets` (`features/ledger`, `useAssets`); salen también en `GET /accounts` como `asset:<id>` |
+| Presupuesto | `/ledger/budget` (`features/budget`) |
+| Cuándo termina cada préstamo | `/ledger/loans` (`features/loans`, `useLoanPlans`) |
 
 El modelo del libro (ids, signos, flujos, categorías) está en
-`../api/docs/modelo-de-datos.md`. Lo que el banco no da no se inventa:
-Préstamos no tiene tasa ni amortización porque los historiales no las traen.
+`../api/docs/modelo-de-datos.md`. Lo que el banco no da no se inventa: los
+historiales de préstamo no traen la tasa ni la cuota, así que las pone el
+usuario, y sin ellas no hay amortización.
 Si una pantalla necesita algo que la API no expone, agrégalo a la API en vez
 de simularlo en la app. Sin datos para el periodo, usa `DataNotice`.
 

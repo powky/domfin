@@ -353,6 +353,32 @@ API guarda solo eso, en `settings` (`budget`):
 Cómo detecta la app un pago que se repite está en `app/docs/desarrollo.md`
 (*Presupuesto*).
 
+## Préstamos: cuándo terminas
+
+El historial de un préstamo no imprime la tasa ni el plazo. El usuario le
+pone la tasa anual y la cuota, y con eso la app calcula cuándo termina y
+cuánto falta de capital e intereses. Si su empleador u otra persona paga una
+parte de la cuota (un préstamo subsidiado), también lo dice. La API guarda
+solo eso, en `settings` (`loans`): `{"plans": {"<id de la cuenta>": {"rate",
+"installment", "subsidy"?}}}`.
+
+| Campo | Qué es |
+| --- | --- |
+| `rate` | La tasa anual: 0.125 es 12.5%. De 0 a menos de 1. |
+| `installment` | La cuota de cada mes, capital e intereses, en centavos de la moneda del préstamo. |
+| `subsidy` | Cuánto de cada cuota paga otra persona, en centavos; nunca más que la cuota. |
+
+La llave es el id de la cuenta del préstamo (`popular:loan:2468:DOP`) o
+`asset:<id>` para una deuda fuera del banco. Una deuda con plan de cuotas no
+necesita uno: su tasa y su cuota salen de su `schedule`, y toda la cuota la
+paga otra persona.
+
+La app cuenta los meses desde el saldo del último historial: cada cuota paga
+primero el interés del mes (la tasa entre 12) y el resto va a capital. Lo
+que ya se pagó de intereses sale de los movimientos: cada pago de un
+préstamo trae `principal`, lo que fue a capital, y el resto fueron
+intereses y cargos.
+
 ## Cómo lo usan las pantallas
 
 - **Montos en otra moneda:** ingresos, gastos, inversiones y préstamos se
@@ -396,9 +422,13 @@ los de estados de cuenta.
 | `PUT /ledger/assets/links` | Vincula movimientos a un activo: `{"movementIds", "assetId"}`; con `assetId: null` los desvincula. |
 | `GET /ledger/budget` | El presupuesto: `{"items", "dismissed", "income"?}` (ver *Presupuesto*). |
 | `PUT /ledger/budget` | Lo reemplaza entero; a los gastos fijos nuevos les pone `id` a partir del nombre. Responde lo guardado. |
+| `GET /ledger/loans` | La tasa, la cuota y lo que paga otra persona de cada préstamo: `{"plans"}` (ver *Préstamos: cuándo terminas*). |
+| `PUT /ledger/loans` | Los reemplaza todos. Responde lo guardado. |
 
 Cada movimiento de `GET /ledger/movements` trae, además de sus campos y de
 `amounts` (su valor en pesos y dólares a la tasa de su fecha), `flow`,
 `categoryId` (`null` si es Sin categoría), `by` (qué lo decidió: `manual`,
 `asset`, `rule`, `payroll`, `transfer`, `bank`, `merchant` o `default`), `ruleId`, `review`,
-`pairId` y `assetId` (el activo al que paga).
+`pairId`, `assetId` (el activo al que paga) y, en los de un préstamo,
+`principal` (lo que movió su saldo: de un pago, lo que fue a capital; falta
+cuando el historial no lo dice).

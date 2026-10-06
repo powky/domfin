@@ -1,5 +1,5 @@
 import type { assets as en } from '../en/assets';
-import { plural, type Translation } from '../types';
+import type { Translation } from '../types';
 
 export const assets = {
   assets: {
@@ -122,11 +122,6 @@ export const assets = {
       boughtFor: 'Costó {{price}} el {{date}}',
       depreciation: 'Pierde al año',
       lost: 'Ha perdido {{amount}}',
-      owedBySchedule: 'Según sus cuotas',
-      installment: 'Cuota',
-      ...plural('installmentsLeft', 'Capital e interés · queda {{count}}', 'Capital e interés · quedan {{count}}'),
-      rate: 'Tasa',
-      lastInstallment: 'Última cuota: {{date}}',
       noDebtMovements:
         'Todavía no hay nada vinculado. Vincula el préstamo y tus pagos desde Transacciones, o agrega un texto que los encuentre.',
       noPayments: 'Todavía no hay pagos vinculados. Vincúlalos desde Transacciones, o agrega un texto que los encuentre.',

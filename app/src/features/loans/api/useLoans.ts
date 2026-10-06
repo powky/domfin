@@ -16,6 +16,7 @@ import { today } from '@/lib/dates';
 import { LEDGER_MONTHS } from '@/lib/period';
 
 import type { LoanSummary, LoansOverview, MonthRange } from '../types';
+import { useLoanPlansByAccount } from './useLoanPlan';
 
 /**
  * The loans found in the imported histories for a period: balances from
@@ -29,6 +30,7 @@ export function useLoans({ start, end }: MonthRange): LoansOverview {
   const live = useLiveAccounts();
   const ledger = useLedger();
   const { assets } = useAssets();
+  const plans = useLoanPlansByAccount();
   return useMemo(() => {
     const months = LEDGER_MONTHS.slice(start, end + 1);
     const inPeriod = new Set(months);
@@ -75,11 +77,19 @@ export function useLoans({ start, end }: MonthRange): LoansOverview {
           lastPayment: last ? { date: last.date, amount: Math.abs(last.amount) / 100 } : undefined,
           asOf: account.asOf,
           href: { pathname: '/accounts/[id]', params: { id: account.id } },
+          // Only once everything loaded: a loan with terms would show without them first.
+          plan: plans.status === 'ready' ? plans.byAccount.get(account.id) : undefined,
         };
       });
     const shown = (loan: LoanSummary, amount: number) => inDisplay(converter, amount, loan.currency);
     loans.sort((a, b) => shown(b, b.balance) - shown(a, a.balance));
     const latestStatement = latestStatementOf(live.accounts);
+    // The loans whose end is known: their interest left, and the last one to end.
+    const ending = loans.flatMap((loan) =>
+      loan.plan?.payoff?.status === 'ends' ? [{ loan, payoff: loan.plan.payoff }] : [],
+    );
+    const owing = loans.filter((loan) => loan.balance > 0);
+    const allEnd = owing.length > 0 && owing.every((loan) => loan.plan?.payoff?.status === 'ends');
 
     return {
       status: live.status,
@@ -90,6 +100,9 @@ export function useLoans({ start, end }: MonthRange): LoansOverview {
       paidInPeriod: sumCents(paidInDisplay),
       paymentsInPeriod: loans.reduce((count, loan) => count + loan.paymentsInPeriod, 0),
       latestStatement,
+      interestLeft: sumCents(ending.map(({ loan, payoff }) => shown(loan, payoff.interest / 100))),
+      planned: ending.length,
+      debtFree: allEnd ? ending.map(({ payoff }) => payoff.last).sort().at(-1) : undefined,
     };
-  }, [start, end, converter, t, live, ledger.movements, assets]);
+  }, [start, end, converter, t, live, ledger.movements, assets, plans.byAccount, plans.status]);
 }

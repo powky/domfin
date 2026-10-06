@@ -10,3 +10,11 @@ export function parseCents(text: string) {
 
 /** Cents as the user types them back: "2450.00", or "2450,00" where cents follow a comma. */
 export const toInput = (cents: number) => (cents / 100).toFixed(2).replace('.', decimalSeparator());
+
+/** "12.5" or "12,5" (where decimals follow a comma) → 12.5; NaN when it isn't a number. A "%" is fine. */
+export function parseDecimal(text: string) {
+  const bare = text.replace(/%/g, '').replace(/\s/g, '');
+  const plain = decimalSeparator() === ',' ? bare.replace(/\./g, '').replace(',', '.') : bare.replace(/,/g, '');
+  const value = plain === '' ? NaN : Number(plain);
+  return Number.isFinite(value) ? value : NaN;
+}

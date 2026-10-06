@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { StatCard } from '@/components/ui';
+import { formatLongMonthYear } from '@/lib/dates';
 import { formatCurrency } from '@/lib/format';
 
 import type { LoansOverview } from '../types';
@@ -25,6 +26,17 @@ export function LoansKpis({ overview }: { overview: LoansOverview }) {
         value={formatCurrency(overview.paidInPeriod)}
         caption={t('loans.kpis.payments', { count: overview.paymentsInPeriod })}
       />
+      {overview.planned > 0 ? (
+        <StatCard
+          label={t('loans.kpis.interestLeft')}
+          value={formatCurrency(overview.interestLeft)}
+          caption={
+            overview.debtFree
+              ? t('loans.kpis.debtFree', { month: formatLongMonthYear(overview.debtFree) })
+              : t('loans.kpis.planned', { planned: overview.planned, total: overview.loans.length })
+          }
+        />
+      ) : null}
     </View>
   );
 }

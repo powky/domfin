@@ -102,6 +102,16 @@ domfin-api. Sin estados, las pantallas lo dicen y llevan a importarlos.
   si falta un pago se juzga con el último estado de la cuenta de la que
   sale. Las funciones de `lib/` no cargan React Native, para que
   `npm test` las pruebe.
+- *Préstamos* (`features/loans`) dice cuándo termina cada préstamo con la
+  tasa anual y la cuota que les pone el usuario, y lo que paga otra persona
+  de cada cuota si es subsidiado (`/ledger/loans`, en la página de la
+  cuenta). `lib/payoff.ts` cuenta mes a mes desde el último saldo: el
+  interés del mes primero y el resto a capital, los centavos del redondeo en
+  la última cuota. Lo pagado de intereses sale de `principal` en los
+  movimientos del préstamo. Una deuda con plan de cuotas usa su tasa y su
+  cuota, y la paga toda otra persona. La página de la cuenta importa
+  `LoanPlanSection` por su ruta, no por `@/features/loans`, que importa
+  `@/features/accounts` y cerraría un ciclo.
 - *Configuración → Respaldos* (`features/backup`) activa los respaldos
   cifrados de domfin-api en una carpeta de nube (`/backup/*`), los corre y
   restaura uno, aquí o en otra computadora. Restaurar cambia todo lo que la
